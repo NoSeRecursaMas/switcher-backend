@@ -4,7 +4,7 @@
 
 - Python 3.8+
 - `uvicorn`
-- `docker` y `docker-compose` (si se utiliza Docker)
+- `docker` y `docker-compose`
 - Las dependencias listadas en `requirements.txt`
 
 ## Instalación
@@ -70,8 +70,9 @@ Puedes eliminar los archivos compilados de Python y las carpetas `__pycache__` c
 ```bash
 make clean
 ```
+<br>
 
-### Abrir documentacion Swagger
+### Abrir documentación Swagger
 
 Para abrir automáticamente la documentación de Swagger generada por FastAPI en localhost:8000/docs.
 
