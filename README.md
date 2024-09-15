@@ -61,7 +61,7 @@ docker build -t backend .
 
 4. Iniciar el contenedor
 ```bash
-docker run -p 8000:80 backend
+docker run -p 8000:80 -v .:/app backend
 ```
 
 5. Acceder a la documentación de la aplicación en [localhost:8000/docs](http://localhost:8000/docs)
