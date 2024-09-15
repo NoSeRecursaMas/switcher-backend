@@ -5,7 +5,7 @@ ACTIVATE = . $(VENV)/bin/activate
 # Targets
 run-docker:
 	( \
-	   docker run -p 8000:80 -v $(pwd):/app backend; \
+	   docker run -p 8000:80 -v .:/app backend; \
 	)
 
 build-docker:
