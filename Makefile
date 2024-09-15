@@ -3,10 +3,20 @@ VENV = venv
 ACTIVATE = . $(VENV)/bin/activate
 
 # Targets
+run-docker:
+	( \
+	   docker run -p 8000:80 backend; \
+	)
+
+build-docker:
+	( \
+	   docker build -t backend .; \
+	)
+
 run:
 	( \
 	   $(ACTIVATE); \
-	   uvicorn src.main:app --reload --host 0.0.0.0 --port 8000; \
+	   fastapi dev src.main --port 8000; \
 	)
 
 test:
@@ -20,16 +30,6 @@ install:
 	   python3 -m venv $(VENV); \
 	   $(ACTIVATE); \
 	   pip install -r requirements.txt; \
-	)
-
-docker-up:
-	( \
-	   docker-compose up --build; \
-	)
-
-docker-down:
-	( \
-	   docker-compose down; \
 	)
 
 clean:
