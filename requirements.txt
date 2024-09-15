@@ -1,0 +1,13 @@
+fastapi[standard]==0.114.2
+pytest==8.3.3
+uvicorn==0.30.6
+sqlalchemy==2.0.34
+pydantic==2.9.1
+pytest-asyncio==0.24.0
+websockets==13.0.1  
+
+# Opcionales ver si estan buenas
+factory-boy==3.3.1
+
+
+httpx==0.27.2 
