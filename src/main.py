@@ -4,8 +4,7 @@ from src.database import engine
 from src.players.domain.model import Base
 from sqlalchemy.ext.declarative import declarative_base
 
-
-declarative_base().metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 

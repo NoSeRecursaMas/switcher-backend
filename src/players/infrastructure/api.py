@@ -11,7 +11,7 @@ router = APIRouter()
 @router.post(path = "", status_code=201)
 def create_player(player_name: str, db: Session = Depends(get_db)):
     try:
-        
+       
         player_repository = SQLAlchemyPlayerRepository(db)
         player_service = PlayerService(player_repository)
         

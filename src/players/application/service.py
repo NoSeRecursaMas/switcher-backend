@@ -12,7 +12,7 @@ class PlayerService():
         
         PlayerDomaineService.validate_length_name(player_name)
         PlayerDomaineService.validate_is_ascii(player_name)
-        print ("Error6")
+        
         player = Player(name=player_name)
-        print ("Error7")
+        
         return self.player_repository.save(player)
