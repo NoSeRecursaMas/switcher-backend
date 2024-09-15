@@ -1,39 +1,96 @@
-# USO
+# El Switcher
 
-## Requisitos
+Proyecto de ingenieria de Software 1 2024 - FAMAF UNC
 
-- Python 3.8+
-- `uvicorn`
-- `docker` y `docker-compose`
-- Las dependencias listadas en `requirements.txt`
+## Estructura del proyecto
 
-## Instalación
+Esta detallada en [ARCHITECTURE.md](src/ARCHITECTURE.md)
 
-Para configurar el entorno virtual y las dependencias necesarias:
+## Comenzando 🚀
 
+### Requisitos 📋
+
+Para poder correr el proyecto necesitas tener instalado:
+- [Docker](https://www.docker.com/)
+
+Opcionalmente, si no queres usar Docker, necesitas tener instalado:
+- [Python](https://www.python.org/downloads/)
+
+### Instalación
+
+#### Linux
+
+1. Clonar el repositorio
+```bash
+git clone git@github.com:NoSeRecursaMas/switcher-frontend.git
+```
+
+2. Ingresar al repositorio
+```bash
+cd switcher-frontend
+```
+
+3. Ejecutar el script de instalación
+```bash
+make build-docker
+```
+
+4. Iniciar el contenedor
+```bash
+make run-docker
+```
+
+5. Acceder a la documentación de la aplicación en [localhost:8000/docs](http://localhost:8000/docs)
+
+#### Windows
+
+1. Clonar el repositorio
+```bash
+git clone
+```
+
+2. Ingresar al repositorio
+```bash
+cd switcher-frontend
+```
+
+3. Ejecutar el script de instalación
+```bash
+docker build -t backend .
+```
+
+4. Iniciar el contenedor
+```bash
+docker run -p 8000:80 backend
+```
+
+5. Acceder a la documentación de la aplicación en [localhost:8000/docs](http://localhost:8000/docs)
+
+#### Sin Docker
+
+1. Clonar el repositorio
+```bash
+git clone
+```
+
+2. Ingresar al repositorio
+```bash
+cd switcher-frontend
+```
+
+3. Instalar el entorno virtual y las dependencias
 ```bash
 make install
 ```
 
-Esto crea un entorno virtual, lo activa e instala los paquetes definidos en `requirements.txt`.
-
-<br>
-
-## Comandos disponibles
-
-<br>
-
-### Ejecutar la aplicación
-
-Para iniciar el servidor FastAPI localmente, ejecuta el siguiente comando:
-
+4. Iniciar el servidor
 ```bash
 make run
 ```
 
-Esto inicia `uvicorn` en el host `0.0.0.0` y el puerto `8000` con el recargado automático activado.
+5. Acceder a la documentación de la aplicación en [localhost:8000/docs](http://localhost:8000/docs)
 
-<br>
+## Otras tareas
 
 ### Ejecutar las pruebas
 
@@ -43,25 +100,6 @@ Puedes correr todas las pruebas definidas utilizando pytest con el siguiente com
 make test
 ```
 
-<br>
-
-### Docker
-
-Para levantar la aplicación dentro de un contenedor Docker, usa:
-
-```bash
-make docker-up
-```
-
-Esto construirá la imagen de Docker y lanzará los servicios definidos en el archivo `docker-compose.yml`.
-
-Para detener y eliminar los contenedores, usa:
-
-```bash
-make docker-down
-```
-
-<br>
 
 ### Limpiar archivos temporales
 
@@ -70,7 +108,7 @@ Puedes eliminar los archivos compilados de Python y las carpetas `__pycache__` c
 ```bash
 make clean
 ```
-<br>
+
 
 ### Abrir documentación Swagger
 
