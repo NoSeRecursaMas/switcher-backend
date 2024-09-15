@@ -22,12 +22,12 @@ Opcionalmente, si no queres usar Docker, necesitas tener instalado:
 
 1. Clonar el repositorio
 ```bash
-git clone git@github.com:NoSeRecursaMas/switcher-frontend.git
+git clone git@github.com:NoSeRecursaMas/switcher-backend.git
 ```
 
 2. Ingresar al repositorio
 ```bash
-cd switcher-frontend
+cd switcher-backend
 ```
 
 3. Ejecutar el script de instalación
@@ -46,12 +46,12 @@ make run-docker
 
 1. Clonar el repositorio
 ```bash
-git clone
+git clone git@github.com:NoSeRecursaMas/switcher-backend.git
 ```
 
 2. Ingresar al repositorio
 ```bash
-cd switcher-frontend
+cd switcher-backend
 ```
 
 3. Ejecutar el script de instalación
@@ -70,12 +70,12 @@ docker run -p 8000:80 -v .:/app backend
 
 1. Clonar el repositorio
 ```bash
-git clone
+git clone git@github.com:NoSeRecursaMas/switcher-backend.git
 ```
 
 2. Ingresar al repositorio
 ```bash
-cd switcher-frontend
+cd switcher-backend
 ```
 
 3. Instalar el entorno virtual y las dependencias
