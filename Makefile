@@ -16,7 +16,7 @@ build-docker:
 run:
 	( \
 	   $(ACTIVATE); \
-	   fastapi dev src.main --port 8000; \
+	   fastapi dev src/main.py --port 8000; \
 	)
 
 test:
