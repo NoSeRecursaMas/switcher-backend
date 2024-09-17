@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 from src.players.infrastructure.api import router as players_router
-from src.database import engine
-from src.players.domain.dbModels import Base
-from sqlalchemy.ext.declarative import declarative_base
+from src.database import engine, Base
 
 Base.metadata.create_all(bind=engine)
 

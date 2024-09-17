@@ -1,16 +1,19 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
 
 sqlite_file_url = '../database.sqlite'
-base_dir = os.path.dirname(os.path.realpath(__file__)) 
-database_url = f"sqlite:///{os.path.join(base_dir,sqlite_file_url)}"
+base_dir = os.path.dirname(os.path.realpath(__file__))
+database_url = f"sqlite:///{os.path.join(base_dir, sqlite_file_url)}"
 
-# Maneja conexion de BD
 engine = create_engine(database_url, echo=True)
 
+
 SessionLocal = sessionmaker(bind=engine)
+
+Base = declarative_base()
+
 
 def get_db():
     db = SessionLocal()
