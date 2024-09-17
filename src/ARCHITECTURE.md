@@ -27,7 +27,7 @@ switcher-backend/
     │   │   ├── services.py
     │   │   └── use_case.py
     │   ├── domain                      
-    │   │   ├── lobby_models.py
+    │   │   ├── lobby_dbModelss.py
     │   │   └── lobby_service.py
     │   ├── infrastructure
     │   │   ├── api.py
@@ -52,12 +52,12 @@ switcher-backend/
 ### 1. **Domain**
  - **Qué sabe:** Solo detalles de sí mismo.
  - **No conoce:** Ninguna otra capa (ni `application` ni `infrastructure`).
- - **Responsabilidad:** Define la lógica del negocio y los modelos del dominio. Es la parte más estable y pura del sistema, sin depender de la tecnología externa.
+ - **Responsabilidad:** Define la lógica del negocio y los dbModelsos del dominio. Es la parte más estable y pura del sistema, sin depender de la tecnología externa.
 
 ---
 
 ### 2. **Application**
- - **Qué sabe:** Detalles de `domain` (cómo usar los modelos y reglas del dominio).
+ - **Qué sabe:** Detalles de `domain` (cómo usar los dbModelsos y reglas del dominio).
  - **No conoce:** Detalles de `infrastructure` (cómo se implementan la persistencia de datos o las interacciones externas).
  - **Responsabilidad:** Coordina los casos de uso y orquesta cómo se aplican las reglas del dominio para responder a las acciones del usuario. 
 
@@ -66,7 +66,7 @@ switcher-backend/
 ### 3. **Infrastructure**
  - **Qué sabe:** 
     - Detalles de `application` (cómo implementar puertos y adaptadores para la capa de `application`).
-    - Detalles de `domain` (cómo persistir datos relacionados con los modelos del dominio).
+    - Detalles de `domain` (cómo persistir datos relacionados con los dbModelsos del dominio).
  - **Responsabilidad:** Implementa la persistencia de datos, la comunicación con otros servicios, y todo lo relacionado con el entorno técnico. Aquí es donde se manejan las conexiones a bases de datos o las llamadas a otros servicios.
 
 

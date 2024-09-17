@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.players.domain.model import Player
+from src.players.domain.dbModels import Player
 
 
 class PlayerRepository(ABC):

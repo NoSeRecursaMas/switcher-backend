@@ -1,18 +1,18 @@
 from sqlalchemy.orm import Session
-from src.players.domain.model import Player
-from src.players.domain.service import PlayerDomaineService
+from src.players.domain.dbModels import Player
+from src.players.domain.service import DomaineService
 from src.players.domain.repository import PlayerRepository
 
+
 class PlayerService():
-    def __init__(self, player_repository: PlayerRepository):
-        self.player_repository = player_repository 
+    def __init__(self, repository: PlayerRepository):
+        self.repository = repository
 
-    def create_player_use_case(self, player_name: str) -> Player:
+    def create_player(self, request_username: str) -> Player:
 
-        
-        PlayerDomaineService.validate_length_name(player_name)
-        PlayerDomaineService.validate_is_ascii(player_name)
-        
-        player = Player(name=player_name)
-        
-        return self.player_repository.save(player)
+        DomaineService.is_valid_size(request_username)
+        DomaineService.is_ascii(request_username)
+
+        player = Player(username=request_username)
+
+        return self.repository.save(player)

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from src.players.infrastructure.api import router as players_router
 from src.database import engine
-from src.players.domain.model import Base
+from src.players.domain.dbModels import Base
 from sqlalchemy.ext.declarative import declarative_base
 
 Base.metadata.create_all(bind=engine)
@@ -13,4 +13,4 @@ app = FastAPI()
 async def root():
     return {"message": "Hello World"}
 
-app.include_router(players_router, prefix="/players", tags=["player"] )
+app.include_router(players_router, prefix="/players", tags=["players"])

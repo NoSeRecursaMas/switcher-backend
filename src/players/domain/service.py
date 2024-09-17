@@ -1,10 +1,11 @@
-from src.players.domain.model import Player
+from src.players.domain.dbModels import Player
 
-class PlayerDomaineService:
-    def validate_length_name(name: str):
-        if len(name) < 1 or len(name) > 32:
+
+class DomaineService:
+    def is_valid_size(username: str):
+        if len(username) < 1 or len(username) > 32:
             raise ValueError("El nombre debe tener entre 1 y 32 caracteres")
-    
-    def validate_is_ascii(name: str):
-        if not name.isascii():
+
+    def is_ascii(username: str):
+        if not username.isascii():
             raise ValueError("El nombre solo puede contener caracteres ASCII")
