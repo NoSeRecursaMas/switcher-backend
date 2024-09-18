@@ -2,7 +2,7 @@ from src.players.domain.models import PlayerResponse
 from fastapi import HTTPException
 
 
-class DomaineService:
+class DomainService:
     def is_valid_size(username: str):
         if len(username) < 1 or len(username) > 32:
             raise HTTPException(
