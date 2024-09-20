@@ -10,11 +10,12 @@ class ConnectionManager:
             self.active_room_connections[room_id] = []
         self.active_room_connections[room_id].append(websocket)
 
-    def disconnect_from_room(self, room_id: int, websocket: WebSocket):
+    async def disconnect_from_room(self, room_id: int, websocket: WebSocket):
         if room_id in self.active_room_connections:
             self.active_room_connections[room_id].remove(websocket)
             if not self.active_room_connections[room_id]:
                 del self.active_room_connections[room_id]
+            await websocket.close()
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
