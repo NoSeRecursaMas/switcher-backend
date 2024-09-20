@@ -15,7 +15,7 @@ class ConnectionManager:
             if websocket not in self.active_room_connections[room_id]:
                 self.active_room_connections[room_id].append(websocket)
         except Exception as e:
-            print(f"Error connecting to room {room_id} for player {player_id}: {e}")
+            raise RuntimeError(f"Error connecting to room {room_id} for player {player_id}")
 
     async def disconnect_from_room(self, room_id: int, player_id: int, websocket: WebSocket):
         try:
@@ -27,7 +27,7 @@ class ConnectionManager:
                     del self.players_connections[player_id]
                 await websocket.close()
         except Exception as e:
-            print(f"Error disconnecting from room {room_id} for player {player_id}: {e}")
+            raise RuntimeError(f"Error disconnecting from room {room_id} for player {player_id}")
 
     async def send_personal_message(self, message: str, player_id: int):
         try:
@@ -35,7 +35,7 @@ class ConnectionManager:
                 websocket = self.players_connections[player_id]
                 await websocket.send_text(message)
         except Exception as e:
-            print(f"Error sending personal message to player {player_id}: {e}")
+            raise RuntimeError(f"Error sending personal message to player {player_id}")
 
     async def broadcast_to_room(self, room_id: int, message: str):
         try:
@@ -43,4 +43,4 @@ class ConnectionManager:
                 for connection in self.active_room_connections[room_id]:
                     await connection.send_text(message)
         except Exception as e:
-            print(f"Error broadcasting to room {room_id}: {e}")
+            raise RuntimeError(f"Error broadcasting to room {room_id}")
