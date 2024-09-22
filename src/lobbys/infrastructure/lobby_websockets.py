@@ -29,18 +29,18 @@ class ConnectionManager:
         except Exception as e:
             raise RuntimeError(f"Error disconnecting from room {room_id} for player {player_id}")
 
-    async def send_personal_message(self, message: str, player_id: int):
+    async def send_personal_message(self, message: dict, player_id: int):
         try:
             if player_id in self.players_connections:
                 websocket = self.players_connections[player_id]
-                await websocket.send_text(message)
+                await websocket.send_json(message)
         except Exception as e:
             raise RuntimeError(f"Error sending personal message to player {player_id}")
 
-    async def broadcast_to_room(self, room_id: int, message: str):
+    async def broadcast_to_room(self, room_id: int, message: dict):
         try:
             if room_id in self.active_room_connections:
                 for connection in self.active_room_connections[room_id]:
-                    await connection.send_text(message)
+                    await connection.send_json(message)
         except Exception as e:
             raise RuntimeError(f"Error broadcasting to room {room_id}")
