@@ -10,4 +10,4 @@ class CreteLobbyRequest(BaseModel):
     lobbyName: str
     min_players: int
     max_players: int
-    password: str
+    password: str = None
