@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeingKey
+from sqlalchemy import Column, Integer, String, ForeignKey
 from src.database import Base
 
 
@@ -11,7 +11,7 @@ class Lobby(Base):
     max_players = Column(Integer, nullable=True)
     password = Column(String, nullable=True)
 
-    host = Column(Integer, ForeingKey('players.playerID'))
+    owner = Column(Integer, ForeignKey('players.playerID'))
 
     def __repr__(self):
         return f"<Lobby(name={self.name})>"
