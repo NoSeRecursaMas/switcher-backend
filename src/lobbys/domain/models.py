@@ -5,9 +5,9 @@ class LobbyResponse(BaseModel):
     lobbyID: int
 
 
-class CreteLobbyRequest(BaseModel):
+class CreateLobbyRequest(BaseModel):
     owner: int
-    lobbyName: str
+    name: str
     min_players: int
     max_players: int
     password: str = None
