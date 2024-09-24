@@ -14,4 +14,4 @@ class DomaineService:
 
     def validate_owner_exist(self, owner: str):
         if not self.repository.find(owner):
-            raise HTTPException(status_code=404, detail="Owner not found")
+            raise HTTPException(status_code=404, detail="El valor proporcionado no cumple con el owner indicado")
