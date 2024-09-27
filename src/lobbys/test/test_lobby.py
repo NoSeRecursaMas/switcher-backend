@@ -76,7 +76,7 @@ def test_create_lobby_invalid_owner(new_mock, mock_db):
     response = new_mock.post('/lobbys/', json=mock_lobby)
     assert response.status_code == 404
     assert response.json() == {
-        'detail': 'El propietario proporcionado no existe.'}
+        'detail': 'El jugador proporcionado no existe.'}
 
 
 def test_create_lobby_name_not_ascii(new_mock, mock_db):

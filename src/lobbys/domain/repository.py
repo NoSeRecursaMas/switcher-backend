@@ -18,4 +18,11 @@ class LobbyRepository(ABC):
     @abstractmethod
     def is_owner(self, player_id: int) -> bool:
         pass
-    
+
+    @abstractmethod
+    def save_lobby_player(self, playerID: int, lobbyID: int) -> None:
+        pass
+
+    @abstractmethod
+    def player_in_lobby(self, playerID: int, lobbyID: int) -> bool:
+        pass
