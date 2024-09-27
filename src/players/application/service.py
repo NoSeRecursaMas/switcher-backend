@@ -10,7 +10,7 @@ class PlayerService():
 
     def create_player(self, request_username: PlayerUsername) -> PlayerResponse:
 
-        DomaineService.validate_username(request_username.username)
+        DomainService.validate_username(request_username.username)
 
         saved_player = self.repository.save(request_username)
 
