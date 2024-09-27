@@ -27,7 +27,7 @@ def redirect_to_docs():
 
 app.include_router(players_router, prefix="/players", tags=["players"])
 
-app.include_router(lobbys_router, prefix="/lobbys", tags=["lobbys"])
+app.include_router(lobbys_router, prefix="/rooms", tags=["lobbys"])
 
 
 if __name__ == "__main__":
