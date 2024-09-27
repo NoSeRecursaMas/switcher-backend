@@ -38,7 +38,8 @@ class DomainService:
         DomainService.validate_max_players(max_players)
         DomainService.validate_player_range(min_players, max_players)
 
-    def validate_owner_exists(self, owner: str):
-        if not self.repository.find(owner):
+    def validate_player_exists(self, player: int):
+        if not self.repository.find(player):
             raise HTTPException(
                 status_code=404, detail="El propietario proporcionado no existe.")
+    

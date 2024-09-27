@@ -4,7 +4,6 @@ from pydantic import BaseModel
 class LobbyResponse(BaseModel):
     lobbyID: int
 
-
 class CreateLobbyRequest(BaseModel):
     owner: int
     name: str

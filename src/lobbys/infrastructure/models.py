@@ -15,3 +15,9 @@ class Lobby(Base):
 
     def __repr__(self):
         return f"<Lobby(name={self.name})>"
+
+class PlayerLobby(Base):
+    __tablename__ = 'player_lobby_association'
+
+    playerID = Column(Integer, ForeignKey('players.playerID', ondelete='CASCADE'), primary_key=True)
+    lobbyID = Column(Integer, ForeignKey('lobbys.lobbyID', ondelete='CASCADE'), primary_key=True)
