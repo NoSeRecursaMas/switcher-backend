@@ -52,3 +52,25 @@ def create_mock_lobby(mock_db, owner_exists=True, lobbyID=1, name="test_lobby", 
         "password": password,
         "owner": owner
     }
+
+def list_mock_lobby (mock_db, lobbies_data):
+    
+    mock_lobbies =  []
+
+    for lobby in lobbies_data:
+        mock_lobby = MagicMock()
+        mock_lobby.lobbyID = lobby['lobbyID']
+        mock_lobby.name = lobby['roomName']
+        mock_lobby.max_players = lobby['max_players']
+        mock_lobby.private = lobby['private']
+        mock_lobbies.append(mock_lobby)
+  # Mock para el método all()
+    list_lobbies_mock = MagicMock()
+    list_lobbies_mock.all.return_value = mock_lobbies
+
+    # Mock para el método order_by()
+    query_mock = MagicMock()
+    query_mock.order_by.return_value = list_lobbies_mock
+
+    # Asignar query_mock al método query de mock_db
+    mock_db.query.return_value = query_mock

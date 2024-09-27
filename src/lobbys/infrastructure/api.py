@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from src.lobbys.application.service import LobbyService
 from src.players.infrastructure.repository import SQLAlchemyRepository as PlayerSQLAlchemyRepository
 from src.lobbys.infrastructure.repository import SQLAlchemyRepository as LobbySQLAlchemyRepository
-from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest
+from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest, GetLobbyResponse
 
 router = APIRouter()
 
@@ -17,3 +17,14 @@ def create_lobby(lobby_data: CreateLobbyRequest, db: Session = Depends(get_db)) 
 
     lobby = service.create_lobby(lobby_data)
     return lobby
+
+
+@router.get("",status_code=200)
+def get_lobby (db: Session = Depends(get_db)) -> list[GetLobbyResponse]:
+
+    lobby_repository = LobbySQLAlchemyRepository(db)
+    service = LobbyService(lobby_repository)
+
+    lobby_all = service.get_lobby()
+
+    return lobby_all

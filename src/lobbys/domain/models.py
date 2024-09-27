@@ -11,3 +11,13 @@ class CreateLobbyRequest(BaseModel):
     min_players: int
     max_players: int
     password: str = None
+
+
+class GetLobbyResponse(BaseModel):
+    lobbyID: int
+    roomName: str
+    maxPlayers: int
+    actualPlayers: int
+    #started: bool
+    private: bool
+
