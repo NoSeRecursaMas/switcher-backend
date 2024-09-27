@@ -28,6 +28,3 @@ class PlayerLobby(Base):
                       ondelete='CASCADE'), primary_key=True)
     lobbyID = Column(Integer, ForeignKey('lobbys.lobbyID',
                      ondelete='CASCADE'), primary_key=True)
-
-    lobbys = relationship('Lobby', secondary='PlayerLobby',
-                          back_populates='players')

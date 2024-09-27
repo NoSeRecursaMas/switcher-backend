@@ -21,10 +21,10 @@ class SQLAlchemyRepository(PlayerRepository):
 
     def find(self, playerID: int) -> Union[PlayerResponse, None]:
 
-        player_infra = self.db.query(Player).filter(Player.playerID == playerID).first()
+        player_infra = self.db.query(Player).filter(
+            Player.playerID == playerID).first()
 
         if player_infra is None:
             return None
 
         return PlayerResponse(playerID=player_infra.playerID, username=player_infra.username)
-        

@@ -7,7 +7,7 @@ from src.players.domain.repository import PlayerRepository
 class LobbyService():
     def __init__(self, repository: LobbyRepository, player_repository: PlayerRepository):
         self.repository = repository
-        self.domain_service = DomainService(player_repository)
+        self.domain_service = DomainService(player_repository, repository)
 
     def create_lobby(self, lobby_data: CreateLobbyRequest) -> LobbyResponse:
 
@@ -26,7 +26,7 @@ class LobbyService():
 
         self.domain_service.validate_player_exists(player_id)
         self.domain_service.validate_player_in_lobby(player_id, lobby_id)
-        self.domain_service.validate_player_is_not_owner(player_id, lobby_id)
+        self.domain_service.validate_player_is_not_owner(player_id)
 
         self.repository.remove_player_lobby_association(player_id=player_id)
 

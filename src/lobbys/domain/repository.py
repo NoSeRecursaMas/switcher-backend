@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest
+from src.players.domain.models import PlayerID
 
 
 class LobbyRepository(ABC):

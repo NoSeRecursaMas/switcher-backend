@@ -1,5 +1,6 @@
 from fastapi import WebSocket
 
+
 class ConnectionManager:
     def __init__(self):
         self.active_room_connections: dict[int, list[WebSocket]] = {}
@@ -15,7 +16,8 @@ class ConnectionManager:
             if websocket not in self.active_room_connections[room_id]:
                 self.active_room_connections[room_id].append(websocket)
         except Exception as e:
-            raise RuntimeError(f"Error connecting to room {room_id} for player {player_id}")
+            raise RuntimeError(f"Error connecting to room {
+                               room_id} for player {player_id}")
 
     async def disconnect_from_room(self, room_id: int, player_id: int, websocket: WebSocket):
         try:
@@ -27,7 +29,8 @@ class ConnectionManager:
                     del self.players_connections[player_id]
                 await websocket.close()
         except Exception as e:
-            raise RuntimeError(f"Error disconnecting from room {room_id} for player {player_id}")
+            raise RuntimeError(f"Error disconnecting from room {
+                               room_id} for player {player_id}")
 
     async def send_personal_message(self, message: dict, player_id: int):
         try:
@@ -35,7 +38,8 @@ class ConnectionManager:
                 websocket = self.players_connections[player_id]
                 await websocket.send_json(message)
         except Exception as e:
-            raise RuntimeError(f"Error sending personal message to player {player_id}")
+            raise RuntimeError(
+                f"Error sending personal message to player {player_id}")
 
     async def broadcast_to_room(self, room_id: int, message: dict):
         try:
