@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
 from src.database import get_db
 from sqlalchemy.orm import Session
 from src.lobbys.application.service import LobbyService
