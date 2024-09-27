@@ -16,7 +16,7 @@ switcher-backend/
 ├── README.md
 ├── requirements.txt
 └── src
-    ├── api.py
+    ├── main.py
     ├── games
     │   ├── application         # Casos de uso, donde se aplican las reglas del dominio
     │   ├── domain              # Lógica de negocio y reglas específicas
