@@ -14,6 +14,7 @@ class CreteLobbyRequest(BaseModel):
     password: Optional[str] = None
 
 class RoomInfo(BaseModel):
+    hostID: int
     roomID: int
     roomName: str
     minPlayers: int
