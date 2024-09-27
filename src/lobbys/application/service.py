@@ -12,9 +12,12 @@ class LobbyService():
     def create_lobby(self, lobby_data: CreateLobbyRequest) -> LobbyResponse:
 
         DomainService.validate_lobby_name(lobby_data.name)
-        DomainService.validate_player_count(lobby_data.min_players, lobby_data.max_players)
+        DomainService.validate_player_count(
+            lobby_data.min_players, lobby_data.max_players)
         self.domain_service.validate_owner_exists(lobby_data.owner)
 
         saved_lobby = self.repository.save(lobby_data)
+        self.repository.save_lobby_player(
+            saved_lobby.lobbyID, lobby_data.owner)
 
         return saved_lobby

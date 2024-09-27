@@ -1,7 +1,7 @@
 from src.lobbys.domain.repository import LobbyRepository
 from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest
 from sqlalchemy.orm import Session
-from src.lobbys.infrastructure.models import Lobby
+from src.lobbys.infrastructure.models import Lobby, PlayerLobby
 
 
 class SQLAlchemyRepository(LobbyRepository):
@@ -22,3 +22,9 @@ class SQLAlchemyRepository(LobbyRepository):
         self.db.refresh(lobby_infra)
 
         return LobbyResponse(lobbyID=lobby_infra.lobbyID)
+
+    def save_lobby_player(self, lobbyID: int, playerID: int):
+
+        player_lobby_entry = PlayerLobby(lobbyID=lobbyID, playerID=playerID)
+        self.db.add(player_lobby_entry)
+        self.db.commit()
