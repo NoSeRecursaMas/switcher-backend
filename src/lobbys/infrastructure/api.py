@@ -10,7 +10,6 @@ from src.lobbys.infrastructure.lobby_websockets import ConnectionManager
 
 lobby_router = APIRouter()
 websocket_router = APIRouter()
-chatRouter = APIRouter()
 
 manager = ConnectionManager()  
 
