@@ -8,3 +8,8 @@ class PlayerResponse(BaseModel):
 
 class PlayerUsername(BaseModel):
     username: str
+
+
+class PlayerLobby(BaseModel):
+    playerID: int
+    lobbyID: int

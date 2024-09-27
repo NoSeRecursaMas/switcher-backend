@@ -39,3 +39,21 @@ def create_mock_player(mock_db, player_id, username):
         "playerID": player_id,
         "username": username
     }
+
+    
+def create_mock_lobby(mock_db, owner_exists=True, lobbyID=1, name="test_lobby", min_players=2, max_players=4, owner=1, password=""):
+
+    if owner_exists:
+        mock_db.refresh.side_effect = lambda x: setattr(x, 'lobbyID', lobbyID)
+        create_mock_player(mock_db, player_id=owner)
+    else:
+        mock_db.query().filter().first.return_value = None
+
+    return {
+        "name": name,
+        "min_players": min_players,
+        "max_players": max_players,
+        "password": password,
+        "owner": owner
+    }
+
