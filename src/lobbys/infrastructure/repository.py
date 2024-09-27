@@ -50,6 +50,6 @@ class SQLAlchemyRepository(LobbyRepository):
         self.db.commit()
 
     def player_in_lobby(self, playerID: int, lobbyID: int) -> bool:
-        player_lobby = self.db.query(PlayerLobby).filter(
-            PlayerLobby.playerID == playerID, PlayerLobby.lobbyID == lobbyID).first()
+        player_lobby = self.db.query(PlayerLobby).filter_by(
+            playerID=playerID, lobbyID=lobbyID).first()
         return player_lobby is not None
