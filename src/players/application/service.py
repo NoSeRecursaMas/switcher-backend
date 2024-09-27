@@ -1,6 +1,6 @@
 
 from src.players.domain.models import PlayerResponse, PlayerUsername
-from src.players.domain.service import DomaineService
+from src.players.domain.service import DomainService
 from src.players.domain.repository import PlayerRepository
 
 
