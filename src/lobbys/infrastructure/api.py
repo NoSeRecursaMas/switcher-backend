@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
 from src.database import get_db
 from sqlalchemy.orm import Session
 from src.lobbys.application.service import LobbyService
@@ -9,6 +10,7 @@ from src.lobbys.infrastructure.lobby_websockets import ConnectionManager
 
 lobby_router = APIRouter()
 websocket_router = APIRouter()
+chatRouter = APIRouter()
 
 manager = ConnectionManager()  
 
@@ -18,10 +20,10 @@ async def websocket_endpoint(websocket: WebSocket, game_id: int, player_id: int)
     try:
         while True:
             data = await websocket.receive_json()
-            if data["type"] == "update":
-                print("Under construction")
+            if data["type"] == "message":
+                await manager.broadcast_to_room(room_id=game_id, message=data["content"])
     except WebSocketDisconnect:
-        await manager.disconnect_from_room(room_id=game_id, player_id=player_id, websocket=websocket)  # Añadido await
+        await manager.disconnect_from_room(room_id=game_id, player_id=player_id, websocket=websocket)  
 
 
 @lobby_router.post("", status_code=201)
