@@ -36,7 +36,7 @@ class SQLAlchemyRepository(LobbyRepository):
         lobbies_list = []
         
         for lobby in lobbies_all:
-            lobby_infra = GetLobbyResponse(lobbyID=lobby.lobbyID,
+            lobby_infra = GetLobbyResponse(roomID=lobby.lobbyID,
                                            roomName=lobby.name,
                                            maxPlayers=lobby.max_players,
                                            actualPlayers=self.get_actual_players(lobby.lobbyID),

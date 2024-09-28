@@ -14,7 +14,7 @@ class CreateLobbyRequest(BaseModel):
 
 
 class GetLobbyResponse(BaseModel):
-    lobbyID: int
+    roomID: int
     roomName: str
     maxPlayers: int
     actualPlayers: int

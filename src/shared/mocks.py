@@ -73,10 +73,10 @@ def list_mock_lobby(mock_db, lobbies_data):
 
     for lobby in lobbies_data:
         mock_lobby = MagicMock()
-        mock_lobby.lobbyID = lobby['lobbyID']
+        mock_lobby.lobbyID = lobby['roomID']
         mock_lobby.name = lobby['roomName']
         mock_lobby.max_players = lobby['maxPlayers']
-        mock_lobby.actual_players = lobby['actualPlayers']
+        mock_lobby.actualPlayers = lobby['actualPlayers']
         mock_lobby.started = lobby['started']
         mock_lobby.private = lobby['private']
         # Simular la relación de jugadores (puedes ajustar la cantidad de jugadores en cada lobby)
