@@ -21,9 +21,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/", tags=["Root"])
 def redirect_to_docs():
     return RedirectResponse(url="/docs/")
+
 
 app.include_router(players_router, prefix="/players", tags=["players"])
 
@@ -31,4 +33,4 @@ app.include_router(lobbys_router, prefix="/rooms", tags=["lobbys"])
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0",reload=True, port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)

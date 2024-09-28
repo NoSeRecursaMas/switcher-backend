@@ -19,8 +19,8 @@ def create_lobby(lobby_data: CreateLobbyRequest, db: Session = Depends(get_db)) 
     return lobby
 
 
-@router.get("",status_code=200)
-def get_lobby (db: Session = Depends(get_db)) -> list[GetLobbyResponse]:
+@router.get("", status_code=200)
+def get_lobby(db: Session = Depends(get_db)) -> list[GetLobbyResponse]:
 
     lobby_repository = LobbySQLAlchemyRepository(db)
     service = LobbyService(lobby_repository)
@@ -29,7 +29,7 @@ def get_lobby (db: Session = Depends(get_db)) -> list[GetLobbyResponse]:
 
     return lobby_all
 
-
+  
 @router.get("/{lobby_id}",status_code=200)
 def get_data_lobby(lobby_id, db: Session = Depends(get_db)) -> GetLobbyData:
 

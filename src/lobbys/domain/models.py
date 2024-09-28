@@ -1,17 +1,17 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 class LobbyResponse(BaseModel):
-    lobbyID: int
+    roomID: int
 
 
 class CreateLobbyRequest(BaseModel):
-    owner: int
-    name: str
-    min_players: int
-    max_players: int
-    password: str = None
-
+    playerID: int
+    roomName: str
+    minPlayers: int
+    maxPlayers: int
+    password: Optional[str] = None
 
 class GetLobbyResponse(BaseModel):
     roomID: int

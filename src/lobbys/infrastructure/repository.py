@@ -11,45 +11,47 @@ class SQLAlchemyRepository(LobbyRepository):
 
     def save(self, lobby: CreateLobbyRequest) -> LobbyResponse:
 
-        lobby_infra = Lobby(name=lobby.name,
-                            min_players=lobby.min_players,
-                            max_players=lobby.max_players,
+        lobby_infra = Lobby(name=lobby.roomName,
+                            minPlayers=lobby.minPlayers,
+                            maxPlayers=lobby.maxPlayers,
                             password=lobby.password,
-                            owner=lobby.owner
+                            owner=lobby.playerID
                             )
 
         self.db.add(lobby_infra)
         self.db.commit()
         self.db.refresh(lobby_infra)
 
-        return LobbyResponse(lobbyID=lobby_infra.lobbyID)
+        return LobbyResponse(roomID=lobby_infra.roomID)
 
-    def save_lobby_player(self, lobbyID: int, playerID: int):
+    def save_lobby_player(self, roomID: int, playerID: int):
 
-        player_lobby_entry = PlayerLobby(lobbyID=lobbyID, playerID=playerID)
+        player_lobby_entry = PlayerLobby(roomID=roomID, playerID=playerID)
         self.db.add(player_lobby_entry)
         self.db.commit()
 
     def get_all(self) -> list[GetLobbyResponse]:
-        
-        lobbies_all = self.db.query(Lobby).order_by(Lobby.lobbyID).all()
+
+        lobbies_all = self.db.query(Lobby).order_by(Lobby.roomID).all()
         lobbies_list = []
-        
+
         for lobby in lobbies_all:
-            lobby_infra = GetLobbyResponse(roomID=lobby.lobbyID,
+            lobby_infra = GetLobbyResponse(roomID=lobby.roomID,
                                            roomName=lobby.name,
-                                           maxPlayers=lobby.max_players,
-                                           actualPlayers=self.get_actual_players(lobby.lobbyID),
+                                           maxPlayers=lobby.maxPlayers,
+                                           actualPlayers=self.get_actual_players(
+                                               lobby.roomID),
                                            started=False,
-                                           private= not lobby.password 
+                                           private=not lobby.password
                                            )
             lobbies_list.append(lobby_infra)
-            
+
         return lobbies_list
-    
-    def get_actual_players(self, lobbyID: int) -> int:
-        lobby = self.db.query(Lobby).filter(Lobby.lobbyID == lobbyID).first()    
-        return len(lobby.players)
+
+    def get_actual_players(self, roomID: int) -> int:
+        players = self.db.query(PlayerLobby).filter(
+            PlayerLobby.roomID == roomID).all()
+        return len(players)
         
     def get_data_lobby(self, lobby_id) -> GetLobbyData:
         lobby = self.db.query(Lobby).filter(Lobby.lobbyID == lobby_id).first()

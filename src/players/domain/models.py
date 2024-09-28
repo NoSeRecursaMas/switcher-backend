@@ -12,4 +12,4 @@ class PlayerUsername(BaseModel):
 
 class PlayerLobby(BaseModel):
     playerID: int
-    lobbyID: int
+    roomID: int

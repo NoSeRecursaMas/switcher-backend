@@ -6,10 +6,10 @@ from sqlalchemy.orm import relationship
 class Lobby(Base):
     __tablename__ = 'lobbys'
 
-    lobbyID = Column(Integer, primary_key=True, index=True)
+    roomID = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=True)
-    min_players = Column(Integer, nullable=True)
-    max_players = Column(Integer, nullable=True)
+    minPlayers = Column(Integer, nullable=True)
+    maxPlayers = Column(Integer, nullable=True)
     password = Column(String, nullable=True)
 
     owner = Column(Integer, ForeignKey('players.playerID'))
@@ -26,5 +26,5 @@ class PlayerLobby(Base):
 
     playerID = Column(Integer, ForeignKey('players.playerID',
                       ondelete='CASCADE'), primary_key=True)
-    lobbyID = Column(Integer, ForeignKey('lobbys.lobbyID',
-                     ondelete='CASCADE'), primary_key=True)
+    roomID = Column(Integer, ForeignKey('lobbys.roomID',
+                                        ondelete='CASCADE'), primary_key=True)
