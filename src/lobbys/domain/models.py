@@ -1,15 +1,16 @@
 from typing import Dict, List, Any, Optional
 from pydantic import BaseModel
-
+from typing import Optional
 
 class LobbyResponse(BaseModel):
-    lobbyID: int
+    roomID: int
 
 class CreateLobbyRequest(BaseModel):
-    owner: int
-    name: str
-    min_players: int
-    max_players: int
+    password: str = None
+    playerID: int
+    roomName: str
+    minPlayers: int
+    maxPlayers: int
     password: Optional[str] = None
 
 class RoomInfo(BaseModel):
@@ -31,7 +32,6 @@ class Status(BaseModel):
 class WebsocketsUpdateResponse(BaseModel):
     msg: str
     status: Status
-    password: str = None
 
 class GetLobbyResponse(BaseModel):
     roomID: int

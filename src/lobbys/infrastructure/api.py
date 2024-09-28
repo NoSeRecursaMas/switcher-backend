@@ -38,7 +38,6 @@ async def create_lobby(lobby_data: CreateLobbyRequest, db: Session = Depends(get
 
 @lobby_router.get("",status_code=200)
 def get_lobby (db: Session = Depends(get_db)) -> list[GetLobbyResponse]:
-
     lobby_repository = LobbySQLAlchemyRepository(db)
     service = LobbyService(lobby_repository)
 
