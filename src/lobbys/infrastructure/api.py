@@ -39,3 +39,14 @@ def get_data_lobby(lobby_id, db: Session = Depends(get_db)) -> GetLobbyData:
     lobby_data = service.get_data_lobby(lobby_id)
 
     return lobby_data
+
+@router.put("/{lobby_id}/join", status_code=200)
+def join_lobby(lobby_id:int, db: Session = Depends(get_db)) -> LobbyResponse:
+
+    lobby_repository = LobbySQLAlchemyRepository(db)
+    player_repository = PlayerSQLAlchemyRepository(db)
+    service = LobbyService(lobby_repository, player_repository)
+
+    service.join_lobby(lobby_id)
+
+    return None
