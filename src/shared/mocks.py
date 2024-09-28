@@ -4,7 +4,6 @@ from src.main import app
 from src.database import get_db
 import pytest
 
-
 client = TestClient(app)
 
 
@@ -30,22 +29,38 @@ def new_mock(mock_db):
     app.dependency_overrides.clear()
 
 
-def create_mock_player(mock_db, player_id=1, username='test'):
+def create_mock_player(mock_db, player_id, username):
     mock_player = MagicMock()
     mock_player.playerID = player_id
     mock_player.username = username
+    mock_db.refresh.side_effect = lambda x: setattr(x, 'playerID', player_id) if hasattr(x, 'playerID') else None
     mock_db.query().filter().first.return_value = mock_player
+    return {
+        "playerID": player_id,
+        "username": username
+    }
 
-
+    
 def create_mock_lobby(mock_db, owner_exists=True, lobbyID=1, name="test_lobby", min_players=2, max_players=4, owner=1, password=""):
+    mock_lobby = MagicMock()
+    mock_lobby.lobbyID = lobbyID
+    mock_lobby.name = name
+    mock_lobby.min_players = min_players
+    mock_lobby.max_players = max_players
+    mock_lobby.password = password
+    mock_lobby.owner = owner
 
     if owner_exists:
-        mock_db.refresh.side_effect = lambda x: setattr(x, 'lobbyID', lobbyID)
-        create_mock_player(mock_db, player_id=owner)
+        create_mock_player(mock_db, player_id=owner, username="test")
     else:
         mock_db.query().filter().first.return_value = None
 
+    mock_db.add.return_value = mock_lobby
+    mock_db.commit.return_value = None
+    mock_db.refresh.side_effect = lambda x: setattr(x, 'lobbyID', lobbyID)
+
     return {
+        "lobbyID": lobbyID,
         "name": name,
         "min_players": min_players,
         "max_players": max_players,
