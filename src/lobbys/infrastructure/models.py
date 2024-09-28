@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from src.database import Base
+from sqlalchemy.orm import relationship
 
 
 class Lobby(Base):
@@ -12,6 +13,9 @@ class Lobby(Base):
     password = Column(String, nullable=True)
 
     owner = Column(Integer, ForeignKey('players.playerID'))
+
+    players = relationship(
+        'Player', secondary='PlayerLobby', back_populates='lobbys')
 
     def __repr__(self):
         return f"<Lobby(name={self.name})>"

@@ -6,6 +6,7 @@ from src.players.infrastructure.repository import SQLAlchemyRepository as Player
 from src.lobbys.infrastructure.repository import SQLAlchemyRepository as LobbySQLAlchemyRepository
 from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest
 from src.lobbys.infrastructure.lobby_websockets import ConnectionManager
+from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest, GetLobbyResponse, GetLobbyData
 
 lobby_router = APIRouter()
 websocket_router = APIRouter()
@@ -31,3 +32,25 @@ def create_lobby(lobby_data: CreateLobbyRequest, db: Session = Depends(get_db)) 
     service = LobbyService(lobby_repository, player_repository)
     lobby = service.create_lobby(lobby_data)
     return lobby
+
+
+@lobby_router.get("",status_code=200)
+def get_lobby (db: Session = Depends(get_db)) -> list[GetLobbyResponse]:
+
+    lobby_repository = LobbySQLAlchemyRepository(db)
+    service = LobbyService(lobby_repository)
+
+    lobby_all = service.get_lobby()
+
+    return lobby_all
+
+
+@lobby_router.get("/{lobby_id}",status_code=200)
+def get_data_lobby(lobby_id, db: Session = Depends(get_db)) -> GetLobbyData:
+
+    lobby_repository = LobbySQLAlchemyRepository(db)
+    service = LobbyService(lobby_repository)
+
+    lobby_data = service.get_data_lobby(lobby_id)
+
+    return lobby_data

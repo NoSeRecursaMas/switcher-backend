@@ -1,7 +1,8 @@
 from src.lobbys.domain.repository import LobbyRepository
-from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest
+from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest, GetLobbyResponse, GetLobbyData
 from sqlalchemy.orm import Session
 from src.lobbys.infrastructure.models import Lobby, PlayerLobby
+from src.players.infrastructure.models import Player
 
 
 class SQLAlchemyRepository(LobbyRepository):
@@ -28,3 +29,41 @@ class SQLAlchemyRepository(LobbyRepository):
         player_lobby_entry = PlayerLobby(lobbyID=lobbyID, playerID=playerID)
         self.db.add(player_lobby_entry)
         self.db.commit()
+
+    def get_all(self) -> list[GetLobbyResponse]:
+        
+        lobbies_all = self.db.query(Lobby).order_by(Lobby.lobbyID).all()
+        lobbies_list = []
+        
+        for lobby in lobbies_all:
+            lobby_infra = GetLobbyResponse(roomID=lobby.lobbyID,
+                                           roomName=lobby.name,
+                                           maxPlayers=lobby.max_players,
+                                           actualPlayers=self.get_actual_players(lobby.lobbyID),
+                                           started=False,
+                                           private= not lobby.password 
+                                           )
+            lobbies_list.append(lobby_infra)
+            
+        return lobbies_list
+    
+    def get_actual_players(self, lobbyID: int) -> int:
+        lobby = self.db.query(Lobby).filter(Lobby.lobbyID == lobbyID).first()    
+        return len(lobby.players)
+        
+    def get_data_lobby(self, lobby_id) -> GetLobbyData:
+        lobby = self.db.query(Lobby).filter(Lobby.lobbyID == lobby_id).first()
+        players = self.db.query(Player).join(PlayerLobby).filter(PlayerLobby.lobbyID == lobby_id).all()
+    
+        players_list = [{"playerID": str(player.playerID), "username": player.username} for player in players]
+
+        lobby_data = GetLobbyData(
+            hostID=lobby.owner,
+            roomName=lobby.name,
+            roomID=lobby.lobbyID,
+            minPlayers=lobby.min_players,
+            maxPlayers=lobby.max_players,
+            players=players_list
+        )
+    
+        return lobby_data

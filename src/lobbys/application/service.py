@@ -5,7 +5,7 @@ from src.players.domain.repository import PlayerRepository
 
 
 class LobbyService():
-    def __init__(self, repository: LobbyRepository, player_repository: PlayerRepository):
+    def __init__(self, repository: LobbyRepository, player_repository: PlayerRepository = None):
         self.repository = repository
         self.domain_service = DomainService(player_repository)
 
@@ -21,3 +21,9 @@ class LobbyService():
             saved_lobby.lobbyID, lobby_data.owner)
 
         return saved_lobby
+
+    def get_lobby(self):
+        return self.repository.get_all()
+    
+    def get_data_lobby(self,lobby_id):
+        return self.repository.get_data_lobby(lobby_id)
