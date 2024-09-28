@@ -13,14 +13,6 @@ class CreateLobbyRequest(BaseModel):
     maxPlayers: int
     password: Optional[str] = None
 
-class RoomInfo(BaseModel):
-    hostID: int
-    roomID: int
-    roomName: str
-    minPlayers: int
-    maxPlayers: int
-    players: List[Dict[str, Any]] 
-
 class Status(BaseModel):
     currentTurn: int
     turnOrder: List[int]
