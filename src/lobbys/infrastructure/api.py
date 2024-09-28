@@ -28,13 +28,11 @@ async def websocket_endpoint(websocket: WebSocket, game_id: int, player_id: int)
 
 
 @lobby_router.post("", status_code=201)
-async def create_lobby(lobby_data: CreateLobbyRequest, db: Session = Depends(get_db)) -> LobbyResponse:
+def create_lobby(lobby_data: CreateLobbyRequest, db: Session = Depends(get_db)) -> LobbyResponse:
     lobby_repository = LobbySQLAlchemyRepository(db)
     player_repository = PlayerSQLAlchemyRepository(db)
     service = LobbyService(lobby_repository, player_repository)
     lobby = service.create_lobby(lobby_data)
-    lobby_data_response = get_data_lobby(lobby.roomID, db)
-    await manager.broadcast_to_room(lobby.roomID, lobby_data_response)
     return lobby
 
 
