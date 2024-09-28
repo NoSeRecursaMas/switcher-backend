@@ -2,6 +2,7 @@ from src.lobbys.domain.repository import LobbyRepository
 from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest, GetLobbyResponse
 from sqlalchemy.orm import Session
 from src.lobbys.infrastructure.models import Lobby, PlayerLobby
+from src.players.infrastructure.models import Player
 
 
 class SQLAlchemyRepository(LobbyRepository):
@@ -38,8 +39,15 @@ class SQLAlchemyRepository(LobbyRepository):
             lobby_infra = GetLobbyResponse(lobbyID=lobby.lobbyID,
                                            roomName=lobby.name,
                                            maxPlayers=lobby.max_players,
+                                           actualPlayers=self.get_actual_players(lobby.lobbyID),
+                                           started=False,
                                            private= not lobby.password 
                                            )
             lobbies_list.append(lobby_infra)
             
         return lobbies_list
+    
+    def get_actual_players(self, lobbyID: int) -> int:
+        lobby = self.db.query(Lobby).filter(Lobby.lobbyID == lobbyID).first()    
+        return len(lobby.players)
+        

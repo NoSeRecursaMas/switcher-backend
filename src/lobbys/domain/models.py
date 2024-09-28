@@ -18,6 +18,6 @@ class GetLobbyResponse(BaseModel):
     roomName: str
     maxPlayers: int
     actualPlayers: int
-    #started: bool
+    started: bool
     private: bool
 

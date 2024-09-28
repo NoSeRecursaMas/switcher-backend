@@ -118,7 +118,7 @@ def test_create_lobbies_with_same_name(new_mock, mock_db):
 def test_get_all_lobbies(new_mock, mock_db):
 
     lobbies_data = [
-        {"lobbyID": 1, "roomName": "test_lobby", "max_players": 4, "private": False}
+        {"lobbyID": 1, "roomName": "test_lobby", "maxPlayers": 4,"actualPlayers":3,"started":False, "private": False}
     ]
     list_mock_lobby(mock_db,lobbies_data)
 
@@ -126,17 +126,17 @@ def test_get_all_lobbies(new_mock, mock_db):
     response = new_mock.get('/lobbys/')
     print("Response JSON:", response.json())  
     assert response.status_code == 200
-    assert response.json() == [{'lobbyID': 1, 'roomName': 'test_lobby', 'maxPlayers': 4, 'private': False}]
+    assert response.json() == [{'lobbyID': 1, 'roomName': 'test_lobby', 'maxPlayers': 4,'actualPlayers':3,'started':False, 'private': False}]
 
 
 
 def test_get_four_lobbies(new_mock, mock_db):
 
     lobbies_data = [
-        {"lobbyID": 1, "roomName": "test_lobby", "max_players": 4, "private": False},
-        {"lobbyID": 2, "roomName": "test_lobby2", "max_players": 4, "private": False},
-        {"lobbyID": 3, "roomName": "test_lobby3", "max_players": 4, "private": False},
-        {"lobbyID": 4, "roomName": "test_lobby4", "max_players": 4, "private": False}
+        {"lobbyID": 1, "roomName": "test_lobby", "maxPlayers": 4,"actualPlayers":2,"started":False, "private": False},
+        {"lobbyID": 2, "roomName": "test_lobby2", "maxPlayers": 4,"actualPlayers":2,"started":False, "private": False},
+        {"lobbyID": 3, "roomName": "test_lobby3", "maxPlayers": 4,"actualPlayers":2,"started":False, "private": False},
+        {"lobbyID": 4, "roomName": "test_lobby4", "maxPlayers": 4,"actualPlayers":2,"started":False, "private": False}
     ]
 
     list_mock_lobby(mock_db, lobbies_data)
@@ -145,9 +145,9 @@ def test_get_four_lobbies(new_mock, mock_db):
     assert response.status_code == 200
     print("Response JSON:", response.json())
     assert response.json() == [
-        {'lobbyID': 1, 'roomName': 'test_lobby', 'maxPlayers': 4, 'private': False},
-        {'lobbyID': 2, 'roomName': 'test_lobby2', 'maxPlayers': 4, 'private': False},
-        {'lobbyID': 3, 'roomName': 'test_lobby3', 'maxPlayers': 4, 'private': False},
-        {'lobbyID': 4, 'roomName': 'test_lobby4', 'maxPlayers': 4, 'private': False}]
+        {"lobbyID": 1, "roomName": "test_lobby", "maxPlayers": 4,"actualPlayers":2,"started":False, "private": False},
+        {"lobbyID": 2, "roomName": "test_lobby2", "maxPlayers": 4,"actualPlayers":2,"started":False, "private": False},
+        {"lobbyID": 3, "roomName": "test_lobby3", "maxPlayers": 4,"actualPlayers":2,"started":False, "private": False},
+        {"lobbyID": 4, "roomName": "test_lobby4", "maxPlayers": 4,"actualPlayers":2,"started":False, "private": False}]
 
     

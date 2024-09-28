@@ -53,24 +53,40 @@ def create_mock_lobby(mock_db, owner_exists=True, lobbyID=1, name="test_lobby", 
         "owner": owner
     }
 
-def list_mock_lobby (mock_db, lobbies_data):
-    
-    mock_lobbies =  []
+def list_mock_lobby(mock_db, lobbies_data):
+    mock_lobbies = []
 
     for lobby in lobbies_data:
         mock_lobby = MagicMock()
         mock_lobby.lobbyID = lobby['lobbyID']
         mock_lobby.name = lobby['roomName']
-        mock_lobby.max_players = lobby['max_players']
+        mock_lobby.max_players = lobby['maxPlayers']
+        mock_lobby.actual_players = lobby['actualPlayers']
+        mock_lobby.started = lobby['started']
         mock_lobby.private = lobby['private']
+        # Simular la relación de jugadores (puedes ajustar la cantidad de jugadores en cada lobby)
+        mock_lobby.players = [MagicMock() for _ in range(lobby['actualPlayers'])]  # Simula una lista de jugadores
         mock_lobbies.append(mock_lobby)
-  # Mock para el método all()
+
+    # Mock para el método all()
     list_lobbies_mock = MagicMock()
     list_lobbies_mock.all.return_value = mock_lobbies
 
     # Mock para el método order_by()
     query_mock = MagicMock()
     query_mock.order_by.return_value = list_lobbies_mock
+
+    # Mock para el método filter(), que se utiliza en get_actual_players
+    def filter_mock(*args, **kwargs):
+        # Extraer el lobbyID del filtro
+        lobbyID = args[0].right.value
+        # Encontrar el lobby con ese lobbyID
+        for mock_lobby in mock_lobbies:
+            if mock_lobby.lobbyID == lobbyID:
+                return MagicMock(first=MagicMock(return_value=mock_lobby))
+        return MagicMock(first=MagicMock(return_value=None))  # Si no se encuentra, devolver None
+
+    query_mock.filter.side_effect = filter_mock
 
     # Asignar query_mock al método query de mock_db
     mock_db.query.return_value = query_mock
