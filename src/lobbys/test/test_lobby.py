@@ -150,4 +150,12 @@ def test_get_four_lobbies(new_mock, mock_db):
         {"lobbyID": 3, "roomName": "test_lobby3", "maxPlayers": 4,"actualPlayers":2,"started":False, "private": False},
         {"lobbyID": 4, "roomName": "test_lobby4", "maxPlayers": 4,"actualPlayers":2,"started":False, "private": False}]
 
-    
+
+def test_get_lobbies_empty(new_mock, mock_db):
+
+    lobbies_data = []
+    list_mock_lobby(mock_db, lobbies_data)
+
+    response = new_mock.get('/lobbys/')
+    assert response.status_code == 200
+    assert response.json() == []
