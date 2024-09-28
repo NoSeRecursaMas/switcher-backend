@@ -27,4 +27,4 @@ class GetLobbyData(BaseModel):
     roomID: int
     minPlayers: int
     maxPlayers: int
-    players: list[tuple[int,str]]
+    players: list[dict[str, str]]

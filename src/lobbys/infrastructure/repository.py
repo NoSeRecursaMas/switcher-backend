@@ -51,18 +51,19 @@ class SQLAlchemyRepository(LobbyRepository):
         lobby = self.db.query(Lobby).filter(Lobby.lobbyID == lobbyID).first()    
         return len(lobby.players)
         
-    def get_data_lobby(self,lobby_id) -> GetLobbyData:
+    def get_data_lobby(self, lobby_id) -> GetLobbyData:
         lobby = self.db.query(Lobby).filter(Lobby.lobbyID == lobby_id).first()
         players = self.db.query(Player).join(PlayerLobby).filter(PlayerLobby.lobbyID == lobby_id).all()
-        players_list = []
-        for player in players:
-            players_list.append((player.playerID,player.username))
+    
+        players_list = [{"playerID": str(player.playerID), "username": player.username} for player in players]
 
-        lobby_data = GetLobbyData(hostID=lobby.owner,
-                                  roomName=lobby.name,
-                                  roomID=lobby.lobbyID,
-                                  minPlayers=lobby.min_players,
-                                  maxPlayers=lobby.max_players,
-                                  players=players_list)
-        
+        lobby_data = GetLobbyData(
+            hostID=lobby.owner,
+            roomName=lobby.name,
+            roomID=lobby.lobbyID,
+            minPlayers=lobby.min_players,
+            maxPlayers=lobby.max_players,
+            players=players_list
+        )
+    
         return lobby_data
