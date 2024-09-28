@@ -1,5 +1,5 @@
 from src.lobbys.domain.repository import LobbyRepository
-from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest, GetLobbyResponse
+from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest, GetLobbyResponse, GetLobbyData
 from sqlalchemy.orm import Session
 from src.lobbys.infrastructure.models import Lobby, PlayerLobby
 from src.players.infrastructure.models import Player
@@ -36,7 +36,7 @@ class SQLAlchemyRepository(LobbyRepository):
         lobbies_list = []
         
         for lobby in lobbies_all:
-            lobby_infra = GetLobbyResponse(lobbyID=lobby.lobbyID,
+            lobby_infra = GetLobbyResponse(roomID=lobby.lobbyID,
                                            roomName=lobby.name,
                                            maxPlayers=lobby.max_players,
                                            actualPlayers=self.get_actual_players(lobby.lobbyID),
@@ -51,3 +51,19 @@ class SQLAlchemyRepository(LobbyRepository):
         lobby = self.db.query(Lobby).filter(Lobby.lobbyID == lobbyID).first()    
         return len(lobby.players)
         
+    def get_data_lobby(self, lobby_id) -> GetLobbyData:
+        lobby = self.db.query(Lobby).filter(Lobby.lobbyID == lobby_id).first()
+        players = self.db.query(Player).join(PlayerLobby).filter(PlayerLobby.lobbyID == lobby_id).all()
+    
+        players_list = [{"playerID": str(player.playerID), "username": player.username} for player in players]
+
+        lobby_data = GetLobbyData(
+            hostID=lobby.owner,
+            roomName=lobby.name,
+            roomID=lobby.lobbyID,
+            minPlayers=lobby.min_players,
+            maxPlayers=lobby.max_players,
+            players=players_list
+        )
+    
+        return lobby_data

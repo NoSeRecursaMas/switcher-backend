@@ -73,10 +73,10 @@ def list_mock_lobby(mock_db, lobbies_data):
 
     for lobby in lobbies_data:
         mock_lobby = MagicMock()
-        mock_lobby.lobbyID = lobby['lobbyID']
+        mock_lobby.lobbyID = lobby['roomID']
         mock_lobby.name = lobby['roomName']
         mock_lobby.max_players = lobby['maxPlayers']
-        mock_lobby.actual_players = lobby['actualPlayers']
+        mock_lobby.actualPlayers = lobby['actualPlayers']
         mock_lobby.started = lobby['started']
         mock_lobby.private = lobby['private']
         # Simular la relación de jugadores (puedes ajustar la cantidad de jugadores en cada lobby)
@@ -105,3 +105,28 @@ def list_mock_lobby(mock_db, lobbies_data):
 
     # Asignar query_mock al método query de mock_db
     mock_db.query.return_value = query_mock
+
+
+
+def list_mock_data_lobby(mock_db, lobbies_data):
+    # Mock para simular la tabla Lobby
+    mock_lobby = MagicMock()
+    mock_lobby.owner = lobbies_data[0]["hostID"]
+    mock_lobby.name = lobbies_data[0]["roomName"]  # Aseguramos que sea un string
+    mock_lobby.lobbyID = lobbies_data[0]["roomID"]
+    mock_lobby.min_players = lobbies_data[0]["minPlayers"]
+    mock_lobby.max_players = lobbies_data[0]["maxPlayers"]
+
+    # Mock para la consulta de Lobby
+    mock_lobby_query = MagicMock()
+    mock_lobby_query.filter.return_value.first.return_value = mock_lobby
+    
+    # Simulamos la consulta para obtener los jugadores del lobby
+    mock_player_query = MagicMock()
+    mock_player_query.join.return_value.filter.return_value.all.return_value = [
+        MagicMock(playerID=player[0], username=player[1]) for player in lobbies_data[0]["players"]
+    ]
+    
+    # Asignamos los mocks a la base de datos mockeada
+    mock_db.query.side_effect = [mock_lobby_query, mock_player_query]
+
