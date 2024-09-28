@@ -13,16 +13,6 @@ class CreateLobbyRequest(BaseModel):
     maxPlayers: int
     password: Optional[str] = None
 
-
-'''
-    owner: int
-    name: str
-    minPlayers: int
-    maxPlayers: int
-    password: str = None
-'''
-
-
 class GetLobbyResponse(BaseModel):
     roomID: int
     roomName: str
@@ -30,3 +20,11 @@ class GetLobbyResponse(BaseModel):
     actualPlayers: int
     started: bool
     private: bool
+
+class GetLobbyData(BaseModel):
+    hostID: int
+    roomName: str
+    roomID: int
+    minPlayers: int
+    maxPlayers: int
+    players: list[dict[str, str]]

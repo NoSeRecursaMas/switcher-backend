@@ -24,3 +24,6 @@ class LobbyService():
 
     def get_lobby(self):
         return self.repository.get_all()
+    
+    def get_data_lobby(self,lobby_id):
+        return self.repository.get_data_lobby(lobby_id)
