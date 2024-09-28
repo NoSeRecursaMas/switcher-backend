@@ -21,3 +21,10 @@ class GetLobbyResponse(BaseModel):
     started: bool
     private: bool
 
+class GetLobbyData(BaseModel):
+    hostID: int
+    roomName: str
+    roomID: int
+    minPlayers: int
+    maxPlayers: int
+    players: list[tuple[int,str]]
