@@ -29,6 +29,5 @@ def create_lobby(lobby_data: CreateLobbyRequest, db: Session = Depends(get_db)) 
     lobby_repository = LobbySQLAlchemyRepository(db)
     player_repository = PlayerSQLAlchemyRepository(db)
     service = LobbyService(lobby_repository, player_repository)
-
     lobby = service.create_lobby(lobby_data)
     return lobby
