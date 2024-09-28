@@ -106,7 +106,7 @@ def list_mock_lobby(mock_db, lobbies_data):
     # Asignar query_mock al método query de mock_db
     mock_db.query.return_value = query_mock
 
-from unittest.mock import MagicMock
+
 
 def list_mock_data_lobby(mock_db, lobbies_data):
     # Mock para simular la tabla Lobby

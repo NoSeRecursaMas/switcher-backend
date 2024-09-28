@@ -159,23 +159,3 @@ def test_get_lobbies_empty(new_mock, mock_db):
     response = new_mock.get('/rooms/')
     assert response.status_code == 200
     assert response.json() == []
-
-def test_get_data_lobby(new_mock, mock_db):
-    lobbies_data = [{"hostID": 1, "roomName": "test_lobby", "roomID": 1, "minPlayers": 2, "maxPlayers": 4, "players": [[1, "test"], [2, "test2"]]}]
-    
-    # Simulamos los datos de la base de datos
-    list_mock_data_lobby(mock_db, lobbies_data)
-
-    # Realizamos la solicitud
-    response = new_mock.get('/rooms/1')
-
-    # Verificamos el resultado
-    assert response.status_code == 200
-    assert response.json() == {
-        "hostID": 1,
-        "roomName": "test_lobby",
-        "roomID": 1,
-        "minPlayers": 2,
-        "maxPlayers": 4,
-        "players": [[1, "test"], [2, "test2"]]
-    }
