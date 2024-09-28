@@ -31,8 +31,8 @@ async def create_lobby(lobby_data: CreateLobbyRequest, db: Session = Depends(get
     player_repository = PlayerSQLAlchemyRepository(db)
     service = LobbyService(lobby_repository, player_repository)
     lobby = service.create_lobby(lobby_data)
-    lobby_data_response = get_data_lobby(lobby.lobbyID, db)
-    await manager.broadcast_to_room(lobby.lobbyID, lobby_data_response)
+    lobby_data_response = get_data_lobby(lobby.roomID, db)
+    await manager.broadcast_to_room(lobby.roomID, lobby_data_response)
     return lobby
 
 
