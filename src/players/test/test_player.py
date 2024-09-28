@@ -4,7 +4,6 @@ import pytest
 def test_create_player(new_mock, mock_db):
 
     mock_player = create_mock_player(mock_db, player_id=1, username="mensio")
-    print(mock_player)
     response = new_mock.post("/players", json=mock_player)
     assert response.status_code == 201
     assert response.json() == {"playerID": 1, "username": "mensio"}
