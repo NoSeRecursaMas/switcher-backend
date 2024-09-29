@@ -27,7 +27,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: int, player_id: int,
             if data["type"] == "message":
                 await manager.broadcast_to_room(room_id=game_id, message=data["content"])
     except WebSocketDisconnect:
-        await manager.disconnect_from_room(room_id=lobby_id, player_id=player_id, websocket=websocket)  
+        await manager.disconnect_from_room(room_id=game_id, player_id=player_id, websocket=websocket)  
 
 
 @lobby_router.post("", status_code=201)
