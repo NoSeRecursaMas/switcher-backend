@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Union
 from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest,GetLobbyResponse, GetLobbyData
 
 class LobbyRepository(ABC):
@@ -17,3 +18,8 @@ class LobbyRepository(ABC):
     @abstractmethod
     def get_data_lobby(self,lobby_id) -> GetLobbyData:
         pass
+    
+    @abstractmethod
+    def find(self, roomID: int) -> bool:
+        pass
+    
