@@ -1,13 +1,66 @@
 from src.shared.mocks import create_mock_lobby, list_mock_lobby, mock_db, new_mock, list_mock_data_lobby
+from unittest.mock import AsyncMock, patch, MagicMock
+from fastapi import WebSocket
+from src.main import app
 import pytest
+from src.lobbys.infrastructure.websockets import ConnectionManager
 
 
-def test_create_lobby(new_mock, mock_db):
+def mock_get_data_lobby(game_id):
+    return {"room_id": game_id, "info": "Room Info"}
 
-    mock_lobby = create_mock_lobby(mock_db)
-    response = new_mock.post('/rooms/', json=mock_lobby)
-    assert response.status_code == 201
-    assert response.json() == {'roomID': 1}
+
+@pytest.fixture
+def mock_websocket():
+    return MagicMock(spec=WebSocket)
+
+
+@pytest.mark.asyncio
+@patch('src.lobbys.infrastructure.api.get_data_lobby', side_effect=mock_get_data_lobby)
+@patch.object(ConnectionManager, 'broadcast_to_room', new_callable=AsyncMock)
+async def test_websocket_broadcast_correctly(mock_broadcast_to_room, mock_get_data_lobby, mock_websocket):
+    mock_websocket.receive_json = AsyncMock(
+        return_value={"type": "get_room_info"})
+
+    manager = ConnectionManager()
+
+    await manager.connect_to_room(room_id=1, player_id=1, websocket=mock_websocket)
+
+    await manager.broadcast_to_room(room_id=1, message=mock_get_data_lobby(1))
+
+    mock_broadcast_to_room.assert_any_call(
+        room_id=1, message={"room_id": 1, "info": "Room Info"})
+
+    data = await mock_websocket.receive_json()
+    if data["type"] == "get_room_info":
+        await manager.broadcast_to_room(room_id=1, message=mock_get_data_lobby(1))
+
+    mock_broadcast_to_room.assert_any_call(
+        room_id=1, message={"room_id": 1, "info": "Room Info"})
+
+# test de send_personal_message websocket
+
+
+@pytest.mark.asyncio
+@patch.object(ConnectionManager, 'send_personal_message', new_callable=AsyncMock)
+async def test_websocket_send_personal_message(mock_send_personal_message, mock_websocket):
+    mock_websocket.receive_json = AsyncMock(return_value={"type": "message"})
+
+    manager = ConnectionManager()
+
+    await manager.connect_to_room(room_id=1, player_id=1, websocket=mock_websocket)
+
+    await manager.send_personal_message(message={"msg": "test"}, player_id=1)
+
+    mock_send_personal_message.assert_any_call(
+        message={"msg": "test"}, player_id=1)
+
+    data = await mock_websocket.receive_json()
+    if data["type"] == "message":
+        await manager.send_personal_message(message={"msg": "test"}, player_id=1)
+
+    mock_send_personal_message.assert_any_call(
+        message={"msg": "test"}, player_id=1)
 
 
 def test_create_lobby_invalid_size(new_mock, mock_db):

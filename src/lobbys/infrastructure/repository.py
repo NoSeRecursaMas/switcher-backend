@@ -89,6 +89,11 @@ class SQLAlchemyRepository(LobbyRepository):
 
         players_list = [{"playerID": str(
             player.playerID), "username": player.username} for player in players]
+        players = self.db.query(Player).join(PlayerLobby).filter(
+            PlayerLobby.roomID == lobby_id).all()
+
+        players_list = [{"playerID": str(
+            player.playerID), "username": player.username} for player in players]
 
         lobby_data = GetLobbyData(
             hostID=lobby.owner,

@@ -35,11 +35,6 @@ class Status(BaseModel):
 class WebsocketsUpdateResponse(BaseModel):
     msg: str
     status: Status
-    playerID: int
-    roomName: str
-    minPlayers: int
-    maxPlayers: int
-    password: Optional[str] = None
 
 
 class GetLobbyResponse(BaseModel):

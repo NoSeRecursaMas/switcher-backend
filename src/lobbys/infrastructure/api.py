@@ -9,7 +9,6 @@ from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest, GetLobby
 from src.players.domain.models import PlayerID
 from src.lobbys.infrastructure.websockets import ConnectionManager
 
-
 lobby_router = APIRouter()
 websocket_router = APIRouter()
 
@@ -17,9 +16,14 @@ manager = ConnectionManager()
 
 
 @websocket_router.websocket("/ws/{game_id}/{player_id}")
-async def websocket_endpoint(websocket: WebSocket, game_id: int, player_id: int):
+async def websocket_endpoint(websocket: WebSocket, game_id: int, player_id: int, db: Session = Depends(get_db)):
+    lobby_repository = LobbySQLAlchemyRepository(db)
+    service = LobbyService(lobby_repository)
+    player_repository = PlayerSQLAlchemyRepository(db)
     await manager.connect_to_room(room_id=game_id, player_id=player_id, websocket=websocket)
     try:
+        await manager.broadcast_to_room(room_id=game_id, message={"type": "update_room", "payload": {"msg": f"Sala creada por {player_repository.find(player_id).username}", "status":
+                                                                  service.get_data_lobby(game_id).dict()}})
         while True:
             data = await websocket.receive_json()
             if data["type"] == "message":
@@ -35,7 +39,6 @@ def create_lobby(lobby_data: CreateLobbyRequest, db: Session = Depends(get_db)) 
     lobby_repository = LobbySQLAlchemyRepository(db)
     player_repository = PlayerSQLAlchemyRepository(db)
     service = LobbyService(lobby_repository, player_repository)
-
     lobby = service.create_lobby(lobby_data)
     return lobby
 
@@ -53,7 +56,6 @@ def leave_lobby(lobby_id: int, player_id: PlayerID, db: Session = Depends(get_db
 
 @lobby_router.get("", status_code=200)
 def get_lobby(db: Session = Depends(get_db)) -> list[GetLobbyResponse]:
-
     lobby_repository = LobbySQLAlchemyRepository(db)
     service = LobbyService(lobby_repository)
 
