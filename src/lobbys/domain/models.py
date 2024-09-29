@@ -1,17 +1,29 @@
+from typing import Dict, List, Any, Optional
 from pydantic import BaseModel
 from typing import Optional
-
 
 class LobbyResponse(BaseModel):
     roomID: int
 
-
 class CreateLobbyRequest(BaseModel):
+    password: str = None
     playerID: int
     roomName: str
     minPlayers: int
     maxPlayers: int
     password: Optional[str] = None
+
+class Status(BaseModel):
+    currentTurn: int
+    turnOrder: List[int]
+    lastColor: int
+    board: List[List[int]]
+    handMovementCards: List[int]
+    players: List[Dict[str, Any]]
+
+class WebsocketsUpdateResponse(BaseModel):
+    msg: str
+    status: Status
 
 class GetLobbyResponse(BaseModel):
     roomID: int
@@ -28,3 +40,4 @@ class GetLobbyData(BaseModel):
     minPlayers: int
     maxPlayers: int
     players: list[dict[str, str]]
+

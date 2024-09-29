@@ -1,8 +1,6 @@
 from src.database import get_db
 from fastapi import APIRouter, Depends, HTTPException
-
 from sqlalchemy.orm import Session
-from src.database import get_db
 from src.players.application.service import PlayerService
 from src.players.infrastructure.repository import SQLAlchemyRepository
 from src.players.domain.models import PlayerUsername, PlayerResponse

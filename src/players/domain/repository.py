@@ -1,12 +1,10 @@
 from abc import ABC, abstractmethod
-
 from typing import Union
-from src.players.domain.models import PlayerResponse, PlayerUsername
-
+from src.players.domain.models import PlayerResponse
 
 class PlayerRepository(ABC):
     @abstractmethod
-    def save(self, player: PlayerUsername) -> PlayerResponse:
+    def save(self, player: PlayerResponse) -> None:
         pass
 
     def find(self, playerID: int) -> Union[PlayerResponse, None]:
