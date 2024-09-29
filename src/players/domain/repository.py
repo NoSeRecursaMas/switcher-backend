@@ -8,6 +8,7 @@ class PlayerRepository(ABC):
     @abstractmethod
     def save(self, player: PlayerUsername) -> PlayerResponse:
         pass
-
+    
+    @abstractmethod
     def find(self, playerID: int) -> Union[PlayerResponse, None]:
         pass
