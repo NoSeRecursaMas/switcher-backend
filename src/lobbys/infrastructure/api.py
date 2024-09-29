@@ -14,18 +14,22 @@ websocket_router = APIRouter()
 manager = ConnectionManager()  
 
 @websocket_router.websocket("/ws/{game_id}/{player_id}")
-async def websocket_endpoint(websocket: WebSocket, game_id: int, player_id: int):
-    await manager.connect_to_room(room_id=game_id, player_id=player_id, websocket=websocket)
+async def websocket_endpoint(websocket: WebSocket, player_id: int, lobby_id, db: Session = Depends(get_db)):
+    await manager.connect_to_room(room_id=lobby_id, player_id=player_id, websocket=websocket)
     try:
-        await manager.broadcast_to_room(room_id=game_id, message=get_data_lobby(game_id))
+        lobby_repository = LobbySQLAlchemyRepository(db)
+        service = LobbyService(lobby_repository)
+        lobby_data = service.get_data_lobby(lobby_id)
+
+        await manager.broadcast_to_room(room_id=lobby_id, message=lobby_data)
         while True:
             data = await websocket.receive_json()
             if data["type"] == "message":
-                await manager.broadcast_to_room(room_id=game_id, message=data["content"])
+                await manager.broadcast_to_room(room_id=lobby_id, message=data["content"])
             elif data["type"] == "get_room_info":
-                await manager.broadcast_to_room(room_id=game_id, message=get_data_lobby(game_id))
+                await manager.broadcast_to_room(room_id=lobby_id, message=lobby_data)
     except WebSocketDisconnect:
-        await manager.disconnect_from_room(room_id=game_id, player_id=player_id, websocket=websocket)  
+        await manager.disconnect_from_room(room_id=lobby_id, player_id=player_id, websocket=websocket)  
 
 
 @lobby_router.post("", status_code=201)
