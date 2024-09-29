@@ -1,5 +1,6 @@
 from fastapi import WebSocket
 
+
 class ConnectionManager:
     def __init__(self):
         self.active_room_connections: dict[int, list[WebSocket]] = {}
@@ -13,7 +14,6 @@ class ConnectionManager:
             self.players_connections[player_id] = websocket
         if websocket not in self.active_room_connections[room_id]:
             self.active_room_connections[room_id].append(websocket)
-    
 
     async def disconnect_from_room(self, room_id: int, player_id: int, websocket: WebSocket):
         if room_id in self.active_room_connections:
@@ -29,9 +29,7 @@ class ConnectionManager:
             websocket = self.players_connections[player_id]
             await websocket.send_json(message)
 
-
     async def broadcast_to_room(self, room_id: int, message: dict):
         if room_id in self.active_room_connections:
             for connection in self.active_room_connections[room_id]:
                 await connection.send_json(message)
-

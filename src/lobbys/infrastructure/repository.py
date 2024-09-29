@@ -24,11 +24,37 @@ class SQLAlchemyRepository(LobbyRepository):
 
         return LobbyResponse(roomID=lobby_infra.roomID)
 
+    def delete(self, lobby_id: int) -> None:
+        self.db.query(Lobby).filter(Lobby.roomID == lobby_id).delete()
+        self.db.commit()
+
+    def remove_player_lobby_association(self, player_id: int = None, lobby_id: int = None) -> None:
+        query = self.db.query(PlayerLobby)
+
+        if player_id:
+            query = query.filter(PlayerLobby.playerID == player_id)
+
+        if lobby_id:
+            query = query.filter(PlayerLobby.roomID == lobby_id)
+
+        query.delete()
+        self.db.commit()
+
+    def is_owner(self, player_id: int) -> bool:
+        lobby = self.db.query(Lobby).filter(
+            Lobby.owner == player_id).first()
+        return lobby is not None
+
     def save_lobby_player(self, roomID: int, playerID: int):
 
         player_lobby_entry = PlayerLobby(roomID=roomID, playerID=playerID)
         self.db.add(player_lobby_entry)
         self.db.commit()
+
+    def player_in_lobby(self, playerID: int, roomID: int) -> bool:
+        player_lobby = self.db.query(PlayerLobby).filter_by(
+            playerID=playerID, roomID=roomID).first()
+        return player_lobby is not None
 
     def get_all(self) -> list[GetLobbyResponse]:
 
@@ -42,7 +68,7 @@ class SQLAlchemyRepository(LobbyRepository):
                                            actualPlayers=self.get_actual_players(
                                                lobby.roomID),
                                            started=False,
-                                           private=not lobby.password
+                                           private=lobby.password is not None
                                            )
             lobbies_list.append(lobby_infra)
 
@@ -52,12 +78,22 @@ class SQLAlchemyRepository(LobbyRepository):
         players = self.db.query(PlayerLobby).filter(
             PlayerLobby.roomID == roomID).all()
         return len(players)
-        
+
     def get_data_lobby(self, lobby_id) -> GetLobbyData:
         lobby = self.db.query(Lobby).filter(Lobby.roomID == lobby_id).first()
-        players = self.db.query(Player).join(PlayerLobby).filter(PlayerLobby.roomID == lobby_id).all()
-    
-        players_list = [{"playerID": str(player.playerID), "username": player.username} for player in players]
+        if lobby is None:
+            return None
+
+        players = self.db.query(Player).join(PlayerLobby).filter(
+            PlayerLobby.roomID == lobby_id).all()
+
+        players_list = [{"playerID": str(
+            player.playerID), "username": player.username} for player in players]
+        players = self.db.query(Player).join(PlayerLobby).filter(
+            PlayerLobby.roomID == lobby_id).all()
+
+        players_list = [{"playerID": str(
+            player.playerID), "username": player.username} for player in players]
 
         lobby_data = GetLobbyData(
             hostID=lobby.owner,
@@ -67,5 +103,5 @@ class SQLAlchemyRepository(LobbyRepository):
             maxPlayers=lobby.maxPlayers,
             players=players_list
         )
-    
+
         return lobby_data
