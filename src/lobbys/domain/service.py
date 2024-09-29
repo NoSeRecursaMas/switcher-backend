@@ -1,11 +1,13 @@
 from fastapi import HTTPException
 from src.shared.validators import CommonValidators
 from src.players.domain.repository import PlayerRepository
+from src.lobbys.domain.repository import LobbyRepository
 
 
 class DomainService:
-    def __init__(self, repository: PlayerRepository):
-        self.repository = repository
+    def __init__(self, player_repository: PlayerRepository, lobby_repository: LobbyRepository):
+        self.player_repository = player_repository
+        self.lobby_repository = lobby_repository
 
     @staticmethod
     def validate_minPlayers(minPlayers: int):
@@ -38,7 +40,12 @@ class DomainService:
         DomainService.validate_maxPlayers(maxPlayers)
         DomainService.validate_player_range(minPlayers, maxPlayers)
 
-    def validate_owner_exists(self, owner: str):
-        if not self.repository.find(owner):
+    def validate_player_exists(self, player: int):
+        if not self.player_repository.find(player):
             raise HTTPException(
                 status_code=404, detail="El propietario proporcionado no existe.")
+    
+    def validate_lobby_exists(self, lobby: int):
+        if not self.lobby_repository.find(lobby):
+            raise HTTPException(
+                status_code=404, detail="La sala no existe.")
