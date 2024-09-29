@@ -44,8 +44,14 @@ class DomainService:
         if not self.player_repository.find(player):
             raise HTTPException(
                 status_code=404, detail="El propietario proporcionado no existe.")
-    
+
     def validate_lobby_exists(self, lobby: int):
         if not self.lobby_repository.find(lobby):
             raise HTTPException(
                 status_code=404, detail="La sala no existe.")
+
+    def validate_room_full (self, lobby_id: int):
+        lobby = self.lobby_repository.get_data_lobby(lobby_id)
+        if len(lobby.players) >= lobby.maxPlayers:
+            raise HTTPException(
+                status_code=405, detail="La sala está llena.")

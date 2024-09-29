@@ -33,5 +33,6 @@ class LobbyService():
 
         self.domain_service.validate_player_exists(player_id)
         self.domain_service.validate_lobby_exists(lobby_id)
+        self.domain_service.validate_room_full(lobby_id)
 
         self.repository.save_lobby_player(lobby_id, player_id)
