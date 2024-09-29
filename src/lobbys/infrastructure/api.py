@@ -5,6 +5,7 @@ from src.lobbys.application.service import LobbyService
 from src.players.infrastructure.repository import SQLAlchemyRepository as PlayerSQLAlchemyRepository
 from src.lobbys.infrastructure.repository import SQLAlchemyRepository as LobbySQLAlchemyRepository
 from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest, GetLobbyResponse, GetLobbyData
+from src.players.domain.models import PlayerID
 
 router = APIRouter()
 
@@ -41,12 +42,12 @@ def get_data_lobby(lobby_id, db: Session = Depends(get_db)) -> GetLobbyData:
     return lobby_data
 
 @router.put("/{lobby_id}/join", status_code=200)
-def join_lobby(lobby_id:int, db: Session = Depends(get_db)) -> LobbyResponse:
+def join_lobby(lobby_id:int, player_id: PlayerID, db: Session = Depends(get_db)) -> LobbyResponse:
 
     lobby_repository = LobbySQLAlchemyRepository(db)
     player_repository = PlayerSQLAlchemyRepository(db)
     service = LobbyService(lobby_repository, player_repository)
 
-    service.join_lobby(lobby_id)
+    service.join_lobby(lobby_id, player_id.playerID)
 
     return None

@@ -9,6 +9,8 @@ class PlayerResponse(BaseModel):
 class PlayerUsername(BaseModel):
     username: str
 
+class PlayerID(BaseModel):
+    playerID: int
 
 class PlayerLobby(BaseModel):
     playerID: int
