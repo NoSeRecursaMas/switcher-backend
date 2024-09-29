@@ -30,9 +30,10 @@ def redirect_to_docs():
 
 app.include_router(players_router, prefix="/players", tags=["players"])
 
-app.include_router(lobbys_router, prefix="/lobbys", tags=["lobbys"])
+app.include_router(lobbys_router, prefix="/rooms", tags=["lobbys"])
 
 app.include_router(ws_router)
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)

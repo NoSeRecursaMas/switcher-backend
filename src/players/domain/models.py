@@ -16,4 +16,4 @@ class PlayerID(BaseModel):
 
 class PlayerLobby(BaseModel):
     playerID: int
-    lobbyID: int
+    roomID: int

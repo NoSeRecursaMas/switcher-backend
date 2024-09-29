@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest
+from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest, GetLobbyResponse, GetLobbyData
 from src.players.domain.models import PlayerID
 
 
@@ -21,9 +21,21 @@ class LobbyRepository(ABC):
         pass
 
     @abstractmethod
-    def save_lobby_player(self, playerID: int, lobbyID: int) -> None:
+    def save_lobby_player(self, playerID: int, roomID: int) -> None:
         pass
 
     @abstractmethod
-    def player_in_lobby(self, playerID: int, lobbyID: int) -> bool:
+    def player_in_lobby(self, playerID: int, roomID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def save_lobby_player(self, playerID: int, roomID: int) -> None:
+        pass
+
+    @abstractmethod
+    def get_all(self) -> list[GetLobbyResponse]:
+        pass
+
+    @abstractmethod
+    def get_data_lobby(self, lobby_id) -> GetLobbyData:
         pass

@@ -1,5 +1,6 @@
 from src.database import get_db
 from fastapi import APIRouter, Depends
+
 from sqlalchemy.orm import Session
 from src.players.application.service import PlayerService
 from src.players.infrastructure.repository import SQLAlchemyRepository
