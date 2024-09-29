@@ -1,19 +1,25 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from src.players.domain.service import validate_username
 
 
-class PlayerResponse(BaseModel):
+class Player(BaseModel):
     playerID: int
     username: str
 
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, value):
+        return validate_username(value)
 
-class PlayerUsername(BaseModel):
+
+class PlayerCreationRequest(BaseModel):
     username: str
+
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, value):
+        return validate_username(value)
 
 
 class PlayerID(BaseModel):
     playerID: int
-
-
-class PlayerLobby(BaseModel):
-    playerID: int
-    roomID: int

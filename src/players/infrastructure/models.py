@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 
 
 class Player(Base):
-    __tablename__ = 'players'
+    __tablename__ = 'Players'
 
     playerID = Column(Integer, primary_key=True, index=True)
     username = Column(String, nullable=True)
@@ -12,7 +12,5 @@ class Player(Base):
     lobbys = relationship('Lobby', secondary='PlayerLobby',
                           back_populates='players')
 
-    lobbys = relationship('Lobby', secondary='PlayerLobby',
-                          back_populates='players')
     def __repr__(self):
         return f"<Player(username={self.username})>"
