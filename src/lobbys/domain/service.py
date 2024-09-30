@@ -40,10 +40,6 @@ class DomainService:
         DomainService.validate_maxPlayers(maxPlayers)
         DomainService.validate_player_range(minPlayers, maxPlayers)
 
-    def validate_player_exists(self, player: int):
-        if not self.player_repository.find(player):
-            raise HTTPException(
-                status_code=404, detail="El propietario proporcionado no existe.")
 
     def validate_lobby_exists(self, lobby: int):
         if not self.lobby_repository.find(lobby):
@@ -55,3 +51,19 @@ class DomainService:
         if len(lobby.players) >= lobby.maxPlayers:
             raise HTTPException(
                 status_code=405, detail="La sala está llena.")
+            
+    def validate_player_exists(self, player: int):
+        if not self.player_repository.find(player):
+            raise HTTPException(
+                status_code=404, detail="El jugador proporcionado no existe.")
+
+    def validate_player_is_not_owner(self, player_id):
+        if self.lobby_repository.is_owner(player_id):
+            raise HTTPException(
+                status_code=405, detail="El propietario no puede abandonar la sala.")
+
+    def validate_player_in_lobby(self, player_id, lobby_id):
+        if not self.lobby_repository.player_in_lobby(player_id, lobby_id):
+            raise HTTPException(
+                status_code=405, detail="El jugador no se encuentra en la sala.")
+

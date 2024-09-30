@@ -7,7 +7,10 @@ class Player(Base):
     __tablename__ = 'players'
 
     playerID = Column(Integer, primary_key=True, index=True)
-    username = Column(String, nullable=False)
+    username = Column(String, nullable=True)
+
+    lobbys = relationship('Lobby', secondary='PlayerLobby',
+                          back_populates='players')
 
     lobbys = relationship('Lobby', secondary='PlayerLobby',
                           back_populates='players')

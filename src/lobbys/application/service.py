@@ -23,10 +23,19 @@ class LobbyService():
 
         return saved_lobby
 
+    def leave_lobby(self, lobby_id: int, player_id: int) -> None:
+
+        self.domain_service.validate_player_exists(player_id)
+        self.domain_service.validate_lobby_exists(lobby_id)
+        self.domain_service.validate_player_in_lobby(player_id, lobby_id)
+        self.domain_service.validate_player_is_not_owner(player_id)
+
+        self.repository.remove_player_lobby_association(player_id=player_id)
+
     def get_lobby(self):
         return self.repository.get_all()
-    
-    def get_data_lobby(self,lobby_id):
+
+    def get_data_lobby(self, lobby_id):
         return self.repository.get_data_lobby(lobby_id)
 
     def join_lobby(self,lobby_id: int, player_id: int) -> None:

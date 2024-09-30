@@ -12,6 +12,10 @@ class PlayerUsername(BaseModel):
 class PlayerID(BaseModel):
     playerID: int
 
+class PlayerID(BaseModel):
+    playerID: int
+
+
 class PlayerLobby(BaseModel):
     playerID: int
     roomID: int

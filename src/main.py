@@ -2,8 +2,13 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from src.players.infrastructure.api import router as players_router
-from src.lobbys.infrastructure.api import router as lobbys_router
+from src.lobbys.infrastructure.api import lobby_router as lobbys_router
+from src.lobbys.infrastructure.api import websocket_router as ws_router
 from src.database import engine, Base
 
 Base.metadata.create_all(bind=engine)
@@ -29,7 +34,9 @@ def redirect_to_docs():
 
 app.include_router(players_router, prefix="/players", tags=["players"])
 
-app.include_router(lobbys_router, prefix="/rooms", tags=["lobbys"])
+app.include_router(lobbys_router, prefix="/rooms", tags=["rooms"])
+
+app.include_router(ws_router)
 
 
 if __name__ == "__main__":
