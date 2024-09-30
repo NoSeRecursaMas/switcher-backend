@@ -41,7 +41,7 @@ def test_leave_lobby_lobby_not_found(new_mock, mock_db):
         reponse = new_mock.put(f"/rooms/{lobby_id}/leave", json=player_id)
 
         assert reponse.status_code == 404
-        assert reponse.json() == {"detail": "La sala proporcionada no existe."}
+        assert reponse.json() == {"detail": "La sala no existe."}
 
 
 def test_leave_lobby_owner(new_mock, mock_db):

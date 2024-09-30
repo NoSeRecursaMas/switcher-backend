@@ -4,6 +4,7 @@ from src.lobbys.domain.repository import LobbyRepository
 from src.players.domain.repository import PlayerRepository
 
 
+
 class LobbyService():
     def __init__(self, repository: LobbyRepository, player_repository: PlayerRepository = None):
         self.repository = repository
@@ -36,3 +37,11 @@ class LobbyService():
 
     def get_data_lobby(self, lobby_id):
         return self.repository.get_data_lobby(lobby_id)
+
+    def join_lobby(self,lobby_id: int, player_id: int) -> None:
+
+        self.domain_service.validate_player_exists(player_id)
+        self.domain_service.validate_lobby_exists(lobby_id)
+        self.domain_service.validate_room_full(lobby_id)
+
+        self.repository.save_lobby_player(lobby_id, player_id)

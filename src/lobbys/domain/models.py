@@ -1,7 +1,7 @@
 from typing import Dict, List, Any, Optional
 from pydantic import BaseModel
 from typing import Optional
-
+from typing import List
 
 class LobbyResponse(BaseModel):
     roomID: int
@@ -52,4 +52,5 @@ class GetLobbyData(BaseModel):
     roomID: int
     minPlayers: int
     maxPlayers: int
-    players: list[dict[str, str]]
+    players: List[dict[str, str]]
+

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest, GetLobbyResponse, GetLobbyData
+from typing import Union
+from src.lobbys.domain.models import LobbyResponse, CreateLobbyRequest,GetLobbyResponse, GetLobbyData
 from src.players.domain.models import PlayerID
-
 
 class LobbyRepository(ABC):
     @abstractmethod
@@ -37,5 +37,9 @@ class LobbyRepository(ABC):
         pass
 
     @abstractmethod
-    def get_data_lobby(self, lobby_id) -> GetLobbyData:
+    def get_data_lobby(self,lobby_id) -> GetLobbyData:
+        pass
+    
+    @abstractmethod
+    def find(self, roomID: int) -> bool:
         pass

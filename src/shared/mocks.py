@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from src.main import app
 from src.database import get_db
 import pytest
+from src.lobbys.domain.models import GetLobbyData
 
 client = TestClient(app)
 
@@ -127,15 +128,50 @@ def list_mock_data_lobby(mock_db, lobbies_data):
     mock_db.query.side_effect = [mock_lobby_query, mock_player_query]
 
 
+def join_lobby_mock(player_exists=True, lobby_exists=True, full=False):
+    mock_player_repo = MagicMock()
+    mock_lobby_repo = MagicMock()
+    
+    if full:
+        data_lobby = GetLobbyData(
+            hostID=1,
+            roomName="test",
+            roomID=1,
+            minPlayers=2,
+            maxPlayers=3,
+            players=[{"playerID": "1", "username": "test"}, {"playerID": "2", "username": "test2"}, {"playerID": "3", "username": "test3"}]
+        )
+    else:
+        data_lobby = GetLobbyData(
+            hostID=1,
+            roomName="test",
+            roomID=1,
+            minPlayers=2,
+            maxPlayers=4,
+            players=[{"playerID": "1", "username": "test"}, {"playerID": "2", "username": "test2"}]
+        ) 
+    
+    
+    mock_player_repo.find = MagicMock(return_value=player_exists)
+    mock_lobby_repo.find = MagicMock(return_value=lobby_exists)
+    mock_lobby_repo.get_data_lobby = MagicMock(return_value=data_lobby)
+    
+    return (
+        patch("src.lobbys.infrastructure.api.LobbySQLAlchemyRepository", return_value=mock_lobby_repo),
+        patch("src.lobbys.infrastructure.api.PlayerSQLAlchemyRepository", return_value=mock_player_repo)
+    )
+
+
 def leave_lobby_mock(player_exists=True, lobby_exists=True, player_in_lobby=True, is_owner=False):
     mock_player_repo = MagicMock()
     mock_lobby_repo = MagicMock()
 
     mock_player_repo.find = MagicMock(return_value=player_exists)
-    mock_lobby_repo.get_data_lobby = MagicMock(return_value=lobby_exists)
+    mock_lobby_repo.find = MagicMock(return_value=lobby_exists)
     mock_lobby_repo.player_in_lobby = MagicMock(return_value=player_in_lobby)
     mock_lobby_repo.is_owner = MagicMock(return_value=is_owner)
 
     return patch('src.lobbys.infrastructure.api.LobbySQLAlchemyRepository', return_value=mock_lobby_repo), \
         patch('src.lobbys.infrastructure.api.PlayerSQLAlchemyRepository',
               return_value=mock_player_repo)
+
