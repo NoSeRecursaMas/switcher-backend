@@ -167,7 +167,7 @@ def leave_lobby_mock(player_exists=True, lobby_exists=True, player_in_lobby=True
     mock_lobby_repo = MagicMock()
 
     mock_player_repo.find = MagicMock(return_value=player_exists)
-    mock_lobby_repo.get_data_lobby = MagicMock(return_value=lobby_exists)
+    mock_lobby_repo.find = MagicMock(return_value=lobby_exists)
     mock_lobby_repo.player_in_lobby = MagicMock(return_value=player_in_lobby)
     mock_lobby_repo.is_owner = MagicMock(return_value=is_owner)
 
