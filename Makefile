@@ -22,7 +22,7 @@ run:
 test:
 	( \
 	   $(ACTIVATE); \
-	   pytest -rA --cov; \
+	   pytest -rA; \
 	)
 
 install:
