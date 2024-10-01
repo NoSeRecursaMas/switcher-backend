@@ -37,8 +37,7 @@ def create_mock_player(mock_db, playerID, username):
     mock_player = MagicMock()
     mock_player.playerID = playerID
     mock_player.username = username
-    mock_db.refresh.side_effect = lambda x: (
-        setattr(x, "playerID", playerID) if hasattr(x, "playerID") else None)
+    mock_db.refresh.side_effect = lambda x: (setattr(x, "playerID", playerID) if hasattr(x, "playerID") else None)
     mock_db.query().filter().first.return_value = mock_player
 
     return {"playerID": playerID, "username": username}
@@ -103,8 +102,7 @@ def list_mock_room(mock_db, lobbies_data, players_data):
     query_mock_player.filter.side_effect = filter_mock
 
     # Asignar el query_mock al método query de mock_db
-    mock_db.query.side_effect = lambda model: (
-        query_mock_room if model.__name__ == "Room" else query_mock_player)
+    mock_db.query.side_effect = lambda model: (query_mock_room if model.__name__ == "Room" else query_mock_player)
 
 
 def list_mock_data_room(mock_db, lobbies_data):
@@ -137,8 +135,7 @@ def leave_room_mock(player_exists=True, room_exists=True, is_player_in_room=True
 
     mock_player_repo.get = MagicMock(return_value=player_exists)
     mock_room_repo.get = MagicMock(return_value=room_exists)
-    mock_room_repo.is_player_in_room = MagicMock(
-        return_value=is_player_in_room)
+    mock_room_repo.is_player_in_room = MagicMock(return_value=is_player_in_room)
     mock_room_repo.is_owner = MagicMock(return_value=is_owner)
 
     return patch(
@@ -161,8 +158,11 @@ def join_room_mock(player_exists=True, room_exists=True, full=False):
             roomID=1,
             minPlayers=2,
             maxPlayers=3,
-            players=[{"playerID": "1", "username": "test"}, {
-                "playerID": "2", "username": "test2"}, {"playerID": "3", "username": "test3"}]
+            players=[
+                {"playerID": "1", "username": "test"},
+                {"playerID": "2", "username": "test2"},
+                {"playerID": "3", "username": "test3"},
+            ],
         )
     else:
         data_room = RoomPublicInfo(
@@ -171,8 +171,7 @@ def join_room_mock(player_exists=True, room_exists=True, full=False):
             roomID=1,
             minPlayers=2,
             maxPlayers=4,
-            players=[{"playerID": "1", "username": "test"},
-                     {"playerID": "2", "username": "test2"}]
+            players=[{"playerID": "1", "username": "test"}, {"playerID": "2", "username": "test2"}],
         )
 
     mock_player_repo.get = MagicMock(return_value=player_exists)
@@ -180,8 +179,6 @@ def join_room_mock(player_exists=True, room_exists=True, full=False):
     mock_room_repo.get_public_info = MagicMock(return_value=data_room)
 
     return (
-        patch("src.rooms.infrastructure.api.RoomSQLAlchemyRepository",
-              return_value=mock_room_repo),
-        patch("src.rooms.infrastructure.api.PlayerSQLAlchemyRepository",
-              return_value=mock_player_repo)
+        patch("src.rooms.infrastructure.api.RoomSQLAlchemyRepository", return_value=mock_room_repo),
+        patch("src.rooms.infrastructure.api.PlayerSQLAlchemyRepository", return_value=mock_player_repo),
     )

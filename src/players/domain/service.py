@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from src.players.domain.repository import PlayerRepository
 
+
 class RepositoryValidators:
     def __init__(self, player_repository: PlayerRepository):
         self.player_repository = player_repository
