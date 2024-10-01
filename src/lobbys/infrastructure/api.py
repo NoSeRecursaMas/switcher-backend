@@ -24,7 +24,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: int, player_id: int,
     await manager.connect_to_room(room_id=game_id, player_id=player_id, websocket=websocket)
     try:
         await manager.broadcast_to_room(room_id=game_id, message={"type": "UPDATE_ROOM", "payload": {"msg": f"El jugador \"{player_repository.find(player_id).username}\" se ha unido a la sala", "status":
-                                                                  service.get_data_lobby(game_id).dict()}})
+                                                                  service.get_data_lobby(game_id).model_dump()}})
         while True:
             data = await websocket.receive_json()
             if data["type"] == "message":
@@ -33,6 +33,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: int, player_id: int,
                 await manager.disconnect_from_room(room_id=game_id, player_id=player_id, websocket=websocket)
     except WebSocketDisconnect:
         await manager.disconnect_from_room(room_id=game_id, player_id=player_id, websocket=websocket)
+        await manager.broadcast_to_room(room_id=game_id, message={"type": "UPDATE_ROOM", "payload": {"msg": f"El jugador \"{player_repository.find(player_id).username}\" ha abandonado la sala", "status":
+                                                                  service.get_data_lobby(game_id).model_dump()}})
 
 
 @lobby_router.post("", status_code=201)
