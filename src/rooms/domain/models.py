@@ -13,7 +13,7 @@ class Room(BaseModel):
     minPlayers: int
     maxPlayers: int
     hostID: int
-    hash_password: Optional[str] = None
+    password: Optional[str] = None
     players: List[Player]
 
 

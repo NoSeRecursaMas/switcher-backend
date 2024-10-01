@@ -14,8 +14,8 @@ from src.shared.mocks import (
 )
 
 
-def mock_get_data_room(game_id):
-    return {"roomID": game_id, "info": "Room Info"}
+def mock_get_data_room(gameID):
+    return {"roomID": gameID, "info": "Room Info"}
 
 
 @pytest.fixture
@@ -27,8 +27,10 @@ def mock_websocket():
 @patch("src.rooms.application.service.RoomService.get_public_info", new_callable=AsyncMock)
 @patch.object(ConnectionManager, "broadcast_to_room", new_callable=AsyncMock)
 async def test_websocket_broadcast_correctly(mock_broadcast_to_room, mock_get_data_room, mock_websocket):
-    mock_websocket.receive_json = AsyncMock(return_value={"type": "get_room_info"})
+    mock_websocket.receive_json = AsyncMock(
+        return_value={"type": "get_room_info"})
 
+    # Configurar el mock para devolver el valor esperado
     mock_get_data_room.return_value = {"roomID": 1, "info": "Room Info"}
 
     manager = ConnectionManager()
@@ -37,13 +39,8 @@ async def test_websocket_broadcast_correctly(mock_broadcast_to_room, mock_get_da
 
     await manager.broadcast_to_room(roomID=1, message=await mock_get_data_room(1))
 
-    mock_broadcast_to_room.assert_any_call(roomID=1, message={"roomID": 1, "info": "Room Info"})
-
-    data = await mock_websocket.receive_json()
-    if data["type"] == "get_room_info":
-        await manager.broadcast_to_room(roomID=1, message=await mock_get_data_room(1))
-
-    mock_broadcast_to_room.assert_any_call(roomID=1, message={"roomID": 1, "info": "Room Info"})
+    mock_broadcast_to_room.assert_any_call(
+        roomID=1, message={"roomID": 1, "info": "Room Info"})
 
 
 @pytest.mark.asyncio
@@ -57,13 +54,15 @@ async def test_websocket_send_personal_message(mock_send_personal_message, mock_
 
     await manager.send_personal_message(message={"msg": "test"}, playerID=1)
 
-    mock_send_personal_message.assert_any_call(message={"msg": "test"}, playerID=1)
+    mock_send_personal_message.assert_any_call(
+        message={"msg": "test"}, playerID=1)
 
     data = await mock_websocket.receive_json()
     if data["type"] == "message":
         await manager.send_personal_message(message={"msg": "test"}, playerID=1)
 
-    mock_send_personal_message.assert_any_call(message={"msg": "test"}, playerID=1)
+    mock_send_personal_message.assert_any_call(
+        message={"msg": "test"}, playerID=1)
 
 
 def test_create_room_invalid_size(new_mock, mock_db):
@@ -82,7 +81,8 @@ def test_create_room_max_capacity(new_mock, mock_db):
 
     response = new_mock.post("/rooms/", json=mock_room)
     assert response.status_code == 400
-    assert response.json() == {"detail": "El máximo de jugadores permitidos es 4."}
+    assert response.json() == {
+        "detail": "El máximo de jugadores permitidos es 4."}
 
 
 def test_create_room_min_capacity(new_mock, mock_db):
@@ -90,7 +90,8 @@ def test_create_room_min_capacity(new_mock, mock_db):
 
     response = new_mock.post("/rooms/", json=mock_room)
     assert response.status_code == 400
-    assert response.json() == {"detail": "El mínimo de jugadores permitidos es 2."}
+    assert response.json() == {
+        "detail": "El mínimo de jugadores permitidos es 2."}
 
 
 def test_create_room_error_capacity(new_mock, mock_db):
@@ -98,7 +99,8 @@ def test_create_room_error_capacity(new_mock, mock_db):
 
     response = new_mock.post("/rooms/", json=mock_room)
     assert response.status_code == 400
-    assert response.json() == {"detail": "El mínimo de jugadores no puede ser mayor al máximo de jugadores."}
+    assert response.json() == {
+        "detail": "El mínimo de jugadores no puede ser mayor al máximo de jugadores."}
 
 
 def test_create_room_name_with_space(new_mock, mock_db):
@@ -130,7 +132,8 @@ def test_create_room_name_not_ascii(new_mock, mock_db):
 
     response = new_mock.post("/rooms/", json=mock_room)
     assert response.status_code == 422
-    assert response.json().get("detail")[0]["msg"] == "El roomName proporcionado contiene caracteres no permitidos."
+    assert response.json().get("detail")[
+        0]["msg"] == "El roomName proporcionado contiene caracteres no permitidos."
 
 
 def test_create_room_name_empty(new_mock, mock_db):

@@ -7,6 +7,7 @@ class ConnectionManager:
         self.players_connections: dict[int, WebSocket] = {}
 
     async def connect_to_room(self, roomID: int, playerID: int, websocket: WebSocket):
+
         await websocket.accept()
         if roomID not in self.active_room_connections:
             self.active_room_connections[roomID] = []
@@ -22,7 +23,6 @@ class ConnectionManager:
                 del self.active_room_connections[roomID]
             if playerID in self.players_connections:
                 del self.players_connections[playerID]
-            await websocket.close()
 
     async def send_personal_message(self, message: dict, playerID: int):
         if playerID in self.players_connections:
