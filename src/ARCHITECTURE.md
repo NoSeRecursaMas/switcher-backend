@@ -2,7 +2,7 @@
 
 ## Descripción General
 
-Este proyecto utiliza una **arquitectura hexagonal** combinada con **vertical slicing**. La arquitectura hexagonal permite separar claramente las diferentes capas de la aplicación para mejorar la modularidad, mantenibilidad y escalabilidad. El **vertical slicing** organiza el código por características o módulos (por ejemplo, `lobby`, `game`, `player`), cada uno con sus propias capas bien definidas.
+Este proyecto utiliza una **arquitectura hexagonal** combinada con **vertical slicing**. La arquitectura hexagonal permite separar claramente las diferentes capas de la aplicación para mejorar la modularidad, mantenibilidad y escalabilidad. El **vertical slicing** organiza el código por características o módulos (por ejemplo, `room`, `game`, `player`), cada uno con sus propias capas bien definidas.
 
 ## Estructura del Proyecto
 
@@ -27,12 +27,12 @@ switcher-backend/
     │   │   ├── services.py
     │   │   └── use_case.py
     │   ├── domain                      
-    │   │   ├── lobby_dbModelss.py
-    │   │   └── lobby_service.py
+    │   │   ├── room_dbModelss.py
+    │   │   └── room_service.py
     │   ├── infrastructure
     │   │   ├── api.py
     │   │   ├── room_repository.py
-    │   │   └── lobby_websockets.py
+    │   │   └── room_websockets.py
     │   └── test
     ├── players
     │   ├── application

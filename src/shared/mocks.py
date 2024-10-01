@@ -29,16 +29,16 @@ def new_mock(mock_db):
     app.dependency_overrides.clear()
 
 
-def create_mock_player(mock_db, player_id, username):
+def create_mock_player(mock_db, playerID, username):
     mock_player = MagicMock()
-    mock_player.playerID = player_id
+    mock_player.playerID = playerID
     mock_player.username = username
     mock_db.refresh.side_effect = lambda x: setattr(
-        x, 'playerID', player_id) if hasattr(x, 'playerID') else None
+        x, 'playerID', playerID) if hasattr(x, 'playerID') else None
     mock_db.query().filter().first.return_value = mock_player
 
     return {
-        "playerID": player_id,
+        "playerID": playerID,
         "username": username
     }
 
@@ -53,7 +53,7 @@ def create_mock_room(mock_db, owner_exists=True, roomID=1, playerID=1, roomName=
     mock_room.playerID = playerID
 
     if owner_exists:
-        create_mock_player(mock_db, player_id=playerID, username="test")
+        create_mock_player(mock_db, playerID=playerID, username="test")
     else:
         mock_db.query().filter().first.return_value = None
 
@@ -76,7 +76,7 @@ def list_mock_room(mock_db, lobbies_data, players_data):
     def create_mock_room(room):
         mock_room = MagicMock()
         mock_room.roomID = room['roomID']
-        mock_room.name = room['roomName']
+        mock_room.roomName = room['roomName']
         mock_room.maxPlayers = room['maxPlayers']
         mock_room.actualPlayers = room['actualPlayers']
         mock_room.started = room['started']
@@ -109,7 +109,7 @@ def list_mock_data_room(mock_db, lobbies_data):
     mock_room = MagicMock()
     mock_roomplayerID = lobbies_data[0]["hostID"]
     # Aseguramos que sea un string
-    mock_room.name = lobbies_data[0]["roomName"]
+    mock_room.roomName = lobbies_data[0]["roomName"]
     mock_room.roomID = lobbies_data[0]["roomID"]
     mock_room.minPlayers = lobbies_data[0]["minPlayers"]
     mock_room.maxPlayers = lobbies_data[0]["maxPlayers"]

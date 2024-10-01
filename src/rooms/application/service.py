@@ -19,18 +19,18 @@ class RoomService():
 
         return saved_room
 
-    def leave_room(self, room_id: int, player_id: int) -> None:
+    def leave_room(self, roomID: int, playerID: int) -> None:
 
-        self.domain_service.validate_player_exists(player_id)
-        self.domain_service.validate_room_exists(room_id)
-        self.domain_service.validate_player_in_room(player_id, room_id)
-        self.domain_service.validate_player_is_not_owner(player_id)
+        self.domain_service.validate_player_exists(playerID)
+        self.domain_service.validate_room_exists(roomID)
+        self.domain_service.validate_player_in_room(playerID, roomID)
+        self.domain_service.validate_player_is_not_owner(playerID)
 
         self.room_repository.disassociate_player_from_room(
-            player_id=player_id, room_id=room_id)
+            playerID=playerID, roomID=roomID)
 
     def get_all_rooms(self):
         return self.room_repository.get_all_rooms()
 
-    def get_public_info(self, room_id):
-        return self.room_repository.get_public_info(room_id)
+    def get_public_info(self, roomID):
+        return self.room_repository.get_public_info(roomID)

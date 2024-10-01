@@ -15,23 +15,23 @@ websocket_router = APIRouter()
 manager = ConnectionManager()
 
 
-@websocket_router.websocket("/ws/{game_id}/{player_id}")
-async def websocket_endpoint(websocket: WebSocket, game_id: int, player_id: int, db: Session = Depends(get_db)):
+@websocket_router.websocket("/ws/{game_id}/{playerID}")
+async def websocket_endpoint(websocket: WebSocket, game_id: int, playerID: int, db: Session = Depends(get_db)):
     room_repository = RoomSQLAlchemyRepository(db)
     service = RoomService(room_repository)
     player_repository = PlayerSQLAlchemyRepository(db)
-    await manager.connect_to_room(room_id=game_id, player_id=player_id, websocket=websocket)
+    await manager.connect_to_room(roomID=game_id, playerID=playerID, websocket=websocket)
     try:
-        await manager.broadcast_to_room(room_id=game_id, message={"type": "update_room", "payload": {"msg": f"Sala creada por {player_repository.get(player_id).username}", "status":
-                                                                  service.get_public_info(game_id).dict()}})
+        await manager.broadcast_to_room(roomID=game_id, message={"type": "update_room", "payload": {"msg": f"Sala creada por {player_repository.get(playerID).username}", "status":
+                                                                                                    service.get_public_info(game_id).dict()}})
         while True:
             data = await websocket.receive_json()
             if data["type"] == "message":
-                await manager.broadcast_to_room(room_id=game_id, message=data["content"])
+                await manager.broadcast_to_room(roomID=game_id, message=data["content"])
             elif data["type"] == "exit":
-                await manager.disconnect_from_room(room_id=game_id, player_id=player_id, websocket=websocket)
+                await manager.disconnect_from_room(roomID=game_id, playerID=playerID, websocket=websocket)
     except WebSocketDisconnect:
-        await manager.disconnect_from_room(room_id=game_id, player_id=player_id, websocket=websocket)
+        await manager.disconnect_from_room(roomID=game_id, playerID=playerID, websocket=websocket)
 
 
 @room_router.post("", status_code=201)
@@ -42,12 +42,12 @@ def create_room(room_data: RoomCreationRequest, db: Session = Depends(get_db)) -
     return room
 
 
-@room_router.put("/{room_id}/leave", status_code=200)
-def leave_room(room_id: int, player_id: PlayerID, db: Session = Depends(get_db)) -> None:
+@room_router.put("/{roomID}/leave", status_code=200)
+def leave_room(roomID: int, playerID: PlayerID, db: Session = Depends(get_db)) -> None:
     service = RoomService(RoomSQLAlchemyRepository(db),
                           PlayerSQLAlchemyRepository(db))
 
-    service.leave_room(room_id, player_id.playerID)
+    service.leave_room(roomID, playerID.playerID)
 
 
 @room_router.get("", status_code=200)

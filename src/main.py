@@ -7,8 +7,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from src.players.infrastructure.api import router as players_router
-from src.rooms.infrastructure.api import room_router
-from src.rooms.infrastructure.api import websocket_router as ws_router
+from src.rooms.infrastructure.api import room_router as rooms_router
+from src.rooms.infrastructure.api import websocket_router as websocket_router
 from src.database import engine, Base
 
 Base.metadata.create_all(bind=engine)
@@ -28,15 +28,15 @@ app.add_middleware(
 
 
 @app.get("/", tags=["Root"])
-def redirect_to_docs():
+def redirect_to_documentation():
     return RedirectResponse(url="/docs/")
 
 
 app.include_router(players_router, prefix="/players", tags=["players"])
 
-app.include_router(room_router, prefix="/rooms", tags=["rooms"])
+app.include_router(rooms_router, prefix="/rooms", tags=["rooms"])
 
-app.include_router(ws_router)
+app.include_router(websocket_router)
 
 
 if __name__ == "__main__":

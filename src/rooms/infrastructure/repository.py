@@ -13,7 +13,7 @@ class SQLAlchemyRepository(RoomRepository):
     def create(self, room: RoomCreationRequest) -> RoomID:
 
         room = Room(
-            name=room.roomName,
+            roomName=room.roomName,
             minPlayers=room.minPlayers,
             maxPlayers=room.maxPlayers,
             password=room.password,
@@ -26,21 +26,21 @@ class SQLAlchemyRepository(RoomRepository):
 
         return RoomID(roomID=room.roomID)
 
-    def get(self, room_id: int) -> RoomDomain:
-        room = self.db.query(Room).filter(Room.roomID == room_id).first()
+    def get(self, roomID: int) -> RoomDomain:
+        room = self.db.query(Room).filter(Room.roomID == roomID).first()
 
         if room is None:
             return None
 
         players = self.db.query(Player).join(PlayerRoom).filter(
-            PlayerRoom.roomID == room_id).all()
+            PlayerRoom.roomID == roomID).all()
 
         players_list = [{"playerID": str(
             player.playerID), "username": player.username} for player in players]
 
         return Room(
             roomID=room.roomID,
-            roomName=room.name,
+            roomName=room.roomName,
             minPlayers=room.minPlayers,
             maxPlayers=room.maxPlayers,
             hostID=room.hostID,
@@ -48,20 +48,20 @@ class SQLAlchemyRepository(RoomRepository):
             players=players_list
         )
 
-    def get_public_info(self, room_id) -> RoomPublicInfo:
-        room = self.db.query(Room).filter(Room.roomID == room_id).first()
+    def get_public_info(self, roomID) -> RoomPublicInfo:
+        room = self.db.query(Room).filter(Room.roomID == roomID).first()
         if room is None:
             return None
 
         players = self.db.query(Player).join(PlayerRoom).filter(
-            PlayerRoom.roomID == room_id).all()
+            PlayerRoom.roomID == roomID).all()
 
         players_list = [{"playerID": str(
             player.playerID), "username": player.username} for player in players]
 
         room_data = RoomPublicInfo(
             hostID=room.hostID,
-            roomName=room.name,
+            roomName=room.roomName,
             roomID=room.roomID,
             minPlayers=room.minPlayers,
             maxPlayers=room.maxPlayers,
@@ -76,7 +76,7 @@ class SQLAlchemyRepository(RoomRepository):
         for room in all_rooms:
             room_info = RoomExtendedInfo(
                 roomID=room.roomID,
-                roomName=room.name,
+                roomName=room.roomName,
                 maxPlayers=room.maxPlayers,
                 actualPlayers=self.get_player_count(room.roomID),
                 started=False,
@@ -93,11 +93,11 @@ class SQLAlchemyRepository(RoomRepository):
 
     def update(self, room: Room) -> None:
         self.db.query(Room).filter(Room.roomID == room.roomID).update(
-            {"name": room.roomName, "minPlayers": room.minPlayers, "maxPlayers": room.maxPlayers})
+            {"roomName": room.roomName, "minPlayers": room.minPlayers, "maxPlayers": room.maxPlayers})
         self.db.commit()
 
-    def delete(self, room_id: int) -> None:
-        self.db.query(Room).filter(Room.roomID == room_id).delete()
+    def delete(self, roomID: int) -> None:
+        self.db.query(Room).filter(Room.roomID == roomID).delete()
         self.db.commit()
 
     def associate_player_from_room(self, roomID: int, playerID: int):
@@ -106,18 +106,18 @@ class SQLAlchemyRepository(RoomRepository):
         self.db.add(player_join_room)
         self.db.commit()
 
-    def disassociate_player_from_room(self, player_id: int, room_id: int) -> None:
+    def disassociate_player_from_room(self, playerID: int, roomID: int) -> None:
 
         player_in_room = self.db.query(PlayerRoom).filter(
-            PlayerRoom.playerID == player_id,
-            PlayerRoom.roomID == room_id
+            PlayerRoom.playerID == playerID,
+            PlayerRoom.roomID == roomID
         )
         player_in_room.delete()
         self.db.commit()
 
-    def is_owner(self, player_id: int) -> bool:
+    def is_owner(self, playerID: int) -> bool:
         room = self.db.query(Room).filter(
-            Room.hostID == player_id).first()
+            Room.hostID == playerID).first()
         return room is not None
 
     def is_player_in_room(self, playerID: int, roomID: int) -> bool:

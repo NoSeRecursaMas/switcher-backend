@@ -7,7 +7,7 @@ from src.rooms.infrastructure.websockets import ConnectionManager
 
 
 def mock_get_data_room(game_id):
-    return {"room_id": game_id, "info": "Room Info"}
+    return {"roomID": game_id, "info": "Room Info"}
 
 
 @pytest.fixture
@@ -22,23 +22,23 @@ async def test_websocket_broadcast_correctly(mock_broadcast_to_room, mock_get_da
     mock_websocket.receive_json = AsyncMock(
         return_value={"type": "get_room_info"})
 
-    mock_get_data_room.return_value = {"room_id": 1, "info": "Room Info"}
+    mock_get_data_room.return_value = {"roomID": 1, "info": "Room Info"}
 
     manager = ConnectionManager()
 
-    await manager.connect_to_room(room_id=1, player_id=1, websocket=mock_websocket)
+    await manager.connect_to_room(roomID=1, playerID=1, websocket=mock_websocket)
 
-    await manager.broadcast_to_room(room_id=1, message=await mock_get_data_room(1))
+    await manager.broadcast_to_room(roomID=1, message=await mock_get_data_room(1))
 
     mock_broadcast_to_room.assert_any_call(
-        room_id=1, message={"room_id": 1, "info": "Room Info"})
+        roomID=1, message={"roomID": 1, "info": "Room Info"})
 
     data = await mock_websocket.receive_json()
     if data["type"] == "get_room_info":
-        await manager.broadcast_to_room(room_id=1, message=await mock_get_data_room(1))
+        await manager.broadcast_to_room(roomID=1, message=await mock_get_data_room(1))
 
     mock_broadcast_to_room.assert_any_call(
-        room_id=1, message={"room_id": 1, "info": "Room Info"})
+        roomID=1, message={"roomID": 1, "info": "Room Info"})
 
 
 @pytest.mark.asyncio
@@ -48,19 +48,19 @@ async def test_websocket_send_personal_message(mock_send_personal_message, mock_
 
     manager = ConnectionManager()
 
-    await manager.connect_to_room(room_id=1, player_id=1, websocket=mock_websocket)
+    await manager.connect_to_room(roomID=1, playerID=1, websocket=mock_websocket)
 
-    await manager.send_personal_message(message={"msg": "test"}, player_id=1)
+    await manager.send_personal_message(message={"msg": "test"}, playerID=1)
 
     mock_send_personal_message.assert_any_call(
-        message={"msg": "test"}, player_id=1)
+        message={"msg": "test"}, playerID=1)
 
     data = await mock_websocket.receive_json()
     if data["type"] == "message":
-        await manager.send_personal_message(message={"msg": "test"}, player_id=1)
+        await manager.send_personal_message(message={"msg": "test"}, playerID=1)
 
     mock_send_personal_message.assert_any_call(
-        message={"msg": "test"}, player_id=1)
+        message={"msg": "test"}, playerID=1)
 
 
 def test_create_room_invalid_size(new_mock, mock_db):
@@ -136,9 +136,9 @@ def test_create_room_name_not_ascii(new_mock, mock_db):
     mock_room = create_mock_room(mock_db, roomName="test@Σ")
 
     response = new_mock.post('/rooms/', json=mock_room)
-    assert response.status_code == 400
-    assert response.json() == {
-        'detail': 'El valor proporcionado contiene caracteres no permitidos.'}
+    assert response.status_code == 422
+    assert response.json().get(
+        "detail")[0]["msg"] == 'El roomName proporcionado contiene caracteres no permitidos.'
 
 
 def test_create_room_name_empty(new_mock, mock_db):

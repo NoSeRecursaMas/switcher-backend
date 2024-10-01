@@ -8,11 +8,11 @@ class RoomRepository(ABC):
         pass
 
     @abstractmethod
-    def get(self, room_id: int) -> RoomPublicInfo:
+    def get(self, roomID: int) -> RoomPublicInfo:
         pass
 
     @abstractmethod
-    def get_public_info(self, room_id: int) -> RoomPublicInfo:
+    def get_public_info(self, roomID: int) -> RoomPublicInfo:
         pass
 
     @abstractmethod
@@ -20,7 +20,7 @@ class RoomRepository(ABC):
         pass
 
     @abstractmethod
-    def get_player_count(self, room_id: int) -> int:
+    def get_player_count(self, roomID: int) -> int:
         pass
 
     @abstractmethod
@@ -28,7 +28,7 @@ class RoomRepository(ABC):
         pass
 
     @abstractmethod
-    def delete(self, player_id: int) -> None:
+    def delete(self, playerID: int) -> None:
         pass
 
     @abstractmethod
@@ -36,11 +36,11 @@ class RoomRepository(ABC):
         pass
 
     @abstractmethod
-    def disassociate_player_from_room(self, player_id: int, room_id: int) -> None:
+    def disassociate_player_from_room(self, playerID: int, roomID: int) -> None:
         pass
 
     @abstractmethod
-    def is_owner(self, player_id: int) -> bool:
+    def is_owner(self, playerID: int) -> bool:
         pass
 
     @abstractmethod

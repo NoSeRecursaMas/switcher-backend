@@ -4,12 +4,12 @@ from sqlalchemy.orm import relationship
 
 
 class Player(Base):
-    __tablename__ = 'Players'
+    __tablename__ = 'players'
 
     playerID = Column(Integer, primary_key=True, index=True)
     username = Column(String, nullable=True)
 
-    Rooms = relationship('Room', secondary='PlayerRoom',
+    rooms = relationship('Room', secondary='player_room',
                          back_populates='players')
 
     def __repr__(self):
