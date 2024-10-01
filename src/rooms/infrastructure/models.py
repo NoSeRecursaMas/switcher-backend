@@ -1,11 +1,10 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from src.database import Base
-from sqlalchemy.orm import relationship
 
 
-class Lobby(Base):
-    __tablename__ = 'lobbys'
+class Room(Base):
+    __tablename__ = 'Rooms'
 
     roomID = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=True)
@@ -13,19 +12,19 @@ class Lobby(Base):
     maxPlayers = Column(Integer, nullable=True)
     password = Column(String, nullable=True)
 
-    owner = Column(Integer, ForeignKey('players.playerID'))
+    hostID = Column(Integer, ForeignKey('Players.playerID'))
 
     players = relationship(
-        'Player', secondary='PlayerLobby', back_populates='lobbys')
+        'Player', secondary='PlayerRoom', back_populates='Rooms')
 
     def __repr__(self):
-        return f"<Lobby(name={self.name})>"
+        return f"<Room(name={self.name})>"
 
 
-class PlayerLobby(Base):
-    __tablename__ = 'PlayerLobby'
+class PlayerRoom(Base):
+    __tablename__ = 'PlayerRoom'
 
-    playerID = Column(Integer, ForeignKey('players.playerID',
+    playerID = Column(Integer, ForeignKey('Players.playerID',
                       ondelete='CASCADE'), primary_key=True)
-    roomID = Column(Integer, ForeignKey('lobbys.roomID',
+    roomID = Column(Integer, ForeignKey('Rooms.roomID',
                                         ondelete='CASCADE'), primary_key=True)

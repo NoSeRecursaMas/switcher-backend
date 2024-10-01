@@ -22,7 +22,7 @@ switcher-backend/
     │   ├── domain              # Lógica de negocio y reglas específicas
     │   ├── infrastructure      # Interacción con bases de datos y tecnologías externas
     │   └── test
-    ├── lobbys                  # Example
+    ├── Rooms                  # Example
     │   ├── application         
     │   │   ├── services.py
     │   │   └── use_case.py
@@ -31,7 +31,7 @@ switcher-backend/
     │   │   └── lobby_service.py
     │   ├── infrastructure
     │   │   ├── api.py
-    │   │   ├── lobby_repository.py
+    │   │   ├── room_repository.py
     │   │   └── lobby_websockets.py
     │   └── test
     ├── players

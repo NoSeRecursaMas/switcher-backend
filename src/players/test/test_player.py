@@ -12,17 +12,17 @@ def test_create_player(new_mock, mock_db):
 
 def test_create_player_invalid_size(new_mock):
     response = new_mock.post("/players", json={"username": ""})
-    assert response.status_code == 400
-    assert response.json() == {
-        "detail": "El valor proporcionado no cumple con los requisitos de longitud permitidos."}
+    assert response.status_code == 422
+    assert response.json().get(
+        "detail")[0]["msg"] == "El username proporcionado no cumple con los requisitos de longitud permitidos."
 
 
 def test_create_player_long_name(new_mock):
     long_name = "A" * 33
     response = new_mock.post("/players", json={"username": long_name})
-    assert response.status_code == 400
-    assert response.json() == {
-        "detail": "El valor proporcionado no cumple con los requisitos de longitud permitidos."}
+    assert response.status_code == 422
+    assert response.json().get(
+        "detail")[0]["msg"] == "El username proporcionado no cumple con los requisitos de longitud permitidos."
 
 
 def test_create_player_non_ascii(new_mock):
