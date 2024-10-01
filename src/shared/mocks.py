@@ -46,7 +46,7 @@ def create_mock_room(
     owner_exists=True,
     roomID=1,
     playerID=1,
-    roomName="test_lobby",
+    roomName="test_room",
     minPlayers=2,
     maxPlayers=4,
     password="",
