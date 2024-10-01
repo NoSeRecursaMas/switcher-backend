@@ -1,8 +1,10 @@
 from typing import List, Optional
-from pydantic import BaseModel, field_validator, model_validator, ValidationInfo
+
+from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
+
 from src.players.domain.models import Player
-from src.shared.validators import CommonValidators
 from src.rooms.domain.validators import BasicValidators
+from src.shared.validators import CommonValidators
 
 
 class Room(BaseModel):
@@ -44,15 +46,15 @@ class RoomCreationRequest(BaseModel):
     maxPlayers: int
     password: Optional[str] = None
 
-    @field_validator('roomName')
+    @field_validator("roomName")
     @classmethod
     def validate_roomName(cls, value: str, info: ValidationInfo):
         return CommonValidators.validate_string(value, info)
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def validate_players_count(cls, values):
-        minPlayers = values.get('minPlayers')
-        maxPlayers = values.get('maxPlayers')
+        minPlayers = values.get("minPlayers")
+        maxPlayers = values.get("maxPlayers")
         BasicValidators.validate_players_count(minPlayers, maxPlayers)
         return values

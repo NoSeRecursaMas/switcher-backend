@@ -1,9 +1,10 @@
+from typing import Optional, Union
+
 from sqlalchemy.orm import Session
-from typing import Union
-from typing import Optional
-from src.players.infrastructure.models import Player as PlayerDB
+
 from src.players.domain.models import Player, PlayerCreationRequest
 from src.players.domain.repository import PlayerRepository
+from src.players.infrastructure.models import Player as PlayerDB
 
 
 class SQLAlchemyRepository(PlayerRepository):
@@ -11,7 +12,6 @@ class SQLAlchemyRepository(PlayerRepository):
         self.db_session = db_session
 
     def create(self, player_data: PlayerCreationRequest) -> Player:
-
         new_player = PlayerDB(username=player_data.username)
 
         self.db_session.add(new_player)
@@ -21,8 +21,7 @@ class SQLAlchemyRepository(PlayerRepository):
         return Player(playerID=new_player.playerID, username=new_player.username)
 
     def get(self, playerID: int) -> Optional[Player]:
-        player = self.db_session.query(PlayerDB).filter(
-            PlayerDB.playerID == playerID).first()
+        player = self.db_session.query(PlayerDB).filter(PlayerDB.playerID == playerID).first()
 
         if player is None:
             return None
@@ -30,13 +29,11 @@ class SQLAlchemyRepository(PlayerRepository):
         return Player(playerID=player.playerID, username=player.username)
 
     def update(self, player: Player) -> None:
-        self.db_session.query(PlayerDB).filter(
-            PlayerDB.playerID == player.playerID).update(
+        self.db_session.query(PlayerDB).filter(PlayerDB.playerID == player.playerID).update(
             {"username": player.username}
         )
         self.db_session.commit()
 
     def delete(self, playerID: int) -> None:
-        self.db_session.query(PlayerDB).filter(
-            PlayerDB.playerID == playerID).delete()
+        self.db_session.query(PlayerDB).filter(PlayerDB.playerID == playerID).delete()
         self.db_session.commit()

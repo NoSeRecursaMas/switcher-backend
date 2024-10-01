@@ -2,21 +2,15 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-import uvicorn
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+
+from src.database import Base, engine
 from src.players.infrastructure.api import router as players_router
 from src.rooms.infrastructure.api import room_router as rooms_router
 from src.rooms.infrastructure.api import websocket_router as websocket_router
-from src.database import engine, Base
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(
-    title="Switcher Card Game",
-    description="API for Switcher Card Game"
-)
+app = FastAPI(title="Switcher Card Game", description="API for Switcher Card Game")
 
 app.add_middleware(
     CORSMiddleware,

@@ -23,10 +23,10 @@ switcher-backend/
     │   ├── infrastructure      # Interacción con bases de datos y tecnologías externas
     │   └── test
     ├── Rooms                  # Example
-    │   ├── application         
+    │   ├── application
     │   │   ├── services.py
     │   │   └── use_case.py
-    │   ├── domain                      
+    │   ├── domain
     │   │   ├── room_dbModelss.py
     │   │   └── room_service.py
     │   ├── infrastructure
@@ -59,12 +59,12 @@ switcher-backend/
 ### 2. **Application**
  - **Qué sabe:** Detalles de `domain` (cómo usar los dbModelsos y reglas del dominio).
  - **No conoce:** Detalles de `infrastructure` (cómo se implementan la persistencia de datos o las interacciones externas).
- - **Responsabilidad:** Coordina los casos de uso y orquesta cómo se aplican las reglas del dominio para responder a las acciones del usuario. 
+ - **Responsabilidad:** Coordina los casos de uso y orquesta cómo se aplican las reglas del dominio para responder a las acciones del usuario.
 
 ---
 
 ### 3. **Infrastructure**
- - **Qué sabe:** 
+ - **Qué sabe:**
     - Detalles de `application` (cómo implementar puertos y adaptadores para la capa de `application`).
     - Detalles de `domain` (cómo persistir datos relacionados con los dbModelsos del dominio).
  - **Responsabilidad:** Implementa la persistencia de datos, la comunicación con otros servicios, y todo lo relacionado con el entorno técnico. Aquí es donde se manejan las conexiones a bases de datos o las llamadas a otros servicios.

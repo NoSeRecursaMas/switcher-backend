@@ -1,5 +1,12 @@
 from abc import ABC, abstractmethod
-from src.rooms.domain.models import RoomID, RoomCreationRequest, RoomExtendedInfo, RoomPublicInfo
+from typing import Optional
+
+from src.rooms.domain.models import (
+    RoomCreationRequest,
+    RoomExtendedInfo,
+    RoomID,
+    RoomPublicInfo,
+)
 
 
 class RoomRepository(ABC):
@@ -8,11 +15,11 @@ class RoomRepository(ABC):
         pass
 
     @abstractmethod
-    def get(self, roomID: int) -> RoomPublicInfo:
+    def get(self, roomID: int) -> Optional[RoomPublicInfo]:
         pass
 
     @abstractmethod
-    def get_public_info(self, roomID: int) -> RoomPublicInfo:
+    def get_public_info(self, roomID: int) -> Optional[RoomPublicInfo]:
         pass
 
     @abstractmethod

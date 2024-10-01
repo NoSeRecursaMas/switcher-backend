@@ -1,13 +1,15 @@
 from unittest.mock import MagicMock, patch
-from fastapi.testclient import TestClient
-from src.main import app
-from src.database import get_db
+
 import pytest
+from fastapi.testclient import TestClient
+
+from src.database import get_db
+from src.main import app
 
 client = TestClient(app)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def mock_db():
     with patch("src.database.SessionLocal") as mock_session:
         db_session = mock_session.return_value
@@ -19,7 +21,7 @@ def mock_db():
         yield db_session
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def new_mock(mock_db):
     def override_get_db():
         yield mock_db
@@ -33,41 +35,39 @@ def create_mock_player(mock_db, playerID, username):
     mock_player = MagicMock()
     mock_player.playerID = playerID
     mock_player.username = username
-    mock_db.refresh.side_effect = lambda x: setattr(
-        x, 'playerID', playerID) if hasattr(x, 'playerID') else None
+    mock_db.refresh.side_effect = lambda x: (setattr(x, "playerID", playerID) if hasattr(x, "playerID") else None)
     mock_db.query().filter().first.return_value = mock_player
 
-    return {
+    return {"playerID": playerID, "username": username}
+
+
+def create_mock_room(
+    mock_db,
+    owner_exists=True,
+    roomID=1,
+    playerID=1,
+    roomName="test_lobby",
+    minPlayers=2,
+    maxPlayers=4,
+    password="",
+) -> dict:
+    mock_room = {
+        "roomID": roomID,
         "playerID": playerID,
-        "username": username
+        "roomName": roomName,
+        "minPlayers": minPlayers,
+        "maxPlayers": maxPlayers,
+        "password": password,
     }
-
-
-def create_mock_room(mock_db, owner_exists=True, roomID=1, playerID=1, roomName="test_lobby", minPlayers=2, maxPlayers=4, password="") -> dict:
-    mock_room = MagicMock()
-    mock_room.roomID = roomID
-    mock_room.roomName = roomName
-    mock_room.minPlayers = minPlayers
-    mock_room.maxPlayers = maxPlayers
-    mock_room.password = password
-    mock_room.playerID = playerID
 
     if owner_exists:
         create_mock_player(mock_db, playerID=playerID, username="test")
     else:
         mock_db.query().filter().first.return_value = None
 
-    mock_db.add.return_value = mock_room
+    mock_db.add.return_value = None
     mock_db.commit.return_value = None
-    mock_db.refresh.side_effect = lambda x: setattr(x, 'roomID', roomID)
-
-    mock_room = {
-        "playerID": playerID,
-        "roomName": roomName,
-        "minPlayers": minPlayers,
-        "maxPlayers": maxPlayers,
-        "password": password
-    }
+    mock_db.refresh.side_effect = lambda x: setattr(x, "roomID", roomID)
 
     return mock_room
 
@@ -75,14 +75,13 @@ def create_mock_room(mock_db, owner_exists=True, roomID=1, playerID=1, roomName=
 def list_mock_room(mock_db, lobbies_data, players_data):
     def create_mock_room(room):
         mock_room = MagicMock()
-        mock_room.roomID = room['roomID']
-        mock_room.roomName = room['roomName']
-        mock_room.maxPlayers = room['maxPlayers']
-        mock_room.actualPlayers = room['actualPlayers']
-        mock_room.started = room['started']
-        mock_room.password = 'password' if room['private'] else None
-        mock_room.players = [MagicMock()
-                             for _ in range(room['actualPlayers'])]
+        mock_room.roomID = room["roomID"]
+        mock_room.roomName = room["roomName"]
+        mock_room.maxPlayers = room["maxPlayers"]
+        mock_room.actualPlayers = room["actualPlayers"]
+        mock_room.started = room["started"]
+        mock_room.password = "password" if room["private"] else None
+        mock_room.players = [MagicMock() for _ in range(room["actualPlayers"])]
         return mock_room
 
     mock_lobbies = [create_mock_room(room) for room in lobbies_data]
@@ -94,14 +93,14 @@ def list_mock_room(mock_db, lobbies_data, players_data):
     def filter_mock(*args):
         roomID = args[0].right.value
         # Buscar el room correspondiente por roomID
-        players_in_room = [p for p in players_data if p['roomID'] == roomID]
+        players_in_room = [p for p in players_data if p["roomID"] == roomID]
         return MagicMock(all=MagicMock(return_value=players_in_room))
 
     query_mock_player = MagicMock()
     query_mock_player.filter.side_effect = filter_mock
 
     # Asignar el query_mock al método query de mock_db
-    mock_db.query.side_effect = lambda model: query_mock_room if model.__name__ == 'Room' else query_mock_player
+    mock_db.query.side_effect = lambda model: (query_mock_room if model.__name__ == "Room" else query_mock_player)
 
 
 def list_mock_data_room(mock_db, lobbies_data):
@@ -134,10 +133,13 @@ def leave_room_mock(player_exists=True, room_exists=True, is_player_in_room=True
 
     mock_player_repo.get = MagicMock(return_value=player_exists)
     mock_room_repo.get = MagicMock(return_value=room_exists)
-    mock_room_repo.is_player_in_room = MagicMock(
-        return_value=is_player_in_room)
+    mock_room_repo.is_player_in_room = MagicMock(return_value=is_player_in_room)
     mock_room_repo.is_owner = MagicMock(return_value=is_owner)
 
-    return patch('src.rooms.infrastructure.api.RoomSQLAlchemyRepository', return_value=mock_room_repo), \
-        patch('src.rooms.infrastructure.api.PlayerSQLAlchemyRepository',
-              return_value=mock_player_repo)
+    return patch(
+        "src.rooms.infrastructure.api.RoomSQLAlchemyRepository",
+        return_value=mock_room_repo,
+    ), patch(
+        "src.rooms.infrastructure.api.PlayerSQLAlchemyRepository",
+        return_value=mock_player_repo,
+    )
