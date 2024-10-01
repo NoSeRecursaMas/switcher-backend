@@ -22,7 +22,6 @@ class ConnectionManager:
                 del self.active_room_connections[room_id]
             if player_id in self.players_connections:
                 del self.players_connections[player_id]
-            await websocket.close()
 
     async def send_personal_message(self, message: dict, player_id: int):
         if player_id in self.players_connections:
