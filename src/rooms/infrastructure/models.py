@@ -1,7 +1,7 @@
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-
 from src.database import Base
+from src.games.infrastructure.models import Game
 
 
 class Room(Base):
@@ -16,11 +16,10 @@ class Room(Base):
     hostID = Column(Integer, ForeignKey("players.playerID"))
 
     players = relationship("Player", secondary="player_room", back_populates="rooms")
-    game = relationship("Game", back_populates="room")
+    game = relationship("Game", back_populates="room", uselist=False)
 
     def __repr__(self):
         return f"<Room(roomName={self.roomName}, players={self.players})>"
-
 
 class PlayerRoom(Base):
     __tablename__ = "player_room"
