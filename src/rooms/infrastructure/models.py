@@ -16,9 +16,10 @@ class Room(Base):
     hostID = Column(Integer, ForeignKey("players.playerID"))
 
     players = relationship("Player", secondary="player_room", back_populates="rooms")
+    game = relationship("Game", back_populates="room")
 
     def __repr__(self):
-        return f"<Room(roomName={self.roomName})>"
+        return f"<Room(roomName={self.roomName}, players={self.players})>"
 
 
 class PlayerRoom(Base):
