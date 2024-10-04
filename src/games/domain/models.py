@@ -35,7 +35,7 @@ class Player(BaseModel):
     MovementCards: List[MovementCard]
     FigureCards: List[FigureCard]
 
-class Game(BaseModel):
+class GameInfo(BaseModel):
     GameID: int
     Board: List[Board]
     LastMovement: Optional[LastMovement]
@@ -43,7 +43,6 @@ class Game(BaseModel):
     players: List[Player]
 
 class GameCreationRequest(BaseModel):
-    playerID: int
     roomID: int
 
 class GameID(BaseModel):

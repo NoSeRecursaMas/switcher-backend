@@ -27,6 +27,7 @@ class PlayerGame(Base):
     game = relationship("Game", back_populates="players")
     player = relationship("Player", back_populates="games")
     figureCards = relationship("FigureCard", back_populates="playerGame")
+    playerhand
     movementCards = relationship("MovementCard", back_populates="playerGame")
     
     def __repr__(self):
@@ -40,8 +41,6 @@ class FigureCard(Base):
     isBlocked = Column(Boolean, nullable=True)
     playerGameID = Column(Integer, ForeignKey("player_game.playerID"))
 
-    playerGame = relationship("PlayerGame", back_populates="figureCards")
-
     def __repr__(self):
         return f"<FigureCard(cardID={self.cardID}, type={self.type}, isBlocked={self.isBlocked})>"
 
@@ -54,7 +53,6 @@ class MovementCard(Base):
     isDiscarded = Column(Boolean, nullable=True)
     playerGameID = Column(Integer, ForeignKey("player_game.playerID"))
 
-    playerGame = relationship("PlayerGame", back_populates="movementCards")
 
     def __repr__(self):
         return f"<MovementCard(cardID={self.cardID}, type={self.type}, isDiscarded={self.isDiscarded})>"
