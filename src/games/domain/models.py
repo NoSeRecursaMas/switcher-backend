@@ -41,3 +41,11 @@ class Game(BaseModel):
     LastMovement: Optional[LastMovement]
     ProhibitedColor: Optional[str]
     players: List[Player]
+
+class GameCreationRequest(BaseModel):
+    playerID: int
+    roomID: int
+
+class GameID(BaseModel):
+    gameID: int
+
