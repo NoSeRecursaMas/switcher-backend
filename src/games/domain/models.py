@@ -1,8 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel
 
-from src.players.domain.models import Player
-
 class Board(BaseModel):
     PosX: int
     PosY: int
@@ -26,7 +24,7 @@ class FigureCard(BaseModel):
     cardID: int
     isBlocked: bool
 
-class Player(BaseModel):
+class PlayerInfo(BaseModel):
     playerID: int
     username: str
     position: int
@@ -35,16 +33,15 @@ class Player(BaseModel):
     MovementCards: List[MovementCard]
     FigureCards: List[FigureCard]
 
-class GameInfo(BaseModel):
+class Game(BaseModel):
     GameID: int
     Board: List[Board]
     LastMovement: Optional[LastMovement]
     ProhibitedColor: Optional[str]
-    players: List[Player]
+    players: List[PlayerInfo]
 
 class GameCreationRequest(BaseModel):
     roomID: int
 
 class GameID(BaseModel):
     gameID: int
-
