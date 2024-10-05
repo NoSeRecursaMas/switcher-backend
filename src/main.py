@@ -6,6 +6,7 @@ from fastapi.responses import RedirectResponse
 from src.database import Base, engine
 from src.players.infrastructure.api import router as players_router
 from src.rooms.infrastructure.api import room_router as rooms_router
+from src.games.infrastructure.api import router as games_router
 from src.rooms.infrastructure.api import websocket_router as websocket_router
 
 Base.metadata.create_all(bind=engine)
@@ -29,6 +30,8 @@ def redirect_to_documentation():
 app.include_router(players_router, prefix="/players", tags=["players"])
 
 app.include_router(rooms_router, prefix="/rooms", tags=["rooms"])
+
+app.include_router(games_router, prefix="/games", tags=["games"])
 
 app.include_router(websocket_router)
 
