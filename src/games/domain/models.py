@@ -1,5 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel
+from pydantic.types import Json
 
 class Board(BaseModel):
     PosX: int
@@ -42,6 +43,7 @@ class Game(BaseModel):
 
 class GameCreationRequest(BaseModel):
     roomID: int
+    board: List[Board]
 
 class GameID(BaseModel):
     gameID: int
