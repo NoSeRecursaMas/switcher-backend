@@ -40,15 +40,15 @@ class RoomRepository(ABC):
         pass
 
     @abstractmethod
-    def associate_player_from_room(self, playerID: int, roomID: int) -> None:
+    def add_player_to_room(self, playerID: int, roomID: int) -> None:
         pass
 
     @abstractmethod
-    def disassociate_player_from_room(self, playerID: int, roomID: int) -> None:
+    def remove_player_from_room(self, playerID: int, roomID: int) -> None:
         pass
 
     @abstractmethod
-    def is_owner(self, playerID: int) -> bool:
+    def is_owner(self, playerID: int, roomID: int) -> bool:
         pass
 
     @abstractmethod
