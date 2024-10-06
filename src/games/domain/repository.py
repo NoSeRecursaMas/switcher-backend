@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Dict
-from src.games.domain.models import Board
-import json
 
 from src.games.domain.models import (
     Game,
@@ -12,6 +10,10 @@ from src.games.domain.models import (
 class GameRepository(ABC):
     @abstractmethod
     def create(self, game: GameCreationRequest) -> GameID:
+        pass
+
+    @abstractmethod    
+    def create_figure_cards(self, roomID: int) -> None:
         pass
 
     @abstractmethod

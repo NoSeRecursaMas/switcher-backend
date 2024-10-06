@@ -93,6 +93,10 @@ class SQLAlchemyRepository(RoomRepository):
     def get_player_count(self, roomID: int) -> int:
         players = self.db_session.query(PlayerRoom).filter(PlayerRoom.roomID == roomID).all()
         return len(players)
+    
+    def get_players(self, roomID: int) -> List[PlayerDomain]:
+        players = self.db_session.query(Room).filter(Room.roomID == roomID).first().players
+        return [PlayerDomain(playerID=player.playerID, username=player.username) for player in players]
 
     def update(self, room: Room) -> None:
         self.db_session.query(Room).filter(Room.roomID == room.roomID).update(
