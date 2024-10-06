@@ -1,6 +1,7 @@
 from src.games.domain.models import GameID 
 from src.players.domain.models import PlayerID
 from src.games.domain.repository import GameRepository
+from src.games.domain.service import GameServiceDomain
 from src.games.config import COLORS
 import random
 
@@ -9,4 +10,9 @@ class GameService:
         self.repository = repository
 
     def start_game(self, roomID: int, player : PlayerID) -> GameID:
-        self.repository.create_board()
+        
+        board = GameServiceDomain.create_board()
+
+        gameID = self.repository.create(roomID, board)
+
+        self.repository.create_figure_cards(roomID, gameID)

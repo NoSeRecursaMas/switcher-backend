@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, NULL
 from sqlalchemy.orm import Session
 
 from src.games.domain.models import Game as GameDomain
@@ -7,14 +7,19 @@ from src.games.infrastructure.models import Game
 from src.games.domain.repository import GameRepository
 
 class SQLAlchemyRepository(GameRepository):
-    def __init__(self, db_session: Session):
+    def __init__(self, room_repository: SQLAlchemyRepository, db_session: Session):
         self.db_session = db_session
+        self.room_repository = room_repository
 
     def create(self, game: GameCreationRequest) -> GameID:
+        board_json = game.board.json.dumps()
+        last_movements = {}
+
         game = Game(
-            board=game.board,
-            lastMovements=game.lastMovements,
-            prohibitedColor=game.prohibitedColor,
+            board=board_json,
+            lastMovements=last_movements,
+            prohibitedColor=NULL,
+            roomID=game.roomID
         )
 
         self.db_session.add(game)
@@ -41,8 +46,14 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.delete(game)
         self.db_session.commit()
 
-    def associate_player_from_game(self, gameID: int, playerID: int) -> None:
-        pass
+    def create_figure_cards(self, roomID: int, gameID: int) -> None:
+        
+        players = self.room_repository.get_players(roomID)
 
-    def disassociate_player_from_game(self, gameID: int, playerID: int) -> None:
-        pass
+        player_count = len(players)
+
+        for player in players:
+            for i in player_count
+                
+
+

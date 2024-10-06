@@ -17,6 +17,7 @@ class GameServiceDomain:
                     "Color": color_pool.pop()
                 }
                 board.append(token)
-        
-        board_json = json.dumps(board)
-        return board_json
+    
+        return board
+    
+
