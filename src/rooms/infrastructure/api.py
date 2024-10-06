@@ -16,6 +16,7 @@ router = APIRouter()
 @router.post("", status_code=201)
 async def create_room(room_data: RoomCreationRequest, db_session: Session = Depends(get_db)) -> RoomID:
     service = RoomService(RoomWebSocketRepository(db_session), PlayerSQLAlchemyRepository(db_session))
+    
     room = await service.create_room(room_data)
     return room
 
@@ -36,9 +37,8 @@ async def join_room(roomID: int, playerID: PlayerID, db_session: Session = Depen
 
 @router.websocket("/{playerID}")
 async def room_list_websocket(playerID: int, websocket: WebSocket, db_session: Session = Depends(get_db)):
-    room_repository = RoomWebSocketRepository(db_session)
-    player_repository = PlayerSQLAlchemyRepository(db_session)
-    service = RoomService(room_repository, player_repository)
+    service = RoomService(RoomWebSocketRepository(db_session), PlayerSQLAlchemyRepository(db_session))
+
     try:
         await service.connect_to_room_list_websocket(playerID, websocket)
     except WebSocketDisconnect as e:
@@ -47,9 +47,8 @@ async def room_list_websocket(playerID: int, websocket: WebSocket, db_session: S
 
 @router.websocket("/{playerID}/{roomID}")
 async def room_websocket(playerID: int, roomID: int, websocket: WebSocket, db_session: Session = Depends(get_db)):
-    room_repository = RoomWebSocketRepository(db_session)
-    player_repository = PlayerSQLAlchemyRepository(db_session)
-    service = RoomService(room_repository, player_repository)
+    service = RoomService(RoomWebSocketRepository(db_session), PlayerSQLAlchemyRepository(db_session))
+
     try:
         await service.connect_to_room_websocket(playerID, roomID, websocket)
     except WebSocketDisconnect as e:
