@@ -2,6 +2,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String, JSON, Boolean
 from sqlalchemy.orm import relationship
 from src.database import Base
 
+
 class Game(Base):
     __tablename__ = "games"
 
@@ -20,10 +21,11 @@ class Game(Base):
     def __repr__(self):
         return f"<Game(gameID={self.gameID}, board={self.board}, lastMovements={self.lastMovements}, prohibitedColor={self.prohibitedColor}, roomID={self.roomID})>"
 
+
 class FigureCard(Base):
     __tablename__ = "figure_cards"
-    
-    cardID = Column(Integer, primary_key=True)
+
+    cardID = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String, nullable=True)
     isBlocked = Column(Boolean, default=False)
     isPlayable = Column(Boolean, default=False)
@@ -36,6 +38,7 @@ class FigureCard(Base):
 
     def __repr__(self):
         return f"<FigureCard(cardID={self.cardID}, type={self.type}, isBlocked={self.isBlocked})>"
+
 
 class MovementCard(Base):
     __tablename__ = "movement_cards"
@@ -51,10 +54,5 @@ class MovementCard(Base):
     player = relationship("Player", back_populates="movementCards")
     game = relationship("Game", back_populates="movementDeck")
 
-
     def __repr__(self):
         return f"<MovementCard(cardID={self.cardID}, type={self.type}, isDiscarded={self.isDiscarded})>"
-    
-    
-
-

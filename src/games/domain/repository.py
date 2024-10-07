@@ -7,13 +7,18 @@ from src.games.domain.models import (
     GameID,
 )
 
+
 class GameRepository(ABC):
     @abstractmethod
     def create(self, roomID: int, board: List[Dict[str, Union[int, str]]]) -> GameID:
         pass
 
-    @abstractmethod    
-    def create_figure_cards(self, roomID: int) -> None:
+    @abstractmethod
+    def create_figure_cards(self, roomID: int, gameID: int) -> None:
+        pass
+
+    @abstractmethod
+    def create_movement_cards(self, roomID: int, gameID: int) -> None:
         pass
 
     @abstractmethod
@@ -27,4 +32,3 @@ class GameRepository(ABC):
     @abstractmethod
     def is_player_in_game(self, gameID: int, playerID: int) -> bool:
         pass
-
