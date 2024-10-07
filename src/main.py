@@ -13,10 +13,10 @@ from src.rooms.infrastructure.websocket import ws_manager_room_list, ws_manager_
 
 app = FastAPI(title="Switcher Card Game", description="API for Switcher Card Game")
 
+Base.metadata.create_all(bind=engine)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
     ws_manager_room_list.clean_up()
     ws_manager_room.clean_up()
     yield
