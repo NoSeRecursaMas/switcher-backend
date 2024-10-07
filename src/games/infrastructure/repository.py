@@ -73,12 +73,16 @@ class SQLAlchemyRepository(GameRepository):
 
             all_cards = slected_blue_cards + slected_white_cards
 
-            playable_cards = random.sample(all_cards, 2)
-
+            playable_cards = random.sample(all_cards,3)
+            playable_count = 0
             new_cards = []
 
             for card in all_cards:
                 playable = card in playable_cards
+                if playable:
+                    playable_count += 1
+                if playable_count > 3:
+                    playable = False
 
                 new_card = FigureCard(
                     type=card,
@@ -99,15 +103,21 @@ class SQLAlchemyRepository(GameRepository):
         player_count = len(players) - 2
 
         movement_cards_amount = MOVEMENT_CARDS_AMOUNT[player_count]
-
+        all_movement_cards = MOVEMENT_CARDS * 2
+        playable_cards = random.sample(all_movement_cards, 3)
+        
         for player in players:
-
             new_cards = []
-
-            for card in range(movement_cards_amount):
+            playable_count = 0
+            for card in all_movement_cards:
+                playable = card in playable_cards
+                if playable:
+                    playable_count += 1
+                if playable_count > 3:
+                    playable = False
                 new_card = MovementCard(
                     type=card,
-                    isPlayable=True,
+                    isPlayable=playable,
                     isDiscarded=False,
                     playerID=player.playerID,
                     gameID=gameID.gameID
