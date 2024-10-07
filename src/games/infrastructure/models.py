@@ -43,7 +43,7 @@ class FigureCard(Base):
 class MovementCard(Base):
     __tablename__ = "movement_cards"
 
-    cardID = Column(Integer, primary_key=True)
+    cardID = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String, nullable=True)
     isPlayable = Column(Boolean, default=False)
     isDiscarded = Column(Boolean, default=False)

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from src.games.domain.models import Game as GameDomain
 from src.games.domain.models import GameCreationRequest, GameID
-from src.games.infrastructure.models import Game, FigureCard
+from src.games.infrastructure.models import Game, FigureCard, MovementCard
 from src.games.domain.repository import GameRepository
 from src.games.config import WHITE_CARDS_AMOUNT, BLUE_CARDS_AMOUNT, WHITE_CARDS, BLUE_CARDS, MOVEMENT_CARDS_AMOUNT, MOVEMENT_CARDS
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
@@ -94,4 +94,25 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.commit()
 
     def create_movement_cards(self, roomID: int, gameID: int) -> None:
-        pass
+        room_repository = RoomRepository(self.db_session)
+        players = room_repository.get_players(roomID)
+        player_count = len(players) - 2
+
+        movement_cards_amount = MOVEMENT_CARDS_AMOUNT[player_count]
+
+        for player in players:
+
+            new_cards = []
+
+            for card in range(movement_cards_amount):
+                new_card = MovementCard(
+                    type=card,
+                    isPlayable=True,
+                    isDiscarded=False,
+                    playerID=player.playerID,
+                    gameID=gameID.gameID
+                )
+                new_cards.append(new_card)
+
+            self.db_session.add_all(new_cards)
+        self.db_session.commit()
