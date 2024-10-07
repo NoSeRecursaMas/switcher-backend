@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Dict
+from typing import Optional, Dict, Union, List
 
 from src.games.domain.models import (
     Game,
@@ -9,7 +9,7 @@ from src.games.domain.models import (
 
 class GameRepository(ABC):
     @abstractmethod
-    def create(self, game: GameCreationRequest) -> GameID:
+    def create(self, roomID: int, board: List[Dict[str, Union[int, str]]]) -> GameID:
         pass
 
     @abstractmethod    

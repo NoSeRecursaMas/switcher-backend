@@ -1,32 +1,35 @@
-from typing import List, Optional, NULL
+import json
+from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from src.games.domain.models import Game as GameDomain
 from src.games.domain.models import GameCreationRequest, GameID
-from src.games.infrastructure.models import Game
+from src.games.infrastructure.models import Game, FigureCard
 from src.games.domain.repository import GameRepository
+from src.games.config import WHITE_CARDS_AMOUNT, BLUE_CARDS_AMOUNT
+from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
+
 
 class SQLAlchemyRepository(GameRepository):
-    def __init__(self, room_repository: SQLAlchemyRepository, db_session: Session):
+    def __init__(self, db_session: Session):
         self.db_session = db_session
-        self.room_repository = room_repository
 
-    def create(self, game: GameCreationRequest) -> GameID:
-        board_json = game.board.json.dumps()
+    def create(self, roomID: int, new_board: list) -> GameID:
+        board_json = json.dumps(new_board)
         last_movements = {}
 
-        game = Game(
+        new_game = Game(
             board=board_json,
             lastMovements=last_movements,
-            prohibitedColor=NULL,
-            roomID=game.roomID
+            prohibitedColor=None,
+            roomID=roomID
         )
 
-        self.db_session.add(game)
+        self.db_session.add(new_game)
         self.db_session.commit()
-        self.db_session.refresh(game)
+        self.db_session.refresh(new_game)
 
-        return GameID(gameID=game.gameID)
+        return GameID(gameID=new_game.gameID)
     
     def get(self, gameID: int) -> Optional[GameDomain]:
         game = self.db_session.query(Game).filter(Game.gameID == gameID).first()
@@ -46,14 +49,48 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.delete(game)
         self.db_session.commit()
 
+    def is_player_in_game(self, gameID: int, playerID: int) -> bool:
+        return True
+
     def create_figure_cards(self, roomID: int, gameID: int) -> None:
-        
-        players = self.room_repository.get_players(roomID)
+
+        room_repository = RoomRepository(self.db_session)
+
+        players = room_repository.get_players(roomID)
 
         player_count = len(players)
-
+        blue_amount = BLUE_CARDS_AMOUNT[player_count]
+        white_amount = WHITE_CARDS_AMOUNT[player_count]
+        card_count = 0
         for player in players:
-            for i in player_count
+            
+            for i in range(blue_amount):
+                new_card = FigureCard(
+                    type="blue",
+                    cardID=card_count,
+                    isPlayable=True,
+                    isBlocked=False,
+                    playerID=player.playerID,
+                    gameID=gameID.gameID
+                )
+                card_count += 1
+                self.db_session.add(new_card)
+                self.db_session.commit()
+                self.db_session.refresh(new_card)
+            for i in range(white_amount):
+                new_card = FigureCard(
+                    type="white",
+                    cardID=card_count,
+                    isPlayable=True,
+                    isBlocked=False,
+                    playerID=player.playerID,
+                    gameID=gameID.gameID
+                )
+                card_count += 1
+                self.db_session.add(new_card)
+                self.db_session.commit()
+                self.db_session.refresh(new_card)
+                
                 
 
 

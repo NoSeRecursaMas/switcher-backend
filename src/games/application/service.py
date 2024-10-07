@@ -16,3 +16,5 @@ class GameService:
         gameID = self.repository.create(roomID, board)
 
         self.repository.create_figure_cards(roomID, gameID)
+
+        return gameID
