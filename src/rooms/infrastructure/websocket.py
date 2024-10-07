@@ -27,7 +27,7 @@ class ConnectionManagerRoomList:
         """
         await websocket.accept()
         if playerID in self.active_connections:
-            await self.active_connections[playerID].close()
+            await self.active_connections[playerID].close(1000, "Conexión abierta en otra pestaña")
         self.active_connections[playerID] = websocket
 
     async def keep_listening(self, websocket: WebSocket):
@@ -101,7 +101,7 @@ class ConnectionManagerRoom:
         await websocket.accept()
         if roomID in self.active_connections:
             if playerID in self.active_connections[roomID]:
-                await self.active_connections[roomID][playerID].close()
+                await self.active_connections[roomID][playerID].close(1000, "Conexión abierta en otra pestaña")
         if roomID not in self.active_connections:
             self.active_connections[roomID] = {}
         self.active_connections[roomID][playerID] = websocket

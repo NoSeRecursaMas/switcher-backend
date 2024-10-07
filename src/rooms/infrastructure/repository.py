@@ -39,7 +39,7 @@ class SQLAlchemyRepository(RoomRepository):
         return RoomID(roomID=room.roomID)
 
     def get(self, roomID: int) -> Optional[RoomDomain]:
-        room = self.db_session.query(Room).get(roomID)
+        room = self.db_session.get(Room, roomID)
 
         if room is None:
             return None
@@ -67,9 +67,8 @@ class SQLAlchemyRepository(RoomRepository):
             roomName=room.roomName,
             minPlayers=room.minPlayers,
             maxPlayers=room.maxPlayers,
-            actualPlayers=len(room.players),
-            started=False,
-            private=room.password is not None,
+            hostID=room.hostID,
+            players=room.players,
         )
 
     def get_all_rooms(self) -> List[RoomExtendedInfo]:
@@ -151,7 +150,7 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
             websocket (WebSocket): Conexión con el cliente
         """
         await ws_manager_room.connect(playerID, roomID, websocket)
-        room = self.get(roomID)
+        room = self.get_public_info(roomID)
         room_json = room.model_dump()
         await ws_manager_room.send_personal_message(MessageType.STATUS, room_json, websocket)
         await ws_manager_room.keep_listening(playerID, roomID, websocket)
@@ -168,6 +167,6 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         Args:
             roomID (int): ID de la sala
         """
-        room = self.get(roomID)
+        room = self.get_public_info(roomID)
         room_json = room.model_dump()
         await ws_manager_room.broadcast(MessageType.STATUS, room_json, roomID)
