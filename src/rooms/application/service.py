@@ -29,9 +29,9 @@ class RoomService:
         return saved_room
 
     async def leave_room(self, roomID: int, playerID: int) -> None:
-        self.player_domain_service.validate_player_exists(playerID)
-        self.room_domain_service.validate_room_exists(roomID)
-        self.room_domain_service.validate_player_in_room(playerID, roomID)
+        await self.player_domain_service.validate_player_exists(playerID)
+        await self.room_domain_service.validate_room_exists(roomID)
+        await self.room_domain_service.validate_player_in_room(playerID, roomID)
         self.room_domain_service.validate_player_is_not_owner(playerID, roomID)
 
         self.room_repository.remove_player_from_room(playerID=playerID, roomID=roomID)
@@ -40,8 +40,8 @@ class RoomService:
         await self.room_repository.broadcast_status_room(roomID)
 
     async def join_room(self, roomID: int, playerID: int) -> None:
-        self.player_domain_service.validate_player_exists(playerID)
-        self.room_domain_service.validate_room_exists(roomID)
+        await self.player_domain_service.validate_player_exists(playerID)
+        await self.room_domain_service.validate_room_exists(roomID)
         self.room_domain_service.validate_room_full(roomID)
 
         self.room_repository.add_player_to_room(playerID=playerID, roomID=roomID)

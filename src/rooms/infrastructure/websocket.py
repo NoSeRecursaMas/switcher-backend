@@ -152,8 +152,9 @@ class ConnectionManagerRoom:
             roomID (int): ID de la sala
         """
         message = {"type": type, "payload": payload}
-        for connection in self.active_connections[roomID].values():
-            await connection.send_json(message)
+        if roomID in self.active_connections:
+            for connection in self.active_connections[roomID].values():
+                await connection.send_json(message)
 
 
 ws_manager_room_list = ConnectionManagerRoomList()
