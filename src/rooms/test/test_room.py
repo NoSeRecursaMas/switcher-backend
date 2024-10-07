@@ -2,6 +2,7 @@
 from src.players.infrastructure.models import Player as PlayerDB
 from src.conftest import TestingSessionLocal
 from src.conftest import override_get_db
+from src.rooms.infrastructure.models import PlayerRoom
 # import pytest
 # from fastapi import WebSocket
 
@@ -266,134 +267,63 @@ def test_create_rooms_with_same_name(client, test_db):
     assert response_2.json() == {"roomID": 2}
     assert response_1.json() != response_2.json()
 
-
-# def test_get_all_lobbies(new_mock, mock_db):
-#     lobbies_data = [
-#         {
-#             "roomID": 1,
-#             "roomName": "test_room",
-#             "maxPlayers": 4,
-#             "actualPlayers": 3,
-#             "started": False,
-#             "private": False,
-#         }
-#     ]
-
-#     players_data = [
-#         {"playerID": 1, "roomID": 1},
-#         {"playerID": 2, "roomID": 1},
-#         {"playerID": 3, "roomID": 1},
-#     ]
-#     list_mock_room(mock_db, lobbies_data, players_data)
-
-#     response = new_mock.get("/rooms/")
-
-#     assert response.status_code == 200
-#     assert response.json() == [
-#         {
-#             "roomID": 1,
-#             "roomName": "test_room",
-#             "maxPlayers": 4,
-#             "actualPlayers": 3,
-#             "started": False,
-#             "private": False,
-#         }
-#     ]
+def test_get_two_rooms(client,test_db):
+    db = next(override_get_db())
+    player1 = PlayerDB(username="player1")
+    db.add(player1)
+    db.commit()
 
 
-# def test_get_four_lobbies(new_mock, mock_db):
-#     lobbies_data = [
-#         {
-#             "roomID": 1,
-#             "roomName": "test_room",
-#             "maxPlayers": 4,
-#             "actualPlayers": 2,
-#             "started": False,
-#             "private": False,
-#         },
-#         {
-#             "roomID": 2,
-#             "roomName": "test_room2",
-#             "maxPlayers": 4,
-#             "actualPlayers": 2,
-#             "started": False,
-#             "private": False,
-#         },
-#         {
-#             "roomID": 3,
-#             "roomName": "test_room3",
-#             "maxPlayers": 4,
-#             "actualPlayers": 2,
-#             "started": False,
-#             "private": False,
-#         },
-#         {
-#             "roomID": 4,
-#             "roomName": "test_room4",
-#             "maxPlayers": 4,
-#             "actualPlayers": 2,
-#             "started": False,
-#             "private": False,
-#         },
-#     ]
 
-#     players_data = [
-#         {"playerID": 1, "roomID": 1},
-#         {"playerID": 2, "roomID": 1},
-#         {"playerID": 1, "roomID": 2},
-#         {"playerID": 2, "roomID": 2},
-#         {"playerID": 1, "roomID": 3},
-#         {"playerID": 2, "roomID": 3},
-#         {"playerID": 1, "roomID": 4},
-#         {"playerID": 2, "roomID": 4},
-#     ]
+    data_room= {
+        "playerID": player1.playerID,
+        "roomName": "test_room",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+    }
+    response_1 = client.post("/rooms/", json=data_room)
+    assert response_1.status_code == 201
+    assert response_1.json() == {"roomID": 1}
 
-#     list_mock_room(mock_db, lobbies_data, players_data)
+    db = next(override_get_db())
+    player2 = PlayerDB(username="player2")
+    db.add(player2)
+    db.commit()
 
-#     response = new_mock.get("/rooms/")
-#     assert response.status_code == 200
+    data_room2 = {
+        "playerID": player2.playerID,
+        "roomName": "test_room2",
+        "minPlayers": 2,
+        "maxPlayers": 4,
+    }
+    response_2 = client.post("/rooms/", json=data_room2)
+    assert response_2.status_code == 201
+    assert response_2.json() == {"roomID": 2}
+   
+    response = client.get("/rooms/")
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "roomID": 1,
+            "roomName": "test_room",
+            "maxPlayers": 4,
+            "actualPlayers": 1,
+            "started": False,
+            "private": False,
+        },
+        {
+            "roomID": 2,
+            "roomName": "test_room2",
+            "maxPlayers": 4,
+            "actualPlayers": 1,
+            "started": False,
+            "private": False,
+        }
+    ]
 
-#     assert response.json() == [
-#         {
-#             "roomID": 1,
-#             "roomName": "test_room",
-#             "maxPlayers": 4,
-#             "actualPlayers": 2,
-#             "started": False,
-#             "private": False,
-#         },
-#         {
-#             "roomID": 2,
-#             "roomName": "test_room2",
-#             "maxPlayers": 4,
-#             "actualPlayers": 2,
-#             "started": False,
-#             "private": False,
-#         },
-#         {
-#             "roomID": 3,
-#             "roomName": "test_room3",
-#             "maxPlayers": 4,
-#             "actualPlayers": 2,
-#             "started": False,
-#             "private": False,
-#         },
-#         {
-#             "roomID": 4,
-#             "roomName": "test_room4",
-#             "maxPlayers": 4,
-#             "actualPlayers": 2,
-#             "started": False,
-#             "private": False,
-#         },
-#     ]
+def test_get_empty_room(client,test_db):
+    response = client.get("/rooms/")
+    assert response.status_code == 200
+    assert response.json() == []
 
 
-# def test_get_lobbies_empty(new_mock, mock_db):
-#     lobbies_data = []
-#     players_data = []
-#     list_mock_room(mock_db, lobbies_data, players_data)
-
-#     response = new_mock.get("/rooms/")
-#     assert response.status_code == 200
-#     assert response.json() == []
