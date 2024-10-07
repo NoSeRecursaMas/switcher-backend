@@ -1,17 +1,12 @@
-
-from src.players.domain.models import PlayerResponse, PlayerUsername
-from src.players.domain.service import DomainService
+from src.players.domain.models import Player, PlayerCreationRequest
 from src.players.domain.repository import PlayerRepository
 
 
-class PlayerService():
+class PlayerService:
     def __init__(self, repository: PlayerRepository):
         self.repository = repository
 
-    def create_player(self, request_username: PlayerUsername) -> PlayerResponse:
+    def create_player(self, player_username: PlayerCreationRequest) -> Player:
+        new_player = self.repository.create(player_username)
 
-        DomainService.validate_username(request_username.username)
-
-        saved_player = self.repository.save(request_username)
-
-        return saved_player
+        return new_player

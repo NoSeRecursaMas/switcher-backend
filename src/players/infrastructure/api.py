@@ -1,18 +1,17 @@
-from src.database import get_db
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from src.players.application.service import PlayerService
-from src.players.infrastructure.repository import SQLAlchemyRepository
-from src.players.domain.models import PlayerUsername, PlayerResponse
 
+from src.database import get_db
+from src.players.application.service import PlayerService
+from src.players.domain.models import Player, PlayerCreationRequest
+from src.players.infrastructure.repository import SQLAlchemyRepository
 
 router = APIRouter()
 
 
 @router.post(path="", status_code=201)
-def create_player(player_name: PlayerUsername, db: Session = Depends(get_db)) -> PlayerResponse:
-    repository = SQLAlchemyRepository(db)
-    service = PlayerService(repository)
+def create_player(player_username: PlayerCreationRequest, db: Session = Depends(get_db)) -> Player:
+    service = PlayerService(SQLAlchemyRepository(db))
 
-    player = service.create_player(player_name)
-    return player
+    new_player = service.create_player(player_username)
+    return new_player
