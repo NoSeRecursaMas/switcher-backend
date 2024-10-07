@@ -103,7 +103,8 @@ class SQLAlchemyRepository(GameRepository):
         player_count = len(players) - 2
 
         movement_cards_amount = MOVEMENT_CARDS_AMOUNT[player_count]
-        all_movement_cards = MOVEMENT_CARDS * 2
+        movement_cards = MOVEMENT_CARDS * 7
+        all_movement_cards = random.sample(movement_cards, movement_cards_amount)
         playable_cards = random.sample(all_movement_cards, 3)
         
         for player in players:
