@@ -63,25 +63,36 @@ class SQLAlchemyRepository(GameRepository):
         white_amount = WHITE_CARDS_AMOUNT[player_count]
         card_count = 0
         for player in players:
-            
+            playable_count = 0
             for i in range(blue_amount):
+                if playable_count <= 2:
+                    playable = True
+                    playable_count += 1
+                else:
+                    playable = False
                 new_card = FigureCard(
                     type="blue",
                     cardID=card_count,
-                    isPlayable=True,
+                    isPlayable=playable,
                     isBlocked=False,
                     playerID=player.playerID,
                     gameID=gameID.gameID
                 )
                 card_count += 1
+
                 self.db_session.add(new_card)
                 self.db_session.commit()
                 self.db_session.refresh(new_card)
             for i in range(white_amount):
+                if playable_count <= 2:
+                    playable = True
+                    playable_count += 1
+                else:
+                    playable = False
                 new_card = FigureCard(
                     type="white",
                     cardID=card_count,
-                    isPlayable=True,
+                    isPlayable=playable,
                     isBlocked=False,
                     playerID=player.playerID,
                     gameID=gameID.gameID
