@@ -2,8 +2,6 @@ from src.games.domain.models import GameID
 from src.players.domain.models import PlayerID
 from src.games.domain.repository import GameRepository
 from src.games.domain.service import GameServiceDomain
-from src.games.config import COLORS
-import random
 
 
 class GameService:

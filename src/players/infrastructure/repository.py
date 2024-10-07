@@ -37,3 +37,9 @@ class SQLAlchemyRepository(PlayerRepository):
     def delete(self, playerID: int) -> None:
         self.db_session.query(PlayerDB).filter(PlayerDB.playerID == playerID).delete()
         self.db_session.commit()
+    
+    def set_position(self, playerID: int, position: int) -> None:
+        self.db_session.query(PlayerDB).filter(PlayerDB.playerID == playerID).update(
+            {"position": position}
+        )
+        self.db_session.commit()
