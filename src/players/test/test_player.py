@@ -2,9 +2,9 @@
 
 def test_create_player(client, test_db):
 
-    player_data = {"playerID" : 1, "username": "mensio"}
+    #player_data = {"playerID" : 1, "username": "mensio"}
 
-    response = client.post("/players", json=player_data )
+    response = client.post("/players", json={"username": "mensio"} )
 
     assert response.status_code == 201
     assert response.json() == {"playerID": 1, "username": "mensio"}
@@ -74,5 +74,5 @@ def test_create_two_players_with_same_name(client, test_db):
 
     assert player1["playerID"] == 1
     assert player2["playerID"] == 2
-    
+
     assert player1["playerID"] != player2["playerID"]

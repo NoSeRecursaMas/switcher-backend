@@ -4,12 +4,9 @@ from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import sessionmaker
 from src.database import Base
 
-from src.main import app
 from fastapi.testclient import TestClient
 
-
 import pytest
-
 
 engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
 
@@ -26,7 +23,7 @@ def override_get_db():
 
 app.dependency_overrides[get_db] = override_get_db
 
-@pytest.fixture()
+@pytest.fixture(scope="function")
 def test_db():
     Base.metadata.create_all(bind=engine)
     yield
