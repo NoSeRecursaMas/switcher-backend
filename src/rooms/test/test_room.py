@@ -1,68 +1,7 @@
-# from unittest.mock import AsyncMock, MagicMock, patch
 from src.players.infrastructure.models import Player as PlayerDB
-from src.conftest import TestingSessionLocal
 from src.conftest import override_get_db
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
 from src.rooms.infrastructure.models import Room as RoomDB
-# import pytest
-# from fastapi import WebSocket
-
-# from src.main import app
-# from src.rooms.infrastructure.websockets import ConnectionManager
-# from src.shared.mocks import (
-#     create_mock_room,
-#     list_mock_data_room,
-#     list_mock_room,
-#     mock_db,
-#     new_mock,
-# )
-
-
-# def mock_get_data_room(gameID):
-#     return {"roomID": gameID, "info": "Room Info"}
-
-
-# @pytest.fixture
-# def mock_websocket():
-#     return MagicMock(spec=WebSocket)
-
-
-# @pytest.mark.asyncio
-# @patch("src.rooms.application.service.RoomService.get_public_info", new_callable=AsyncMock)
-# @patch.object(ConnectionManager, "broadcast_to_room", new_callable=AsyncMock)
-# async def test_websocket_broadcast_correctly(mock_broadcast_to_room, mock_get_data_room, mock_websocket):
-#     mock_websocket.receive_json = AsyncMock(return_value={"type": "get_room_info"})
-
-#     # Configurar el mock para devolver el valor esperado
-#     mock_get_data_room.return_value = {"roomID": 1, "info": "Room Info"}
-
-#     manager = ConnectionManager()
-
-#     await manager.connect_to_room(roomID=1, playerID=1, websocket=mock_websocket)
-
-#     await manager.broadcast_to_room(roomID=1, message=await mock_get_data_room(1))
-
-#     mock_broadcast_to_room.assert_any_call(roomID=1, message={"roomID": 1, "info": "Room Info"})
-
-
-# @pytest.mark.asyncio
-# @patch.object(ConnectionManager, "send_personal_message", new_callable=AsyncMock)
-# async def test_websocket_send_personal_message(mock_send_personal_message, mock_websocket):
-#     mock_websocket.receive_json = AsyncMock(return_value={"type": "message"})
-
-#     manager = ConnectionManager()
-
-#     await manager.connect_to_room(roomID=1, playerID=1, websocket=mock_websocket)
-
-#     await manager.send_personal_message(message={"msg": "test"}, playerID=1)
-
-#     mock_send_personal_message.assert_any_call(message={"msg": "test"}, playerID=1)
-
-#     data = await mock_websocket.receive_json()
-#     if data["type"] == "message":
-#         await manager.send_personal_message(message={"msg": "test"}, playerID=1)
-
-#     mock_send_personal_message.assert_any_call(message={"msg": "test"}, playerID=1)
 
 def test_create_room(client,test_db):
 
@@ -268,6 +207,9 @@ def test_create_rooms_with_same_name(client, test_db):
     assert response_2.json() == {"roomID": 2}
     assert response_1.json() != response_2.json()
 
+
+
+
 def test_get_all_rooms(client, test_db):
 
     db = next(override_get_db())
@@ -382,3 +324,10 @@ def test_get_four_rooms(client, test_db):
             "private": False,
         },
     ]
+
+def test_get_empty_room(client,test_db):
+    response = client.get("/rooms/")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
