@@ -32,7 +32,7 @@ def test_leave_room(client,test_db):
         "playerID": player2.playerID
     }
     response_leave = client.put("/rooms/1/leave", json=data_leave_room)
-    print(response_leave.json())
+
     assert response_leave.status_code == 200
 
     response_get = client.get("/rooms/")
@@ -79,7 +79,7 @@ def test_leave_room_player_not_in_room(client,test_db):
     assert response_1.json() == {"roomID": 2}
 
     PlayerRoom1 = PlayerRoom(playerID=player3.playerID, roomID=1)
-    print(PlayerRoom1)
+
     db.add(PlayerRoom1)
     db.commit()
     
@@ -89,7 +89,7 @@ def test_leave_room_player_not_in_room(client,test_db):
     }
 
     response_leave = client.put("/rooms/2/leave", json=data_leave_room)
-    print(response_leave.json())
+
     assert response_leave.status_code == 404
     assert response_leave.json() == {"detail": "El jugador no se encuentra en la sala."}
 
@@ -122,7 +122,7 @@ def test_leave_room_room_not_found(client,test_db):
     }
 
     response_leave = client.put("/rooms/3/leave", json=data_leave_room)
-    print(response_leave.json())
+
     assert response_leave.status_code == 404
     assert response_leave.json() == {"detail": "La sala proporcionada no existe."}
 
@@ -148,19 +148,8 @@ def test_leave_room_owner(client,test_db):
     }
 
     response_leave = client.put("/rooms/1/leave", json=data_leave_room)
-    print(response_leave.json())
+
     assert response_leave.status_code == 404
     assert response_leave.json() == {"detail": "El propietario no puede abandonar la sala."}
 
 
-# def test_leave_room_owner(new_mock, mock_db):
-#     player_repo_patch, room_repo_patch = leave_room_mock(is_owner=True)
-
-#     with player_repo_patch, room_repo_patch:
-#         roomID = 1
-#         playerID = {"playerID": 1}
-
-#         reponse = new_mock.put(f"/rooms/{roomID}/leave", json=playerID)
-
-#         assert reponse.status_code == 405
-#         assert reponse.json() == {"detail": "El propietario no puede abandonar la sala."}
