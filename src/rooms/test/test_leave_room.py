@@ -1,6 +1,6 @@
 from src.players.infrastructure.models import Player as PlayerDB
 from src.conftest import override_get_db
-from src.rooms.infrastructure.models import PlayerRoom
+from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
 from src.rooms.infrastructure.models import Room as RoomDB
 
 def test_leave_room(client,test_db):
@@ -15,8 +15,8 @@ def test_leave_room(client,test_db):
     db.commit() 
     
     players_room_relations = [
-        PlayerRoom(playerID=players[0].playerID, roomID=room.roomID),
-        PlayerRoom(playerID=players[1].playerID, roomID=room.roomID),
+        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID),
+        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID),
     ]
     db.add_all(players_room_relations)
     db.commit()
@@ -27,7 +27,7 @@ def test_leave_room(client,test_db):
     
     response_leave = client.put("/rooms/1/leave", json=player_id)   
     
-    players = db.query(PlayerDB).join(PlayerRoom).filter(PlayerRoom.roomID == 1).all()
+    players = db.query(PlayerDB).join(PlayerRoomDB).filter(PlayerRoomDB.roomID == 1).all()
     players_list = [{"playerID": str(player.playerID), "username": player.username} for player in players]
     
     assert response_leave.status_code == 200
@@ -68,7 +68,7 @@ def test_leave_room_player_not_in_room(client,test_db):
     assert response_1.status_code == 201
     assert response_1.json() == {"roomID": 2}
 
-    PlayerRoom1 = PlayerRoom(playerID=player3.playerID, roomID=1)
+    PlayerRoom1 = PlayerRoomDB(playerID=player3.playerID, roomID=1)
     db.add(PlayerRoom1)
     db.commit()
     
@@ -100,7 +100,7 @@ def test_leave_room_room_not_found(client,test_db):
     assert response_1.status_code == 201
     assert response_1.json() == {"roomID": 1}
 
-    PlayerRoom1 = PlayerRoom(playerID=player2.playerID, roomID=1)
+    PlayerRoom1 = PlayerRoomDB(playerID=player2.playerID, roomID=1)
     db.add(PlayerRoom1)
     db.commit()
     
