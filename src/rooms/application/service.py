@@ -1,18 +1,17 @@
 from typing import Optional
+from fastapi import WebSocket
 
 from src.players.domain.repository import PlayerRepository
-from src.players.domain.service import (
-    RepositoryValidators as PlayerRepositoryValidators,
-)
-from src.rooms.domain.models import RoomCreationRequest, RoomID, RoomPublicInfo
-from src.rooms.domain.repository import RoomRepository
+from src.players.domain.service import RepositoryValidators as PlayerRepositoryValidators
+from src.rooms.domain.models import RoomCreationRequest, RoomID
+from src.rooms.domain.repository import RoomRepositoryWS
 from src.rooms.domain.service import RepositoryValidators as RoomRepositoryValidators
 
 
 class RoomService:
     def __init__(
         self,
-        room_repository: RoomRepository,
+        room_repository: RoomRepositoryWS,
         player_repository: Optional[PlayerRepository] = None,
     ):
         self.room_repository = room_repository
@@ -20,31 +19,44 @@ class RoomService:
         self.room_domain_service = RoomRepositoryValidators(room_repository, player_repository)
         self.player_domain_service = PlayerRepositoryValidators(player_repository)
 
-    def create_room(self, room_data: RoomCreationRequest) -> RoomID:
-        self.player_domain_service.validate_player_exists(room_data.playerID)
+    async def create_room(self, room_data: RoomCreationRequest) -> RoomID:
+        await self.player_domain_service.validate_player_exists(room_data.playerID)
 
         saved_room = self.room_repository.create(room_data)
-        self.room_repository.associate_player_from_room(saved_room.roomID, room_data.playerID)
+        self.room_repository.add_player_to_room(playerID=room_data.playerID, roomID=saved_room.roomID)
+        await self.room_repository.broadcast_status_room_list()
 
         return saved_room
 
-    def get_all_rooms(self):
-        return self.room_repository.get_all_rooms()
+    async def leave_room(self, roomID: int, playerID: int) -> None:
+        await self.player_domain_service.validate_player_exists(playerID)
+        await self.room_domain_service.validate_room_exists(roomID)
+        await self.room_domain_service.validate_player_in_room(playerID, roomID)
+        self.room_domain_service.validate_player_is_not_owner(playerID, roomID)
 
-    def get_public_info(self, roomID: int) -> Optional[RoomPublicInfo]:
-        return self.room_repository.get_public_info(roomID)
+        self.room_repository.remove_player_from_room(playerID=playerID, roomID=roomID)
 
-    def leave_room(self, roomID: int, playerID: int) -> None:
-        self.player_domain_service.validate_player_exists(playerID)
-        self.room_domain_service.validate_room_exists(roomID)
-        self.room_domain_service.validate_player_in_room(playerID, roomID)
-        self.room_domain_service.validate_player_is_not_owner(playerID)
+        await self.room_repository.broadcast_status_room_list()
+        await self.room_repository.broadcast_status_room(roomID)
 
-        self.room_repository.disassociate_player_from_room(playerID=playerID, roomID=roomID)
-
-    def join_room(self, roomID: int, playerID: int) -> None:
-        self.player_domain_service.validate_player_exists(playerID)
-        self.room_domain_service.validate_room_exists(roomID)
+    async def join_room(self, roomID: int, playerID: int) -> None:
+        await self.player_domain_service.validate_player_exists(playerID)
+        await self.room_domain_service.validate_room_exists(roomID)
         self.room_domain_service.validate_room_full(roomID)
 
-        self.room_repository.associate_player_from_room(playerID=playerID, roomID=roomID)
+        self.room_repository.add_player_to_room(playerID=playerID, roomID=roomID)
+
+        await self.room_repository.broadcast_status_room_list()
+        await self.room_repository.broadcast_status_room(roomID)
+
+    async def connect_to_room_list_websocket(self, playerID: int, websocket: WebSocket) -> None:
+        await self.player_domain_service.validate_player_exists(playerID, websocket)
+
+        await self.room_repository.setup_connection_room_list(playerID, websocket)
+
+    async def connect_to_room_websocket(self, playerID: int, roomID: int, websocket: WebSocket) -> None:
+        await self.player_domain_service.validate_player_exists(playerID, websocket)
+        await self.room_domain_service.validate_room_exists(roomID, websocket)
+        await self.room_domain_service.validate_player_in_room(playerID, roomID, websocket)
+
+        await self.room_repository.setup_connection_room(playerID, roomID, websocket)        
