@@ -9,6 +9,7 @@ from src.games.infrastructure.models import Game, FigureCard, MovementCard
 from src.games.domain.repository import GameRepository
 from src.games.config import WHITE_CARDS_AMOUNT, BLUE_CARDS_AMOUNT, WHITE_CARDS, BLUE_CARDS, MOVEMENT_CARDS_AMOUNT, MOVEMENT_CARDS
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
+from src.players.domain.models import Player
 
 
 class SQLAlchemyRepository(GameRepository):
@@ -55,6 +56,12 @@ class SQLAlchemyRepository(GameRepository):
     def is_player_in_game(self, gameID: int, playerID: int) -> bool:
         return True
 
+    def get_game_players(self, gameID: int) -> List[Player]:
+        room_repository = RoomRepository(self.db_session)
+        roomID = self.db_session.query(Game).filter(Game.gameID == gameID).first().roomID
+        return room_repository.get_players(roomID)
+                
+    # TODO: Cambiar cartas jugables a las 3 primeras            
     def create_figure_cards(self, roomID: int, gameID: int) -> None:
 
         room_repository = RoomRepository(self.db_session)
