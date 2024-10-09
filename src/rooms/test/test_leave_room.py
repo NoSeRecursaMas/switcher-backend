@@ -78,20 +78,27 @@ def test_leave_room_player_not_in_room(client,test_db):
     }
 
     response_leave = client.put("/rooms/2/leave", json=data_leave_room)
-    assert response_leave.status_code == 404
+    assert response_leave.status_code == 403
     assert response_leave.json() == {"detail": "El jugador no se encuentra en la sala."}
 
 def test_leave_room_room_not_found(client,test_db):
     db = next(override_get_db())
-    player1 = PlayerDB(username="player1")
-    db.add(player1)
-    db.commit()
-    player2 = PlayerDB(username="player2")
-    db.add(player2)
+    db.add_all([
+        PlayerDB(username="player1"),
+        PlayerDB(username="player2"),
+    ])
     db.commit()
 
+
+    # player1 = PlayerDB(username="player1")
+    # db.add(player1)
+    # db.commit()
+    # player2 = PlayerDB(username="player2")
+    # db.add(player2)
+    # db.commit()
+
     data_room= {
-        "playerID": player1.playerID,
+        "playerID": 1,
         "roomName": "test_room",
         "minPlayers": 2,
         "maxPlayers": 4,
@@ -100,13 +107,13 @@ def test_leave_room_room_not_found(client,test_db):
     assert response_1.status_code == 201
     assert response_1.json() == {"roomID": 1}
 
-    PlayerRoom1 = PlayerRoomDB(playerID=player2.playerID, roomID=1)
+    PlayerRoom1 = PlayerRoomDB(playerID= 2, roomID=1)
     db.add(PlayerRoom1)
     db.commit()
     
 
     data_leave_room = {
-        "playerID": player2.playerID
+        "playerID": 2
     }
 
     response_leave = client.put("/rooms/3/leave", json=data_leave_room)
@@ -135,5 +142,5 @@ def test_leave_room_owner(client,test_db):
     }
 
     response_leave = client.put("/rooms/1/leave", json=data_leave_room)
-    assert response_leave.status_code == 404
+    assert response_leave.status_code == 405
     assert response_leave.json() == {"detail": "El propietario no puede abandonar la sala."}
