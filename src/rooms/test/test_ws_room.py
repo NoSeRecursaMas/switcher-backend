@@ -1,14 +1,14 @@
-from src.conftest import TestingSessionLocal
 import pytest
 from fastapi.websockets import WebSocketDisconnect
 from src.rooms.infrastructure.models import Room as RoomDB, PlayerRoom
 from src.players.infrastructure.models import Player as PlayerDB
+from src.conftest import override_get_db
 
 
 
 
 def test_connect_to_room_websocket_user_not_exist(client, test_db):
-    db = TestingSessionLocal()
+    db = next(override_get_db())
     db.add_all([
         PlayerDB(playerID=1, username="test user"),
         PlayerDB(playerID=2, username="test user 2"),
@@ -25,7 +25,7 @@ def test_connect_to_room_websocket_user_not_exist(client, test_db):
     assert "jugador" in e.value.reason
 
 def test_connect_to_room_websocket_room_not_exist(client, test_db):
-    db = TestingSessionLocal()
+    db = next(override_get_db())
     db.add_all([
         PlayerDB(playerID=1, username="test user"),
         PlayerDB(playerID=2, username="test user 2"),
@@ -42,7 +42,7 @@ def test_connect_to_room_websocket_room_not_exist(client, test_db):
     assert "sala" in e.value.reason
 
 def test_connect_to_room_websocket_player_not_in_room(client, test_db):
-    db = TestingSessionLocal()
+    db = next(override_get_db())
     db.add_all([
         PlayerDB(playerID=1, username="test user"),
         PlayerDB(playerID=2, username="test user 2"),
@@ -59,7 +59,7 @@ def test_connect_to_room_websocket_player_not_in_room(client, test_db):
     assert "sala" in e.value.reason
 
 def test_connect_to_room_websocket_player_in_room(client, test_db):
-    db = TestingSessionLocal()
+    db = next(override_get_db())
     db.add_all([
         PlayerDB(playerID=1, username="test user"),
         PlayerDB(playerID=2, username="test user 2"),
@@ -84,7 +84,7 @@ def test_connect_to_room_websocket_player_in_room(client, test_db):
         }
 
 def test_close_first_connection_if_player_open_second(client, test_db):
-    db = TestingSessionLocal()
+    db = next(override_get_db())
     db.add_all([
         PlayerDB(playerID=1, username="test user"),
         PlayerDB(playerID=2, username="test user 2"),
