@@ -135,7 +135,7 @@ def test_create_room_invalid_owner(client, test_db):
 
     response = client.post("/rooms/", json=room_data)
     assert response.status_code == 404
-    assert response.json() == {"detail": "El jugador proporcionado no existe."}
+    assert response.json() == {"detail": "El jugador no existe."}
 
 
 def test_create_room_name_not_ascii(client, test_db):

@@ -111,7 +111,7 @@ def test_leave_room_room_not_found(client,test_db):
 
     response_leave = client.put("/rooms/3/leave", json=data_leave_room)
     assert response_leave.status_code == 404
-    assert response_leave.json() == {"detail": "La sala proporcionada no existe."}
+    assert response_leave.json() == {"detail": "La sala no existe."}
 
 
 def test_leave_room_owner(client,test_db):
