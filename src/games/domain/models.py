@@ -37,6 +37,7 @@ class PlayerInfo(BaseModel):
 class Game(BaseModel):
     GameID: int
     Board: List[Board]
+    posEnabledToPlay: int
     LastMovement: Optional[LastMovement]
     ProhibitedColor: Optional[str]
     players: List[PlayerInfo]
