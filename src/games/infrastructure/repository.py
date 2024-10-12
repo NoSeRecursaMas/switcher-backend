@@ -62,7 +62,6 @@ class SQLAlchemyRepository(GameRepository):
         roomID = self.db_session.query(Game).filter(Game.gameID == gameID).first().roomID
         return room_repository.get_players(roomID)
 
-    # TODO: Cambiar cartas jugables a las 3 primeras
     def create_figure_cards(self, roomID: int, gameID: int) -> None:
         room_repository = RoomRepository(self.db_session)
         players = room_repository.get_players(roomID)
@@ -102,9 +101,9 @@ class SQLAlchemyRepository(GameRepository):
         players = room_repository.get_players(roomID)
         player_count = len(players) - 2
 
-        movement_cards_amount = MOVEMENT_CARDS_AMOUNT[player_count]
-        movement_cards = MOVEMENT_CARDS * 7
-        all_movement_cards = random.sample(movement_cards, movement_cards_amount)
+        movement_cards_amount = MOVEMENT_CARDS_AMOUNT[player_count] * (player_count + 2) 
+        movement_cards = MOVEMENT_CARDS * 7 
+        all_movement_cards = random.sample(movement_cards, movement_cards_amount) 
 
         new_cards = []
         for card in all_movement_cards:

@@ -3,8 +3,6 @@ from typing import List, Optional
 from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
 from pydantic.types import Json
 
-from src.games.domain.validators import BasicValidators
-
 
 class Board(BaseModel):
     PosX: int
