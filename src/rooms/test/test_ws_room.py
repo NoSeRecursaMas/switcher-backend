@@ -4,7 +4,8 @@ from fastapi.websockets import WebSocketDisconnect
 from src.conftest import TestingSessionLocal
 from src.players.infrastructure.models import Player as PlayerDB
 from src.conftest import override_get_db
-
+from src.rooms.infrastructure.models import PlayerRoom as PlayerRoom
+from src.rooms.infrastructure.models import Room as RoomDB
 
 
 
