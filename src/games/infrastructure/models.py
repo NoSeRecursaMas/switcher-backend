@@ -45,7 +45,7 @@ class MovementCard(Base):
 
     cardID = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String, nullable=True)
-    isPlayable = Column(Boolean, default=False)
+    isPlayed = Column(Boolean, default=False)
     isDiscarded = Column(Boolean, default=False)
 
     playerID = Column(ForeignKey("players.playerID"), nullable=True)
