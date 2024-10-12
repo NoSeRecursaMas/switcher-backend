@@ -1,5 +1,6 @@
 import pytest
-from src.shared.mocks import mock_db, new_mock, join_room_mock
+
+from src.shared.mocks import join_room_mock, mock_db, new_mock
 
 
 def test_join_room(new_mock, mock_db):

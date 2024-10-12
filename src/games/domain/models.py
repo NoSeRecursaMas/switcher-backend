@@ -1,8 +1,8 @@
 from typing import List, Optional
-from pydantic import BaseModel
-from pydantic.types import Json
 
 from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
+from pydantic.types import Json
+
 from src.games.domain.validators import BasicValidators
 
 
@@ -51,8 +51,7 @@ class Game(BaseModel):
     ProhibitedColor: Optional[str]
     players: List[PlayerInfo]
 
-    @model_validator(mode="before")
-    @classmethod
+
 class GameCreationRequest(BaseModel):
     roomID: int
     board: List[Board]

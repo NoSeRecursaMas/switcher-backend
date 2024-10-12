@@ -1,15 +1,23 @@
 import json
 import random
 from typing import List, Optional
+
 from sqlalchemy.orm import Session
 
+from src.games.config import (
+    BLUE_CARDS,
+    BLUE_CARDS_AMOUNT,
+    MOVEMENT_CARDS,
+    MOVEMENT_CARDS_AMOUNT,
+    WHITE_CARDS,
+    WHITE_CARDS_AMOUNT,
+)
 from src.games.domain.models import Game as GameDomain
 from src.games.domain.models import GameCreationRequest, GameID
-from src.games.infrastructure.models import Game, FigureCard, MovementCard
 from src.games.domain.repository import GameRepository
-from src.games.config import WHITE_CARDS_AMOUNT, BLUE_CARDS_AMOUNT, WHITE_CARDS, BLUE_CARDS, MOVEMENT_CARDS_AMOUNT, MOVEMENT_CARDS
-from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
+from src.games.infrastructure.models import FigureCard, Game, MovementCard
 from src.players.domain.models import Player
+from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
 
 
 class SQLAlchemyRepository(GameRepository):
@@ -20,12 +28,7 @@ class SQLAlchemyRepository(GameRepository):
         board_json = json.dumps(new_board)
         last_movements = {}
 
-        new_game = Game(
-            board=board_json,
-            lastMovements=last_movements,
-            prohibitedColor=None,
-            roomID=roomID
-        )
+        new_game = Game(board=board_json, lastMovements=last_movements, prohibitedColor=None, roomID=roomID)
 
         self.db_session.add(new_game)
         self.db_session.commit()
@@ -34,8 +37,7 @@ class SQLAlchemyRepository(GameRepository):
         return GameID(gameID=new_game.gameID)
 
     def get(self, gameID: int) -> Optional[GameDomain]:
-        game = self.db_session.query(Game).filter(
-            Game.gameID == gameID).first()
+        game = self.db_session.query(Game).filter(Game.gameID == gameID).first()
 
         if game is None:
             return None
@@ -48,8 +50,7 @@ class SQLAlchemyRepository(GameRepository):
         )
 
     def delete(self, gameID: int) -> None:
-        game = self.db_session.query(Game).filter(
-            Game.gameID == gameID).first()
+        game = self.db_session.query(Game).filter(Game.gameID == gameID).first()
         self.db_session.delete(game)
         self.db_session.commit()
 
@@ -60,10 +61,9 @@ class SQLAlchemyRepository(GameRepository):
         room_repository = RoomRepository(self.db_session)
         roomID = self.db_session.query(Game).filter(Game.gameID == gameID).first().roomID
         return room_repository.get_players(roomID)
-                
-    # TODO: Cambiar cartas jugables a las 3 primeras            
-    def create_figure_cards(self, roomID: int, gameID: int) -> None:
 
+    # TODO: Cambiar cartas jugables a las 3 primeras
+    def create_figure_cards(self, roomID: int, gameID: int) -> None:
         room_repository = RoomRepository(self.db_session)
         players = room_repository.get_players(roomID)
         player_count = len(players) - 2
@@ -80,23 +80,16 @@ class SQLAlchemyRepository(GameRepository):
 
             all_cards = slected_blue_cards + slected_white_cards
 
-            playable_cards = random.sample(all_cards,3)
-            playable_count = 0
+            playable_cards = random.sample(all_cards, 3)
             new_cards = []
 
             for card in all_cards:
-                playable = card in playable_cards
-                if playable:
-                    playable_count += 1
-                if playable_count > 3:
-                    playable = False
-
                 new_card = FigureCard(
                     type=card,
-                    isPlayable=playable,
+                    isPlayable=card in playable_cards,
                     isBlocked=False,
                     playerID=player.playerID,
-                    gameID=gameID.gameID
+                    gameID=gameID.gameID,
                 )
                 new_cards.append(new_card)
 
@@ -112,25 +105,15 @@ class SQLAlchemyRepository(GameRepository):
         movement_cards_amount = MOVEMENT_CARDS_AMOUNT[player_count]
         movement_cards = MOVEMENT_CARDS * 7
         all_movement_cards = random.sample(movement_cards, movement_cards_amount)
-        playable_cards = random.sample(all_movement_cards, 3)
-        
-        for player in players:
-            new_cards = []
-            playable_count = 0
-            for card in all_movement_cards:
-                playable = card in playable_cards
-                if playable:
-                    playable_count += 1
-                if playable_count > 3:
-                    playable = False
-                new_card = MovementCard(
-                    type=card,
-                    isPlayable=playable,
-                    isDiscarded=False,
-                    playerID=player.playerID,
-                    gameID=gameID.gameID
-                )
-                new_cards.append(new_card)
 
-            self.db_session.add_all(new_cards)
+        new_cards = []
+        for card in all_movement_cards:
+            new_card = MovementCard(type=card, playerID=None, gameID=gameID.gameID)
+            new_cards.append(new_card)
+
+        for index, player in enumerate(players):
+            for i in range(3):
+                new_cards[index * 3 + i].playerID = player.playerID
+
+        self.db_session.add_all(new_cards)
         self.db_session.commit()

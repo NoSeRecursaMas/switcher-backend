@@ -20,7 +20,3 @@ class PlayerRepository(ABC):
     @abstractmethod
     def delete(self, playerID: int) -> None:
         pass
-
-    @abstractmethod
-    def set_position(self, playerID: int, position: int) -> None:
-        pass

@@ -1,5 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
 from src.database import Base
 from src.games.infrastructure.models import Game
 
@@ -21,8 +22,10 @@ class Room(Base):
     def __repr__(self):
         return f"<Room(roomName={self.roomName}, players={self.players})>"
 
+
 class PlayerRoom(Base):
     __tablename__ = "player_room"
 
     playerID = Column(Integer, ForeignKey("players.playerID", ondelete="CASCADE"), primary_key=True)
     roomID = Column(Integer, ForeignKey("rooms.roomID", ondelete="CASCADE"), primary_key=True)
+    position = Column(Integer, nullable=True, default=0)

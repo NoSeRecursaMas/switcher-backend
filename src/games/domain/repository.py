@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Union, List
-from src.players.domain.models import Player as PlayerDomain
+from typing import Dict, List, Optional, Union
 
 from src.games.domain.models import (
     Game,
     GameCreationRequest,
     GameID,
 )
+from src.players.domain.models import Player as PlayerDomain
 
 
 class GameRepository(ABC):
@@ -29,7 +29,7 @@ class GameRepository(ABC):
     @abstractmethod
     def delete(self, gameID: int) -> None:
         pass
-    
+
     @abstractmethod
     def get_game_players(self, gameID: int) -> List[PlayerDomain]:
         pass

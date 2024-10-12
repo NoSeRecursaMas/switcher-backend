@@ -21,7 +21,7 @@ class SQLAlchemyRepository(PlayerRepository):
         return Player(playerID=new_player.playerID, username=new_player.username)
 
     def get(self, playerID: int) -> Optional[Player]:
-        player = self.db_session.query(PlayerDB).filter(PlayerDB.playerID == playerID).first()
+        player = self.db_session.query(PlayerDB).get(playerID)
 
         if player is None:
             return None
@@ -36,10 +36,4 @@ class SQLAlchemyRepository(PlayerRepository):
 
     def delete(self, playerID: int) -> None:
         self.db_session.query(PlayerDB).filter(PlayerDB.playerID == playerID).delete()
-        self.db_session.commit()
-    
-    def set_position(self, playerID: int, position: int) -> None:
-        self.db_session.query(PlayerDB).filter(PlayerDB.playerID == playerID).update(
-            {"position": position}
-        )
         self.db_session.commit()

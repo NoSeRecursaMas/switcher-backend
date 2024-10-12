@@ -1,4 +1,5 @@
 from typing import Optional
+
 from fastapi import WebSocket
 
 from src.players.domain.repository import PlayerRepository
@@ -59,4 +60,4 @@ class RoomService:
         await self.room_domain_service.validate_room_exists(roomID, websocket)
         await self.room_domain_service.validate_player_in_room(playerID, roomID, websocket)
 
-        await self.room_repository.setup_connection_room(playerID, roomID, websocket)        
+        await self.room_repository.setup_connection_room(playerID, roomID, websocket)
