@@ -22,7 +22,6 @@ async def start_game(roomID: int, playerID: PlayerID, db_session: Session = Depe
 
     gameID = await game_service.start_game(roomID, playerID)
     return gameID
-<<<<<<< HEAD
     
 @router.put(path="/{gameID}/turn", status_code=200)
 def skip_turn(gameID: int,playerID : PlayerID, db_session: Session = Depends(get_db)) -> None:
@@ -31,5 +30,3 @@ def skip_turn(gameID: int,playerID : PlayerID, db_session: Session = Depends(get
 
     game_service = GameService(game_repository,player_repository)
     game_service.skip_turn(playerID,gameID)
-=======
->>>>>>> a34d2c7ad13a4b6f7640f5e76537f9be53f5af68

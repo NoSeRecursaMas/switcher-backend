@@ -38,7 +38,6 @@ class GameService:
         game_service_domain.set_game_turn_order(gameID.gameID)
 
         return gameID
-<<<<<<< HEAD
     
     def skip_turn(self,player: PlayerID, gameID: GameID) -> None:
 
@@ -51,5 +50,3 @@ class GameService:
         self.game_repository.replacement_figure_card(gameID.gameID, player.playerID)
         
 
-=======
->>>>>>> a34d2c7ad13a4b6f7640f5e76537f9be53f5af68
