@@ -1,11 +1,14 @@
 from typing import List, Optional
-from pydantic import BaseModel
+
+from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
 from pydantic.types import Json
+
 
 class Board(BaseModel):
     PosX: int
     PosY: int
     Color: str
+
 
 class LastMovement(BaseModel):
     PosX1: int
@@ -15,24 +18,30 @@ class LastMovement(BaseModel):
     Order: int
     CardID: int
 
+
 class MovementCard(BaseModel):
     type: str
     cardID: int
     isDiscarded: bool
+
 
 class FigureCard(BaseModel):
     type: str
     cardID: int
     isBlocked: bool
 
-class PlayerInfo(BaseModel):
+
+class PlayerInfoPublic(BaseModel):
     playerID: int
     username: str
     position: int
     isActive: bool
     sizeDeckFigure: int
-    MovementCards: List[MovementCard]
     FigureCards: List[FigureCard]
+
+class PlayerInfoPrivate(BaseModel):
+    playerID: int
+    MovementCards: List[MovementCard]
 
 class Game(BaseModel):
     GameID: int
@@ -40,11 +49,13 @@ class Game(BaseModel):
     posEnabledToPlay: int
     LastMovement: Optional[LastMovement]
     ProhibitedColor: Optional[str]
-    players: List[PlayerInfo]
+    players: List[PlayerInfoPublic]
+
 
 class GameCreationRequest(BaseModel):
     roomID: int
     board: List[Board]
+
 
 class GameID(BaseModel):
     gameID: int

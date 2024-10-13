@@ -38,7 +38,16 @@ class RepositoryValidators:
         if self.room_repository.is_owner(playerID, roomID):
             raise HTTPException(status_code=405, detail="El propietario no puede abandonar la sala.")
 
+    def validate_player_is_owner(self, playerID: int, roomID: int):
+        if not self.room_repository.is_owner(playerID, roomID):
+            raise HTTPException(status_code=405, detail="Solo el propietario puede iniciar la partida.")
+
     def validate_room_full(self, roomID: int):
         room = self.room_repository.get_public_info(roomID)
         if len(room.players) >= room.maxPlayers:
-            raise HTTPException(status_code=405, detail="La sala está llena.")
+            raise HTTPException(status_code=403, detail="La sala está llena.")
+
+    def validate_min_players_to_start(self, roomID: int):
+        room = self.room_repository.get_public_info(roomID)
+        if len(room.players) < room.minPlayers:
+            raise HTTPException(status_code=403, detail="No hay suficientes jugadores para iniciar la partida.")

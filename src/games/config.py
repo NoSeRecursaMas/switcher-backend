@@ -1,4 +1,4 @@
-COLORS = ['R', 'G', 'B', 'Y']
+COLORS = ["R", "G", "B", "Y"]
 
 WHITE_CARDS_AMOUNT = [18, 12, 9]
 

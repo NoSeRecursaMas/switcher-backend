@@ -1,5 +1,6 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, JSON, Boolean
+from sqlalchemy import JSON, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
 from src.database import Base
 
 
@@ -7,13 +8,12 @@ class Game(Base):
     __tablename__ = "games"
 
     gameID = Column(Integer, primary_key=True)
+    roomID = Column(ForeignKey("rooms.roomID"), nullable=False, unique=True)
     board = Column(JSON)
     lastMovements = Column(JSON, nullable=True)
     prohibitedColor = Column(String, nullable=True)
-
-    roomID = Column(ForeignKey("rooms.roomID"), nullable=False, unique=True)
-
     room = relationship("Room", back_populates="game")
+    posEnabledToPlay = Column(Integer, default=1)
 
     figureDeck = relationship("FigureCard", back_populates="game")
     movementDeck = relationship("MovementCard", back_populates="game")
@@ -45,7 +45,7 @@ class MovementCard(Base):
 
     cardID = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String, nullable=True)
-    isPlayable = Column(Boolean, default=False)
+    isPlayed = Column(Boolean, default=False)
     isDiscarded = Column(Boolean, default=False)
 
     playerID = Column(ForeignKey("players.playerID"), nullable=True)

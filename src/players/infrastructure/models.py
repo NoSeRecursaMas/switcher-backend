@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.database import Base
@@ -10,7 +10,6 @@ class Player(Base):
     playerID = Column(Integer, primary_key=True, index=True)
     username = Column(String, nullable=True)
     isActive = Column(Boolean, nullable=False, default=True)
-    position = Column(Integer, nullable=True, default=0)
 
     rooms = relationship("Room", secondary="player_room", back_populates="players")
     figureCards = relationship("FigureCard", uselist=False, back_populates="player")

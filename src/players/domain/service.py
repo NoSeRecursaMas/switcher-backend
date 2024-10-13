@@ -1,6 +1,8 @@
+from typing import Optional
+
 from fastapi import HTTPException
 from fastapi.websockets import WebSocket, WebSocketDisconnect
-from typing import Optional
+
 from src.players.domain.repository import PlayerRepository
 
 
@@ -16,4 +18,3 @@ class RepositoryValidators:
         else:
             await websocket.accept()
             raise WebSocketDisconnect(4004, "El jugador no existe.")
-
