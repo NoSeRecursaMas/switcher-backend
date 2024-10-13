@@ -31,15 +31,17 @@ class FigureCard(BaseModel):
     isBlocked: bool
 
 
-class PlayerInfo(BaseModel):
+class PlayerInfoPublic(BaseModel):
     playerID: int
     username: str
     position: int
     isActive: bool
     sizeDeckFigure: int
-    MovementCards: List[MovementCard]
     FigureCards: List[FigureCard]
 
+class PlayerInfoPrivate(BaseModel):
+    playerID: int
+    MovementCards: List[MovementCard]
 
 class Game(BaseModel):
     GameID: int
@@ -47,7 +49,7 @@ class Game(BaseModel):
     posEnabledToPlay: int
     LastMovement: Optional[LastMovement]
     ProhibitedColor: Optional[str]
-    players: List[PlayerInfo]
+    players: List[PlayerInfoPublic]
 
 
 class GameCreationRequest(BaseModel):

@@ -18,7 +18,10 @@ from src.games.domain.repository import GameRepository
 from src.games.infrastructure.models import FigureCard, Game, MovementCard
 from src.players.domain.models import Player
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
-
+from src.games.domain.models import Game as GameDomain
+from src.games.domain.models import PlayerInfoPrivate, PlayerInfoPublic
+from src.games.domain.models import FigureCard as FigureCardDomain
+from src.games.domain.models import MovementCard as MovementCardDomain
 
 class SQLAlchemyRepository(GameRepository):
     def __init__(self, db_session: Session):
@@ -116,3 +119,29 @@ class SQLAlchemyRepository(GameRepository):
 
         self.db_session.add_all(new_cards)
         self.db_session.commit()
+
+    def get_player_figure_cards(self, gameID:int, playerID:int) -> List[FigureCardDomain]:
+        player_cards = self.db_session.query(FigureCard).filter(FigureCard.gameID == gameID, FigureCard.playerID == playerID).all()
+        return [FigureCardDomain(type=card.type, isPlayable=card.isPlayable, isBlocked=card.isBlocked, cardID=card.cardID) for card in player_cards]
+    
+    def get_player_movement_cards(self, gameID:int, playerID:int) -> {MovementCardDomain}:
+        player_cards = self.db_session.query(MovementCard).filter(MovementCard.gameID == gameID, MovementCard.playerID == playerID).all()
+        return [MovementCardDomain(type=card.type, isDiscarded=card.isDiscarded, cardID=card.cardID) for card in player_cards]
+    
+    def get_player_private_info(self, gameID:int, playerID:int) -> PlayerInfoPrivate:
+        movement_cards = self.get_player_movement_cards(gameID, playerID)
+        return PlayerInfoPrivate(playerID=playerID, MovementCards=movement_cards)
+    
+    def get_player_public_info(self, gameID:int, playerID:int) -> PlayerInfoPublic:
+        player = self.db_session.query(Player).filter(Player.playerID == playerID).first()
+        figure_cards = self.get_player_figure_cards(gameID, playerID)
+        return PlayerInfoPublic(playerID=playerID, username=player.username, 
+                                position=player.position, isActive=player.isActive, 
+                                sizeDeckFigure=len(figure_cards), FigureCards=figure_cards)
+    
+    def get_game_info(self, gameID:int) -> GameDomain:
+        game = self.db_session.query(Game).filter(Game.gameID == gameID).first()
+        players = self.get_game_players(gameID)
+        player_info = [self.get_player_public_info(gameID, player.playerID) for player in players]
+        return GameDomain(gameID=gameID, board=game.board, posEnabledToPlay=game.posEnabledToPlay, 
+                          LastMovement=game.LastMovement, ProhibitedColor=game.ProhibitedColor, players=player_info)
