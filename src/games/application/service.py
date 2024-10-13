@@ -25,6 +25,14 @@ class GameService:
 
         return gameID
     
-    
-    
+    def skip_turn(self,player: PlayerID, gameID: GameID) -> None:
+
+        game_service_domain = GameServiceDomain(self.game_repository, self.player_repository)
+        self.game_service_domain.player_exists_in_game(player.playerID, gameID.gameID)
+        self.game_service_domain.game_exists(gameID.gameID)
+        
+        self.game_repository.skip(gameID)
+        self.game_repository.replacement_movement_card(gameID.gameID, player.playerID)
+        self.game_repository.replacement_figure_card(gameID.gameID, player.playerID)
+        
 

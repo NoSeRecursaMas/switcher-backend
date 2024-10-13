@@ -10,6 +10,7 @@ from src.games.domain.repository import GameRepository
 from src.games.config import WHITE_CARDS_AMOUNT, BLUE_CARDS_AMOUNT, WHITE_CARDS, BLUE_CARDS, MOVEMENT_CARDS_AMOUNT, MOVEMENT_CARDS
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
 from src.players.domain.models import Player
+from src.rooms.infrastructure.models import Room
 
 
 class SQLAlchemyRepository(GameRepository):
@@ -133,4 +134,85 @@ class SQLAlchemyRepository(GameRepository):
                 new_cards.append(new_card)
 
             self.db_session.add_all(new_cards)
+        self.db_session.commit()
+
+    def skip (self,gameID: int) -> None:
+        game = self.db_session.query(Game).filter(Game.gameID == gameID).first()
+        players = len(self.get_game_players(gameID))
+        current_position = game.posEnabledToPlay
+
+        current_player = self.db_session.query(Player) \
+            .join(Room.players) \
+            .join(Game, Room.roomID == Game.roomID) \
+            .filter(Game.gameID == gameID, Player.position == current_position) \
+            .first()
+        
+        if current_player:
+            current_player.isActive = False
+
+        min_players = (
+             self.db_session.query(Room.minPlayers)
+             .join(Game, Room.roomID == Game.roomID)
+             .filter(Game.gameID == gameID)
+             .first()
+            )
+
+        if current_position == players:
+            game.posEnabledToPlay =  min_players
+        else:
+            game.posEnabledToPlay = current_position + 1
+
+        next_player = self.db_session.query(Player)\
+            .join(Room.players)\
+            .join(Game, Room.roomID == Game.roomID)\
+            .filter(Game.gameID == gameID, Player.position == game.posEnabledToPlay)\
+            .first()
+        
+        if next_player:
+            next_player.isActive = True
+        
+        self.db_session.commit()
+
+    def replacement_movement_card(self, gameID: int, playerID: int) -> None:
+
+        playable_cards = self.db_session.query(MovementCard).filter(
+            MovementCard.gameID == gameID,
+            MovementCard.playerID == playerID,
+            MovementCard.isDiscarded == False,
+            MovementCard.isPlayable == True
+        ).all()        
+
+        if len(playable_cards) < 3:
+            available_cards = self.db_session.query(MovementCard).filter(
+                MovementCard.gameID == gameID,
+                MovementCard.isDiscarded == False,
+                MovementCard.isPlayable == False
+            ).limit(3 - len(playable_cards)).all()
+
+            if len(available_cards) > 0:
+                for card in available_cards:
+                        card.isPlayable = True
+                
+        self.db_session.commit()
+
+    def replacement_figure_card(self, gameID: int, playerID: int) -> None:
+        figure_cards = self.db_session.query(FigureCard).filter(
+            FigureCard.gameID == gameID,
+            FigureCard.playerID == playerID,
+        ).all()
+
+        blocked_cards = [card for card in figure_cards if card.isBlocked]
+ 
+        if len(blocked_cards) == 0:
+            playable_cards = [card for card in figure_cards if card.isPlayable]
+            available_cards = self.db_session.query(FigureCard).filter(
+                FigureCard.gameID == gameID,
+                FigureCard.playerID == playerID,
+                FigureCard.isPlayable == False
+            ).limit(3 - len(playable_cards)).all()
+
+            if len(available_cards) > 0:
+                for card in available_cards:
+                    card.isPlayable = True
+                    
         self.db_session.commit()

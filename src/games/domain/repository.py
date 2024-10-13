@@ -37,3 +37,16 @@ class GameRepository(ABC):
     @abstractmethod
     def is_player_in_game(self, gameID: int, playerID: int) -> bool:
         pass
+
+    @abstractmethod
+    def skip(self, gameID: int) -> None:
+        pass
+
+    @abstractmethod
+    def replacement_movement_card(self, gameID: int, playerID: int) -> None:
+        pass
+
+    @abstractmethod
+    def replacement_figure_card(self, gameID: int, playerID: int) -> None:
+        pass
+    
