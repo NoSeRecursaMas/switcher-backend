@@ -57,7 +57,7 @@ class RoomRepository(ABC):
 
 class RoomRepositoryWS(RoomRepository):
     @abstractmethod
-    async def setup_connection_room_list(self, playerID: int, websocket: WebSocket) -> None:
+    async def setup_connection_room_list(self, websocket: WebSocket) -> None:
         pass
 
     @abstractmethod

@@ -52,7 +52,7 @@ class RoomService:
     async def connect_to_room_list_websocket(self, playerID: int, websocket: WebSocket) -> None:
         await self.player_domain_service.validate_player_exists(playerID, websocket)
 
-        await self.room_repository.setup_connection_room_list(playerID, websocket)
+        await self.room_repository.setup_connection_room_list(websocket)
 
     async def connect_to_room_websocket(self, playerID: int, roomID: int, websocket: WebSocket) -> None:
         await self.player_domain_service.validate_player_exists(playerID, websocket)
