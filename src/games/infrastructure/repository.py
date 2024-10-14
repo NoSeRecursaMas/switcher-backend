@@ -92,12 +92,13 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.commit()
 
     def skip(self, gameID: int) -> None:
-        game = self.get(gameID)
+        game = self.db_session.get(GameDB, gameID)
+        game_players = self.get_players(gameID)
         if game is None:
             raise ValueError(f"Game with ID {gameID} not found")
         current_position = game.posEnabledToPlay
 
-        if current_position == len(game.players):
+        if current_position == len(game_players):
             game.posEnabledToPlay = 1
         else:
             game.posEnabledToPlay = current_position + 1
@@ -119,17 +120,17 @@ class SQLAlchemyRepository(GameRepository):
             MovementCardDB.gameID == gameID, MovementCardDB.playerID == playerID
         )
 
-        if len(playable_cards) < 3:
+        if playable_cards.count() < 3:
             available_cards = (
                 self.db_session.query(MovementCardDB)
                 .filter(
                     MovementCardDB.gameID == gameID, not MovementCardDB.isDiscarded, MovementCardDB.playerID is None
                 )
                 .order_by(func.random())
-                .limit(3 - len(playable_cards))
+                .limit(3 - playable_cards.count())
             )
 
-            if len(available_cards) < 3 - len(playable_cards):
+            if available_cards.count() < 3 - playable_cards.count():
                 self.rebuild_movement_deck(gameID)
                 available_cards = (
                     self.db_session.query(MovementCardDB)
@@ -157,7 +158,7 @@ class SQLAlchemyRepository(GameRepository):
             available_cards = (
                 self.db_session.query(FigureCardDB)
                 .filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID, not FigureCardDB.isPlayable)
-                .limit(3 - len(figure_cards))
+                .limit(3 - figure_cards.count())
             )
 
             for card in available_cards:
@@ -266,6 +267,20 @@ class SQLAlchemyRepository(GameRepository):
     def is_player_in_game(self, playerID, gameID):
         players = self.get_players(gameID)
         return playerID in [player.playerID for player in players]
+    
+    def get_current_turn(self, gameID: int) -> int:
+        game = self.get(gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        return game.posEnabledToPlay
+    
+    def get_position_player(self, gameID, playerID):
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        player_position = self.db_session.query(PlayerRoomDB).filter(
+                PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == game.roomID).one_or_none().position
+        return player_position
 
     def get_public_info(self, gameID: int, playerID: int) -> GamePublicInfo:
         game = self.get(gameID)

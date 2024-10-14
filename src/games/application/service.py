@@ -54,10 +54,18 @@ class GameService:
 
     async def skip_turn(self, playerID: int, gameID: int) -> None:
         await self.player_domain_service.validate_player_exists(playerID)
+        await self.game_domain_service.validate_game_exists(gameID)
+        await self.game_domain_service.is_player_in_game(playerID, gameID)
+        
+        position_player = self.game_repository.get_position_player(gameID, playerID)
+
+        self.game_domain_service.validate_is_player_turn(position_player, gameID)
 
         self.game_repository.skip(gameID)
         self.game_repository.replacement_movement_card(gameID, playerID)
         self.game_repository.replacement_figure_card(gameID, playerID)
+
+        await self.game_repository.broadcast_status_game(gameID)
 
     async def connect_to_game_websocket(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
         await self.player_domain_service.validate_player_exists(playerID, websocket)
