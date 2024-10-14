@@ -1,3 +1,4 @@
+import json
 from typing import List, Optional
 
 from fastapi.websockets import WebSocket
@@ -18,6 +19,7 @@ from src.rooms.infrastructure.websocket import (
     ws_manager_room,
     ws_manager_room_list,
 )
+
 
 class SQLAlchemyRepository(RoomRepository):
     def __init__(self, db_session: Session):
@@ -61,7 +63,7 @@ class SQLAlchemyRepository(RoomRepository):
 
         if room is None:
             return None
-        
+
         return RoomPublicInfo(
             roomID=room.roomID,
             roomName=room.roomName,
@@ -73,23 +75,32 @@ class SQLAlchemyRepository(RoomRepository):
 
     def get_all_rooms(self) -> List[RoomExtendedInfo]:
         all_rooms = self.db_session.query(Room).order_by(Room.roomID).all()
-        room_list = [ 
+        room_list = [
             RoomExtendedInfo(
                 roomID=room.roomID,
                 roomName=room.roomName,
                 minPlayers=room.minPlayers,
                 maxPlayers=room.maxPlayers,
                 actualPlayers=len(room.players),
-                started=False,
+                started=room.game is not None,
                 private=room.password is not None,
-            ) for room in all_rooms
+            )
+            for room in all_rooms
         ]
 
         return room_list
 
     def get_player_count(self, roomID: int) -> int:
         room = self.get(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
         return len(room.players)
+
+    def get_players(self, roomID: int) -> List[Player]:
+        room = self.get(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
+        return room.players
 
     def update(self, room: Room) -> None:
         self.db_session.query(Room).filter(Room.roomID == room.roomID).update(
@@ -126,6 +137,15 @@ class SQLAlchemyRepository(RoomRepository):
         player_in_room = self.db_session.query(PlayerRoom).filter_by(playerID=playerID, roomID=roomID).one_or_none()
         return player_in_room is not None
 
+    def is_game_started(self, roomID: int) -> bool:
+        room = self.db_session.query(Room).filter_by(roomID=roomID).one_or_none()
+        return room.game is not None
+
+    def set_position(self, playerID: int, position: int) -> None:
+        self.db_session.query(PlayerRoom).filter(PlayerRoom.playerID == playerID).update({"position": position})
+        self.db_session.commit()
+
+
 class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_room_list(self, websocket: WebSocket) -> None:
         """Establece la conexión con el websocket lista de salas
@@ -146,11 +166,14 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         y le envia el estado actual de la sala
 
         Args:
+            playerID (int): ID del jugador
             roomID (int): ID de la sala
             websocket (WebSocket): Conexión con el cliente
         """
         await ws_manager_room.connect(playerID, roomID, websocket)
         room = self.get_public_info(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
         room_json = room.model_dump()
         await ws_manager_room.send_personal_message(MessageType.STATUS, room_json, websocket)
         await ws_manager_room.keep_listening(websocket)
@@ -159,7 +182,7 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         """Envía la lista de salas (actualizada) a todos los clientes conectados a la lista de salas"""
         room_list = self.get_all_rooms()
         room_list_json = [room.model_dump() for room in room_list]
-        await ws_manager_room_list.broadcast(MessageType.STATUS, room_list_json)        
+        await ws_manager_room_list.broadcast(MessageType.STATUS, room_list_json)
 
     async def broadcast_status_room(self, roomID: int) -> None:
         """Envía el estado de la sala (actualizado) a todos los clientes conectados a la sala
@@ -168,5 +191,16 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
             roomID (int): ID de la sala
         """
         room = self.get_public_info(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
         room_json = room.model_dump()
         await ws_manager_room.broadcast(MessageType.STATUS, room_json, roomID)
+
+    async def broadcast_start_game(self, roomID: int, gameID: int) -> None:
+        """Envía la señal de inicio de juego a todos los clientes conectados a la sala
+
+        Args:
+            roomID (int): ID de la sala
+        """
+        game_info = json.dumps({"gameID": gameID})
+        await ws_manager_room.broadcast(MessageType.START_GAME, game_info, roomID)

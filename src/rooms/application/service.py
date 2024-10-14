@@ -1,4 +1,5 @@
 from typing import Optional
+
 from fastapi import WebSocket
 
 from src.players.domain.repository import PlayerRepository
@@ -17,7 +18,8 @@ class RoomService:
         self.room_repository = room_repository
 
         self.room_domain_service = RoomRepositoryValidators(room_repository, player_repository)
-        self.player_domain_service = PlayerRepositoryValidators(player_repository)
+        if player_repository is not None:
+            self.player_domain_service = PlayerRepositoryValidators(player_repository)
 
     async def create_room(self, room_data: RoomCreationRequest) -> RoomID:
         await self.player_domain_service.validate_player_exists(room_data.playerID)
@@ -33,6 +35,7 @@ class RoomService:
         await self.room_domain_service.validate_room_exists(roomID)
         await self.room_domain_service.validate_player_in_room(playerID, roomID)
         self.room_domain_service.validate_player_is_not_owner(playerID, roomID)
+        await self.room_domain_service.validate_game_not_started(roomID)
 
         self.room_repository.remove_player_from_room(playerID=playerID, roomID=roomID)
 
@@ -43,6 +46,7 @@ class RoomService:
         await self.player_domain_service.validate_player_exists(playerID)
         await self.room_domain_service.validate_room_exists(roomID)
         self.room_domain_service.validate_room_full(roomID)
+        await self.room_domain_service.validate_game_not_started(roomID)
 
         self.room_repository.add_player_to_room(playerID=playerID, roomID=roomID)
 
@@ -58,5 +62,6 @@ class RoomService:
         await self.player_domain_service.validate_player_exists(playerID, websocket)
         await self.room_domain_service.validate_room_exists(roomID, websocket)
         await self.room_domain_service.validate_player_in_room(playerID, roomID, websocket)
+        await self.room_domain_service.validate_game_not_started(roomID, websocket)
 
-        await self.room_repository.setup_connection_room(playerID, roomID, websocket)        
+        await self.room_repository.setup_connection_room(playerID, roomID, websocket)

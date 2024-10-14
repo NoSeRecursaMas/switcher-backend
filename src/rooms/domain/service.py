@@ -36,9 +36,24 @@ class RepositoryValidators:
 
     def validate_player_is_not_owner(self, playerID: int, roomID: int):
         if self.room_repository.is_owner(playerID, roomID):
-            raise HTTPException(status_code=405, detail="El propietario no puede abandonar la sala.")
+            raise HTTPException(status_code=403, detail="El propietario no puede abandonar la sala.")
+
+    def validate_player_is_owner(self, playerID: int, roomID: int):
+        if not self.room_repository.is_owner(playerID, roomID):
+            raise HTTPException(status_code=403, detail="Solo el propietario puede iniciar la partida.")
 
     def validate_room_full(self, roomID: int):
         room = self.room_repository.get_public_info(roomID)
+        if room is None:
+            raise HTTPException(status_code=404, detail="La sala no existe.")
         if len(room.players) >= room.maxPlayers:
             raise HTTPException(status_code=403, detail="La sala está llena.")
+
+    async def validate_game_not_started(self, roomID: int, websocket: Optional[WebSocket] = None):
+        if not self.room_repository.is_game_started(roomID):
+            return
+        if websocket is None:
+            raise HTTPException(status_code=403, detail="La partida ya ha comenzado.")
+        else:
+            await websocket.accept()
+            raise WebSocketDisconnect(4003, "La partida ya ha comenzado.")

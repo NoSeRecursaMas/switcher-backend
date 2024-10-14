@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.database import Base
@@ -16,9 +16,10 @@ class Room(Base):
     hostID = Column(Integer, ForeignKey("players.playerID"))
 
     players = relationship("Player", secondary="player_room", back_populates="rooms")
+    game = relationship("Game", back_populates="room", uselist=False)
 
     def __repr__(self):
-        return f"<Room(roomName={self.roomName})>"
+        return f"<Room(roomName={self.roomName}, players={self.players})>"
 
 
 class PlayerRoom(Base):
@@ -26,3 +27,5 @@ class PlayerRoom(Base):
 
     playerID = Column(Integer, ForeignKey("players.playerID", ondelete="CASCADE"), primary_key=True)
     roomID = Column(Integer, ForeignKey("rooms.roomID", ondelete="CASCADE"), primary_key=True)
+    position = Column(Integer, nullable=True, default=0)
+    isActive = Column(Boolean, nullable=True, default=True)

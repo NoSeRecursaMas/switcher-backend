@@ -1,10 +1,12 @@
 from enum import Enum
 from typing import Dict, List
+from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
-from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState 
+
 
 class MessageType(str, Enum):
     STATUS = "status"
+    START_GAME = "start"
 
 
 class ConnectionManagerRoomList:
@@ -74,7 +76,7 @@ class ConnectionManagerRoomList:
 
 
 class ConnectionManagerRoom:
-    active_connections: Dict[int, Dict[str, WebSocket]]
+    active_connections: Dict[int, Dict[int, WebSocket]]
 
     def __init__(self):
         self.active_connections = {}

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
+
 from fastapi.websockets import WebSocket
 
 from src.rooms.domain.models import (
@@ -55,6 +56,15 @@ class RoomRepository(ABC):
     def is_player_in_room(self, playerID: int, roomID: int) -> bool:
         pass
 
+    @abstractmethod
+    def is_game_started(self, roomID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def set_position(self, playerID: int, position: int) -> None:
+        pass
+
+
 class RoomRepositoryWS(RoomRepository):
     @abstractmethod
     async def setup_connection_room_list(self, websocket: WebSocket) -> None:
@@ -70,4 +80,8 @@ class RoomRepositoryWS(RoomRepository):
 
     @abstractmethod
     async def broadcast_status_room(self, roomID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def broadcast_start_game(self, roomID: int, gameID: int) -> None:
         pass

@@ -6,9 +6,9 @@ from src.players.domain.models import PlayerID
 from src.players.infrastructure.repository import (
     SQLAlchemyRepository as PlayerSQLAlchemyRepository,
 )
-from src.rooms.infrastructure.repository import WebSocketRepository as RoomWebSocketRepository
 from src.rooms.application.service import RoomService
 from src.rooms.domain.models import RoomCreationRequest, RoomID
+from src.rooms.infrastructure.repository import WebSocketRepository as RoomWebSocketRepository
 
 router = APIRouter()
 
@@ -16,7 +16,7 @@ router = APIRouter()
 @router.post("", status_code=201)
 async def create_room(room_data: RoomCreationRequest, db_session: Session = Depends(get_db)) -> RoomID:
     service = RoomService(RoomWebSocketRepository(db_session), PlayerSQLAlchemyRepository(db_session))
-    
+
     room = await service.create_room(room_data)
     return room
 
