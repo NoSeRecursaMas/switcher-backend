@@ -1,7 +1,8 @@
 import json
 import random
-from typing import Dict, List, Optional
+from typing import List, Optional
 
+from fastapi.websockets import WebSocket
 from sqlalchemy.orm import Session
 
 from src.games.config import (
@@ -16,8 +17,9 @@ from src.games.domain.models import FigureCard as FigureCardDomain
 from src.games.domain.models import Game as GameDomain
 from src.games.domain.models import GameID, PlayerInfoPrivate, PlayerInfoPublic
 from src.games.domain.models import MovementCard as MovementCardDomain
-from src.games.domain.repository import GameRepository
+from src.games.domain.repository import GameRepository, GameRepositoryWS
 from src.games.infrastructure.models import FigureCard, Game, MovementCard
+from src.games.infrastructure.websocket import MessageType, ws_manager_game
 from src.players.domain.models import Player
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
 
@@ -28,9 +30,8 @@ class SQLAlchemyRepository(GameRepository):
 
     def create(self, roomID: int, new_board: list) -> GameID:
         board_json = json.dumps(new_board)
-        last_movements: Dict[str, str] = {}
 
-        new_game = Game(board=board_json, lastMovements=last_movements, prohibitedColor=None, roomID=roomID)
+        new_game = Game(board=board_json, lastMovements={}, prohibitedColor=None, roomID=roomID)
 
         self.db_session.add(new_game)
         self.db_session.commit()
@@ -39,7 +40,7 @@ class SQLAlchemyRepository(GameRepository):
         return GameID(gameID=new_game.gameID)
 
     def get(self, gameID: int) -> Optional[GameDomain]:
-        game = self.db_session.query(Game).filter(Game.gameID == gameID).first()
+        game = self.db_session.get(Game, gameID)
 
         if game is None:
             return None
@@ -56,17 +57,20 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.delete(game)
         self.db_session.commit()
 
-    def is_player_in_game(self, gameID: int, playerID: int) -> bool:
-        return True
-
-    def get_game_players(self, gameID: int) -> List[Player]:
+    def get_players(self, gameID: int) -> List[Player]:
         room_repository = RoomRepository(self.db_session)
-        roomID = self.db_session.query(Game).filter(Game.gameID == gameID).first().roomID
+        game = self.db_session.get(Game, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        roomID = game.roomID
         return room_repository.get_players(roomID)
 
-    def create_figure_cards(self, roomID: int, gameID: int) -> None:
-        room_repository = RoomRepository(self.db_session)
-        players = room_repository.get_players(roomID)
+    def is_player_in_game(self, playerID, gameID):
+        players = self.get_players(gameID)
+        return playerID in [player.playerID for player in players]
+
+    def create_figure_cards(self, gameID: int) -> None:
+        players = self.get_players(gameID)
         player_count = len(players) - 2
 
         blue_amount = BLUE_CARDS_AMOUNT[player_count]
@@ -98,9 +102,8 @@ class SQLAlchemyRepository(GameRepository):
 
         self.db_session.commit()
 
-    def create_movement_cards(self, roomID: int, gameID: int) -> None:
-        room_repository = RoomRepository(self.db_session)
-        players = room_repository.get_players(roomID)
+    def create_movement_cards(self, gameID: int) -> None:
+        players = self.get_players(gameID)
         player_count = len(players) - 2
 
         movement_cards_amount = MOVEMENT_CARDS_AMOUNT[player_count] * (player_count + 2)
@@ -157,7 +160,7 @@ class SQLAlchemyRepository(GameRepository):
 
     def get_game_info(self, gameID: int) -> GameDomain:
         game = self.db_session.query(Game).filter(Game.gameID == gameID).first()
-        players = self.get_game_players(gameID)
+        players = self.get_players(gameID)
         player_info = [self.get_player_public_info(gameID, player.playerID) for player in players]
         return GameDomain(
             gameID=gameID,
@@ -167,3 +170,23 @@ class SQLAlchemyRepository(GameRepository):
             ProhibitedColor=game.ProhibitedColor,
             players=player_info,
         )
+
+
+class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
+    async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
+        """Establece la conexión con el websocket de un juego
+        y le envia el estado actual de la sala
+
+        Args:
+            playerID (int): ID del jugador
+            gameID (int): ID del juego
+            websocket (WebSocket): Conexión con el cliente
+        """
+        await ws_manager_game.connect(playerID, gameID, websocket)
+        game = self.get_game_info(gameID)
+        game_json = game.model_dump()
+        await ws_manager_game.send_personal_message(MessageType.STATUS, game_json, websocket)
+        await ws_manager_game.keep_listening(websocket)
+
+    async def broadcast_status_game(self, gameID: int) -> None:
+        pass

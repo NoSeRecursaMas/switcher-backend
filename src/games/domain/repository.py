@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
 
+from fastapi.websockets import WebSocket
+
 from src.games.domain.models import (
     Game,
-    GameCreationRequest,
     GameID,
 )
 from src.players.domain.models import Player as PlayerDomain
@@ -15,11 +16,11 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def create_figure_cards(self, roomID: int, gameID: int) -> None:
+    def create_figure_cards(self, gameID: int) -> None:
         pass
 
     @abstractmethod
-    def create_movement_cards(self, roomID: int, gameID: int) -> None:
+    def create_movement_cards(self, gameID: int) -> None:
         pass
 
     @abstractmethod
@@ -31,9 +32,19 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def get_game_players(self, gameID: int) -> List[PlayerDomain]:
+    def get_players(self, gameID: int) -> List[PlayerDomain]:
         pass
 
     @abstractmethod
-    def is_player_in_game(self, gameID: int, playerID: int) -> bool:
+    def is_player_in_game(self, playerID: int, gameID: int) -> bool:
+        pass
+
+
+class GameRepositoryWS(GameRepository):
+    @abstractmethod
+    async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
+        pass
+
+    @abstractmethod
+    async def broadcast_status_game(self, gameID: int) -> None:
         pass
