@@ -1,8 +1,9 @@
 from src.conftest import override_get_db
+from src.games.infrastructure.models import Game as GameDB
 from src.players.infrastructure.models import Player as PlayerDB
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
 from src.rooms.infrastructure.models import Room as RoomDB
-from src.games.infrastructure.models import Game as GameDB
+
 
 def test_leave_room(client, test_db):
     db = next(override_get_db())
@@ -228,6 +229,7 @@ def test_leave_room_send_update_ws_room(client, test_db):
         }
 
         assert response_leave.status_code == 200
+
 
 def test_leave_room_game_started(client, test_db):
     db = next(override_get_db())
