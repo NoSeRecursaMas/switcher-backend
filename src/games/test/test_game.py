@@ -6,7 +6,7 @@ from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
 from src.rooms.infrastructure.models import Room as RoomDB
 
 
-def test_create_game(client, test_db):
+def create_game_generalization_two_players(client, test_db):
     db = next(override_get_db())
     players = [PlayerDB(username=f"player{i}") for i in range(1, 3)]
     db.add_all(players)
@@ -23,6 +23,11 @@ def test_create_game(client, test_db):
 
     db.add_all(players_room_relations)
     db.commit()
+
+    return db, players, room
+
+def test_create_game(client, test_db):
+    db, players, room = create_game_generalization_two_players(client, test_db)
 
     response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
     assert response.status_code == 201
@@ -30,22 +35,7 @@ def test_create_game(client, test_db):
 
 
 def test_create_game_cards(client, test_db):
-    db = next(override_get_db())
-    players = [PlayerDB(username=f"player{i}") for i in range(1, 3)]
-    db.add_all(players)
-    db.commit()
-
-    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
-    db.add(room)
-    db.commit()
-
-    players_room_relations = [
-        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID),
-        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID),
-    ]
-
-    db.add_all(players_room_relations)
-    db.commit()
+    db, players, room = create_game_generalization_two_players(client, test_db)
 
     response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
 
@@ -148,22 +138,7 @@ def test_player_exists(client, test_db):
 
 
 def test_create_game_send_update_room_list_ws(client, test_db):
-    db = next(override_get_db())
-    players = [PlayerDB(username=f"player{i}") for i in range(1, 3)]
-    db.add_all(players)
-    db.commit()
-
-    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
-    db.add(room)
-    db.commit()
-
-    players_room_relations = [
-        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID),
-        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID),
-    ]
-
-    db.add_all(players_room_relations)
-    db.commit()
+    db, players, room = create_game_generalization_two_players(client, test_db)
 
     with client.websocket_connect(f"/rooms/{players[1].playerID}") as websocket:
         data = websocket.receive_json()
@@ -198,7 +173,6 @@ def test_create_game_send_update_room_list_ws(client, test_db):
         response.json() == {"gameID": 1}
 
 
-# IDEAS DE TESTS (Se le ocurrieron a Gonza pero no tiene tiempo de hacerlos)
 # - Testear que no se crean más de 2 cartas de figuras iguales por cada tipo
 def test_create_game_figure_cards_unique(client, test_db):
     pass
