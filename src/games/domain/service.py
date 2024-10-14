@@ -41,6 +41,25 @@ class RepositoryValidators:
             await websocket.accept()
             raise WebSocketDisconnect(4003, "El jugador no se encuentra en el juego.")
 
+    async def validate_player_exists(self, playerID: int, websocket: Optional[WebSocket] = None):
+        if self.room_repository is None:
+            raise ValueError("RoomRepository is required to validate player exists")
+        if self.room_repository.get_player(playerID) is not None:
+            return
+        if websocket is None:
+            raise HTTPException(status_code=404, detail="El jugador no existe.")
+        else:
+            await websocket.accept()
+            raise WebSocketDisconnect(4001, "El jugador no existe.")
+        
+    async def validate_player_turn(self, playerID: int, gameID: int, websocket: Optional[WebSocket] = None):
+        if self.game_repository.is_player_turn(playerID, gameID):
+            return
+        if websocket is None:
+            raise HTTPException(status_code=403, detail="No es el turno del jugador.")
+        else:
+            await websocket.accept()
+            raise WebSocketDisconnect(4005, "No es el turno del jugador.")
 
 class GameServiceDomain:
     def __init__(self, game_repository: GameRepository, room_repository: RoomRepository):

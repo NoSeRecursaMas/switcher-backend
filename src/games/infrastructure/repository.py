@@ -144,6 +144,12 @@ class SQLAlchemyRepository(GameRepository):
         game.board = board_json
         self.db_session.commit()
 
+    def is_player_turn(self, playerID: int, gameID: int) -> bool:
+        game = self.db_session.get(GameDB, gameID)
+        players = self.get_players(gameID)
+        player = next(player for player in players if player.playerID == playerID)
+        return player.position == game.posEnabledToPlay
+
     def is_piece_partial(self, gameID: int, posX: int, posY: int) -> bool:
         # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
         # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
