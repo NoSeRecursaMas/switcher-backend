@@ -138,7 +138,7 @@ class SQLAlchemyRepository(GameRepository):
                         MovementCardDB.gameID == gameID, not MovementCardDB.isDiscarded, MovementCardDB.playerID is None
                     )
                     .order_by(func.random())
-                    .limit(3 - len(playable_cards))
+                    .limit(3 - playable_cards.count())
                 )
 
             for card in available_cards:
