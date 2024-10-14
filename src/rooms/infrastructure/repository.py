@@ -138,7 +138,7 @@ class SQLAlchemyRepository(RoomRepository):
 
 
 class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
-    async def setup_connection_room_list(self, playerID: int, websocket: WebSocket) -> None:
+    async def setup_connection_room_list(self, websocket: WebSocket) -> None:
         """Establece la conexión con el websocket lista de salas
         y le envia el estado actual de la lista de salas
 
@@ -146,7 +146,7 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
             playerID (int): ID del jugador
             websocket (WebSocket): Conexión con el cliente
         """
-        await ws_manager_room_list.connect(playerID, websocket)
+        await ws_manager_room_list.connect(websocket)
         room_list = self.get_all_rooms()
         room_list_json = [room.model_dump() for room in room_list]
         await ws_manager_room_list.send_personal_message(MessageType.STATUS, room_list_json, websocket)
@@ -164,7 +164,7 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         room = self.get_public_info(roomID)
         room_json = room.model_dump()
         await ws_manager_room.send_personal_message(MessageType.STATUS, room_json, websocket)
-        await ws_manager_room.keep_listening(playerID, roomID, websocket)
+        await ws_manager_room.keep_listening(websocket)
 
     async def broadcast_status_room_list(self) -> None:
         """Envía la lista de salas (actualizada) a todos los clientes conectados a la lista de salas"""

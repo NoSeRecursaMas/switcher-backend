@@ -74,8 +74,7 @@ def test_connect_to_room_list_websocket_player_exist_and_has_rooms(client, test_
             },
         ]
 
-
-def test_close_first_connection_if_player_open_second(client, test_db):
+def test_can_connect_2_times(client, test_db):
     db = next(override_get_db())
     db.add_all([
         PlayerDB(playerID=1, username="test user"),
@@ -85,8 +84,7 @@ def test_close_first_connection_if_player_open_second(client, test_db):
         PlayerRoomDB(playerID=2, roomID=1),
     ])
     db.commit()
-
-    with pytest.raises(WebSocketDisconnect) as e:
+    try:
         with client.websocket_connect("/rooms/1") as websocket:
             data = websocket.receive_json()
             assert data["type"] == "status"
@@ -114,13 +112,8 @@ def test_close_first_connection_if_player_open_second(client, test_db):
                         "private": False,
                     },
                 ]
-
-                websocket.receive_json()
-
-    assert e.value.code == 1000
-    assert e.value.reason == "Conexión abierta en otra pestaña"
-
-
+    except WebSocketDisconnect as e:
+        pytest.fail("Should not disconnect")
 
 
 def test_get_all_rooms_via_websocket(client, test_db):
@@ -187,7 +180,6 @@ def test_get_all_rooms_via_websocket(client, test_db):
         ]
 
 def test_get_empty_room(client,test_db):
-
     db = next(override_get_db())
     player1 = PlayerDB(username="player1")
     db.add(player1)
