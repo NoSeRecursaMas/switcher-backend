@@ -234,4 +234,13 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
         await ws_manager_game.keep_listening(websocket)
 
     async def broadcast_status_game(self, gameID: int) -> None:
-        pass
+        """Envia el estado actual de la sala a todos los jugadores
+
+        Args:
+            gameID (int): ID del juego
+        """
+        players = self.get_players(gameID)
+        for player in players:
+            game = self.get_public_info(gameID, player.playerID)
+            game_json = game.model_dump()
+            await ws_manager_game.send_personal_message_by_id(MessageType.STATUS, game_json, player.playerID, gameID)

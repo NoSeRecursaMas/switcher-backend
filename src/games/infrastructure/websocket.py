@@ -77,6 +77,20 @@ class ConnectionManagerGame:
         message = {"type": type, "payload": payload}
         await websocket.send_json(message)
 
+    async def send_personal_message_by_id(self, type: MessageType, payload: str, playerID: int, gameID: int):
+        """Envía un mensaje personalizado al cliente
+
+        Args:
+            type (str): Tipo de mensaje
+            payload (str): Cuerpo del mensaje
+            playerID (int): ID del jugador
+            gameID (int): ID del juego
+        """
+        message = {"type": type, "payload": payload}
+        if gameID in self.active_connections:
+            if playerID in self.active_connections[gameID]:
+                await self.active_connections[gameID][playerID].send_json(message)
+
     async def broadcast(self, type: MessageType, payload: str, gameID: int):
         """Envía un mensaje a todos los clientes conectados al juego
 

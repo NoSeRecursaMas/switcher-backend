@@ -81,7 +81,7 @@ class SQLAlchemyRepository(RoomRepository):
                 minPlayers=room.minPlayers,
                 maxPlayers=room.maxPlayers,
                 actualPlayers=len(room.players),
-                started=False,
+                started=room.game is not None,
                 private=room.password is not None,
             )
             for room in all_rooms

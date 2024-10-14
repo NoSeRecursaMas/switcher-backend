@@ -9,7 +9,7 @@ from src.games.domain.service import RepositoryValidators as GameRepositoryValid
 from src.players.domain.models import PlayerID
 from src.players.domain.repository import PlayerRepository
 from src.players.domain.service import RepositoryValidators as PlayerRepositoryValidators
-from src.rooms.domain.repository import RoomRepository
+from src.rooms.domain.repository import RoomRepositoryWS
 from src.rooms.domain.service import RepositoryValidators as RoomRepositoryValidators
 
 
@@ -18,7 +18,7 @@ class GameService:
         self,
         game_repository: GameRepositoryWS,
         player_repository: PlayerRepository,
-        room_repository: Optional[RoomRepository] = None,
+        room_repository: Optional[RoomRepositoryWS] = None,
     ):
         self.game_repository = game_repository
         self.player_repository = player_repository
@@ -47,6 +47,8 @@ class GameService:
         game_service_domain = GameServiceDomain(self.game_repository, self.room_repository)
 
         game_service_domain.set_game_turn_order(gameID)
+
+        self.room_repository.broadcast_status_room_list()
 
         return response
 
