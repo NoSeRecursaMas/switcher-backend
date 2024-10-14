@@ -57,13 +57,17 @@ class RoomRepository(ABC):
         pass
 
     @abstractmethod
+    def is_game_started(self, roomID: int) -> bool:
+        pass
+
+    @abstractmethod
     def set_position(self, playerID: int, position: int) -> None:
         pass
 
 
 class RoomRepositoryWS(RoomRepository):
     @abstractmethod
-    async def setup_connection_room_list(self, playerID: int, websocket: WebSocket) -> None:
+    async def setup_connection_room_list(self, websocket: WebSocket) -> None:
         pass
 
     @abstractmethod
@@ -76,4 +80,8 @@ class RoomRepositoryWS(RoomRepository):
 
     @abstractmethod
     async def broadcast_status_room(self, roomID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def broadcast_start_game(self, roomID: int, gameID: int) -> None:
         pass

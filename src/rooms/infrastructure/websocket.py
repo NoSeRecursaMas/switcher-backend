@@ -1,35 +1,32 @@
 from enum import Enum
-from typing import Dict
+from typing import Dict, List
 
 from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
 
 class MessageType(str, Enum):
     STATUS = "status"
+    START_GAME = "start"
 
 
 class ConnectionManagerRoomList:
-    active_connections = Dict[int, WebSocket]
+    active_connections: List[WebSocket]
 
     def __init__(self):
-        self.active_connections = {}
+        self.active_connections = []
 
     def clean_up(self):
         """Limpia la lista de conexiones activas"""
-        self.active_connections = {}
+        self.active_connections = []
 
-    async def connect(self, playerID: int, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket):
         """Acepta la conexión con el cliente y la almacena.
-        En caso de que ese jugador ya esté conectado, se cierra la conexión anterior.
 
         Args:
-            playerID (int): ID del jugador
             websocket (WebSocket): Conexión con el cliente
         """
         await websocket.accept()
-        if playerID in self.active_connections:
-            await self.active_connections[playerID].close(1000, "Conexión abierta en otra pestaña")
-        self.active_connections[playerID] = websocket
+        self.active_connections.append(websocket)
 
     async def keep_listening(self, websocket: WebSocket):
         """Mantiene la conexión abierta con el cliente por tiempo indefinido
@@ -42,20 +39,18 @@ class ConnectionManagerRoomList:
                 await websocket.receive_text()
 
         except WebSocketDisconnect:
-            connections = self.active_connections.copy()
-            for playerID, ws in connections.items():
-                if ws == websocket:
-                    self.disconnect(playerID)
+            self.disconnect(websocket)
 
-    def disconnect(self, playerID: int):
-        """Desconecta al cliente del jugador
+    def disconnect(self, websocket: WebSocket):
+        """Remueve al cliente de la lista de conexiones activas
 
         Args:
-            playerID (int): ID del jugador
+            websocket (WebSocket): Conexión con el cliente
         """
-        ws = self.active_connections.pop(playerID)
-        if ws.client_state != WebSocketState.DISCONNECTED:
-            ws.close()
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+        if websocket.client_state != WebSocketState.DISCONNECTED:
+            websocket.close()
 
     async def send_personal_message(self, type: MessageType, payload, websocket: WebSocket):
         """Envía un mensaje personalizado al cliente
@@ -76,12 +71,12 @@ class ConnectionManagerRoomList:
             payload (str): Cuerpo del mensaje
         """
         message = {"type": type, "payload": payload}
-        for connection in self.active_connections.values():
+        for connection in self.active_connections:
             await connection.send_json(message)
 
 
 class ConnectionManagerRoom:
-    active_connections = Dict[int, Dict[str, WebSocket]]
+    active_connections: Dict[int, Dict[int, WebSocket]]
 
     def __init__(self):
         self.active_connections = {}
@@ -102,17 +97,15 @@ class ConnectionManagerRoom:
         await websocket.accept()
         if roomID in self.active_connections:
             if playerID in self.active_connections[roomID]:
-                await self.active_connections[roomID][playerID].close(1000, "Conexión abierta en otra pestaña")
+                await self.active_connections[roomID][playerID].close(4005, "Conexión abierta en otra pestaña")
         if roomID not in self.active_connections:
             self.active_connections[roomID] = {}
         self.active_connections[roomID][playerID] = websocket
 
-    async def keep_listening(self, playerID: int, roomID: int, websocket: WebSocket):
+    async def keep_listening(self, websocket: WebSocket):
         """Mantiene la conexión abierta con el cliente por tiempo indefinido
 
         Args:
-            playerID (int): ID del jugador
-            roomID (int): ID de la sala
             websocket (WebSocket): Conexión con el cliente
         """
         try:
@@ -120,18 +113,25 @@ class ConnectionManagerRoom:
                 await websocket.receive_text()
 
         except WebSocketDisconnect:
-            self.disconnect(playerID, roomID)
+            self.disconnect(websocket)
 
-    def disconnect(self, playerID: int, roomID: int):
-        """Desconecta al cliente del jugador en la sala
+    def disconnect(self, websocket: WebSocket):
+        """Remueve al cliente de la lista de conexiones activas y cierra la conexión en caso de que no esté cerrada
 
         Args:
-            playerID (int): ID del jugador
-            roomID (int): ID de la sala
+            websocket (WebSocket): Conexión con el cliente
         """
-        ws = self.active_connections[roomID].pop(playerID)
-        if ws.client_state != WebSocketState.DISCONNECTED:
-            ws.close()
+        if websocket.client_state != WebSocketState.DISCONNECTED:
+            websocket.close()
+        active_connections = self.active_connections.copy()
+        for roomID in active_connections:
+            if websocket in active_connections[roomID].values():
+                playerID = list(active_connections[roomID].keys())[
+                    list(active_connections[roomID].values()).index(websocket)
+                ]
+                self.active_connections[roomID].pop(playerID)
+                if not self.active_connections[roomID]:
+                    self.active_connections.pop(roomID)
 
     async def send_personal_message(self, type: MessageType, payload: str, websocket: WebSocket):
         """Envía un mensaje personalizado al cliente

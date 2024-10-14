@@ -81,7 +81,7 @@ class SQLAlchemyRepository(RoomRepository):
                 minPlayers=room.minPlayers,
                 maxPlayers=room.maxPlayers,
                 actualPlayers=len(room.players),
-                started=False,
+                started=room.game is not None,
                 private=room.password is not None,
             )
             for room in all_rooms
@@ -91,10 +91,14 @@ class SQLAlchemyRepository(RoomRepository):
 
     def get_player_count(self, roomID: int) -> int:
         room = self.get(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
         return len(room.players)
 
     def get_players(self, roomID: int) -> List[Player]:
         room = self.get(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
         return room.players
 
     def update(self, room: Room) -> None:
@@ -131,6 +135,10 @@ class SQLAlchemyRepository(RoomRepository):
     def is_player_in_room(self, playerID: int, roomID: int) -> bool:
         player_in_room = self.db_session.query(PlayerRoom).filter_by(playerID=playerID, roomID=roomID).one_or_none()
         return player_in_room is not None
+    
+    def is_game_started(self, roomID: int) -> bool:
+        room = self.db_session.query(Room).filter_by(roomID=roomID).one_or_none()
+        return room.game is not None
 
     def set_position(self, playerID: int, position: int) -> None:
         self.db_session.query(PlayerRoom).filter(PlayerRoom.playerID == playerID).update({"position": position})
@@ -138,7 +146,7 @@ class SQLAlchemyRepository(RoomRepository):
 
 
 class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
-    async def setup_connection_room_list(self, playerID: int, websocket: WebSocket) -> None:
+    async def setup_connection_room_list(self, websocket: WebSocket) -> None:
         """Establece la conexión con el websocket lista de salas
         y le envia el estado actual de la lista de salas
 
@@ -146,7 +154,7 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
             playerID (int): ID del jugador
             websocket (WebSocket): Conexión con el cliente
         """
-        await ws_manager_room_list.connect(playerID, websocket)
+        await ws_manager_room_list.connect(websocket)
         room_list = self.get_all_rooms()
         room_list_json = [room.model_dump() for room in room_list]
         await ws_manager_room_list.send_personal_message(MessageType.STATUS, room_list_json, websocket)
@@ -157,14 +165,17 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         y le envia el estado actual de la sala
 
         Args:
+            playerID (int): ID del jugador
             roomID (int): ID de la sala
             websocket (WebSocket): Conexión con el cliente
         """
         await ws_manager_room.connect(playerID, roomID, websocket)
         room = self.get_public_info(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
         room_json = room.model_dump()
         await ws_manager_room.send_personal_message(MessageType.STATUS, room_json, websocket)
-        await ws_manager_room.keep_listening(playerID, roomID, websocket)
+        await ws_manager_room.keep_listening(websocket)
 
     async def broadcast_status_room_list(self) -> None:
         """Envía la lista de salas (actualizada) a todos los clientes conectados a la lista de salas"""
@@ -179,5 +190,16 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
             roomID (int): ID de la sala
         """
         room = self.get_public_info(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
         room_json = room.model_dump()
         await ws_manager_room.broadcast(MessageType.STATUS, room_json, roomID)
+
+    async def broadcast_start_game(self, roomID: int, gameID: int) -> None:
+        """Envía la señal de inicio de juego a todos los clientes conectados a la sala
+
+        Args:
+            roomID (int): ID de la sala
+        """
+        game_info = { "gameID": gameID }
+        await ws_manager_room.broadcast(MessageType.START_GAME, game_info, roomID)

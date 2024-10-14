@@ -1,8 +1,7 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.database import Base
-from src.games.infrastructure.models import Game
 
 
 class Room(Base):
@@ -29,3 +28,4 @@ class PlayerRoom(Base):
     playerID = Column(Integer, ForeignKey("players.playerID", ondelete="CASCADE"), primary_key=True)
     roomID = Column(Integer, ForeignKey("rooms.roomID", ondelete="CASCADE"), primary_key=True)
     position = Column(Integer, nullable=True, default=0)
+    isActive = Column(Boolean, nullable=True, default=True)

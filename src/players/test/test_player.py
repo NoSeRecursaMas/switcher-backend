@@ -1,17 +1,13 @@
-
-
 def test_create_player(client, test_db):
-
-    response = client.post("/players", json={"username": "mensio"} )
+    response = client.post("/players", json={"username": "mensio"})
 
     assert response.status_code == 201
     assert response.json() == {"playerID": 1, "username": "mensio"}
 
 
 def test_create_player_invalid_size(client, test_db):
-
     response = client.post("/players", json={"username": ""})
-    
+
     assert response.status_code == 422
     assert (
         response.json().get("detail")[0]["msg"]
@@ -20,7 +16,6 @@ def test_create_player_invalid_size(client, test_db):
 
 
 def test_create_player_long_name(client, test_db):
-
     response = client.post("/players", json={"username": "A" * 33})
 
     assert response.status_code == 422
@@ -31,7 +26,6 @@ def test_create_player_long_name(client, test_db):
 
 
 def test_create_player_non_ascii(client, test_db):
-
     response = client.post("/players", json={"username": "nombre_con_ñ"})
 
     assert response.status_code == 422
@@ -39,7 +33,6 @@ def test_create_player_non_ascii(client, test_db):
 
 
 def test_create_player_one_character(client, test_db):
-
     response = client.post("/players", json={"username": "A"})
 
     assert response.status_code == 201
@@ -47,7 +40,6 @@ def test_create_player_one_character(client, test_db):
 
 
 def test_create_player_with_spaces(client, test_db):
-
     response = client.post("/players", json={"username": "S A N   T I"})
 
     assert response.status_code == 201
@@ -55,8 +47,7 @@ def test_create_player_with_spaces(client, test_db):
 
 
 def test_create_two_players_with_same_name(client, test_db):
-         
-    response1 = client.post("/players", json={"username": "mensio"})      
+    response1 = client.post("/players", json={"username": "mensio"})
 
     assert response1.status_code == 201
     assert response1.json() == {"playerID": 1, "username": "mensio"}

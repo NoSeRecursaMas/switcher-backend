@@ -1,7 +1,8 @@
 import json
 import random
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
+from fastapi.websockets import WebSocket
 from sqlalchemy.orm import Session
 
 from src.games.config import (
@@ -12,19 +13,18 @@ from src.games.config import (
     WHITE_CARDS,
     WHITE_CARDS_AMOUNT,
 )
-from src.games.domain.models import Game as GameDomain
-from src.games.domain.models import GameCreationRequest, GameID
-from src.games.domain.repository import GameRepository
-from src.games.infrastructure.models import FigureCard, Game, MovementCard
-from src.players.infrastructure.models import Player
-from src.rooms.infrastructure.models import Room,PlayerRoom
 
+from src.games.domain.models import BoardPiece, FigureCard, Game, GameID, GamePublicInfo, MovementCard, PlayerPublicInfo
+from src.games.domain.repository import GameRepository, GameRepositoryWS
+from src.games.infrastructure.models import FigureCard as FigureCardDB
+from src.games.infrastructure.models import Game as GameDB
+from src.games.infrastructure.models import MovementCard as MovementCardDB
+from src.games.infrastructure.websocket import MessageType, ws_manager_game
+from src.players.infrastructure.models import Player as PlayerDB
+from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB, Room as RoomDB
 
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
-from src.games.domain.models import Game as GameDomain
-from src.games.domain.models import PlayerInfoPrivate, PlayerInfoPublic
-from src.games.domain.models import FigureCard as FigureCardDomain
-from src.games.domain.models import MovementCard as MovementCardDomain
+from sqlalchemy.sql.expression import func
 
 class SQLAlchemyRepository(GameRepository):
     def __init__(self, db_session: Session):
@@ -32,9 +32,8 @@ class SQLAlchemyRepository(GameRepository):
 
     def create(self, roomID: int, new_board: list) -> GameID:
         board_json = json.dumps(new_board)
-        last_movements = {}
 
-        new_game = Game(board=board_json, lastMovements=last_movements, prohibitedColor=None, roomID=roomID)
+        new_game = GameDB(board=board_json, lastMovements={}, prohibitedColor=None, roomID=roomID)
 
         self.db_session.add(new_game)
         self.db_session.commit()
@@ -42,78 +41,47 @@ class SQLAlchemyRepository(GameRepository):
 
         return GameID(gameID=new_game.gameID)
 
-    def get(self, gameID: int) -> Optional[GameDomain]:
-        game = self.db_session.query(Game).filter(Game.gameID == gameID).first()
+    def create_figure_cards(self, gameID: int) -> None:
+        players = self.get_players(gameID)
+        amount_players_index = len(players) - 2
 
-        if game is None:
-            return None
+        blue_amount = BLUE_CARDS_AMOUNT[amount_players_index]
+        white_amount = WHITE_CARDS_AMOUNT[amount_players_index]
 
-        return GameDomain(
-            gameID=game.gameID,
-            board=game.board,
-            lastMovements=game.lastMovements,
-            prohibitedColor=game.prohibitedColor,
-        )
+        all_blue_cards = BLUE_CARDS * 2
+        all_white_cards = WHITE_CARDS * 2
+        selected_blue_cards = random.sample(all_blue_cards, blue_amount)
+        selected_white_cards = random.sample(all_white_cards, white_amount)
+        selected_cards = selected_blue_cards + selected_white_cards
+        random.shuffle(selected_cards)
+        amount_per_player = len(selected_cards) // len(players)
 
-    def delete(self, gameID: int) -> None:
-        game = self.db_session.query(Game).filter(Game.gameID == gameID).first()
-        self.db_session.delete(game)
-        self.db_session.commit()
+        new_cards: List[FigureCardDB] = []
 
-    def is_player_in_game(self, gameID: int, playerID: int) -> bool:
-        return True
-
-    def get_game_players(self, gameID: int) -> List[Player]:
-        room_repository = RoomRepository(self.db_session)
-        roomID = self.db_session.query(Game).filter(Game.gameID == gameID).first().roomID
-        return room_repository.get_players(roomID)
-
-    def create_figure_cards(self, roomID: int, gameID: int) -> None:
-        room_repository = RoomRepository(self.db_session)
-        players = room_repository.get_players(roomID)
-        player_count = len(players) - 2
-
-        blue_amount = BLUE_CARDS_AMOUNT[player_count]
-        white_amount = WHITE_CARDS_AMOUNT[player_count]
-
-        blue_cards = BLUE_CARDS * 2
-        white_cards = WHITE_CARDS * 2
-
-        for player in players:
-            slected_blue_cards = random.sample(blue_cards, blue_amount)
-            slected_white_cards = random.sample(white_cards, white_amount)
-
-            all_cards = slected_blue_cards + slected_white_cards
-
-            playable_cards = random.sample(all_cards, 3)
-            new_cards = []
-
-            for card in all_cards:
-                new_card = FigureCard(
-                    type=card,
-                    isPlayable=card in playable_cards,
+        for i, player in enumerate(players):
+            for j in range(amount_per_player):
+                new_card = FigureCardDB(
+                    type=selected_cards[j + i * amount_per_player],
+                    isPlayable=j < 3,
                     isBlocked=False,
                     playerID=player.playerID,
-                    gameID=gameID.gameID,
+                    gameID=gameID,
                 )
                 new_cards.append(new_card)
 
-            self.db_session.add_all(new_cards)
-
+        self.db_session.add_all(new_cards)
         self.db_session.commit()
 
-    def create_movement_cards(self, roomID: int, gameID: int) -> None:
-        room_repository = RoomRepository(self.db_session)
-        players = room_repository.get_players(roomID)
-        player_count = len(players) - 2
+    def create_movement_cards(self, gameID: int) -> None:
+        players = self.get_players(gameID)
 
-        movement_cards_amount = MOVEMENT_CARDS_AMOUNT[player_count] * (player_count + 2) 
-        movement_cards = MOVEMENT_CARDS * 7 
-        all_movement_cards = random.sample(movement_cards, movement_cards_amount) 
+        movement_cards_amount = MOVEMENT_CARDS_AMOUNT[len(players) - 2] * len(players)
+        all_movement_cards = MOVEMENT_CARDS * 7
+        selected_movement_cards = random.sample(all_movement_cards, movement_cards_amount)
 
-        new_cards = []
-        for card in all_movement_cards:
-            new_card = MovementCard(type=card, playerID=None, gameID=gameID.gameID)
+        new_cards: List[MovementCardDB] = []
+        for card in selected_movement_cards:
+            new_card = MovementCardDB(type=card, playerID=None, gameID=gameID)
             new_cards.append(new_card)
 
         for index, player in enumerate(players):
@@ -123,109 +91,233 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.add_all(new_cards)
         self.db_session.commit()
 
+
         
 
     def skip (self,gameID: int) -> None:
-        game = self.db_session.query(Game).filter(Game.gameID == gameID).first()
-        players = len(self.get_game_players(gameID))
+        game = self.get(gameID)
         current_position = game.posEnabledToPlay
 
-        current_player = self.db_session.query(Player) \
-            .join(PlayerRoom) \
-            .join(Room, Room.roomID == PlayerRoom.roomID) \
-            .join(Game, Room.roomID == Game.roomID) \
-            .filter(Game.gameID == gameID, PlayerRoom.position == current_position) \
-            .first()
-        
-        if current_player:
-            current_player.isActive = False
-
-        if current_position == players:
+        if current_position == len(game.players):
             game.posEnabledToPlay =  1
         else:
             game.posEnabledToPlay = current_position + 1
-
-        next_player = self.db_session.query(Player) \
-            .join(PlayerRoom) \
-            .join(Room, Room.roomID == PlayerRoom.roomID) \
-            .join(Game, Room.roomID == Game.roomID) \
-            .filter(Game.gameID == gameID, PlayerRoom.position == game.posEnabledToPlay) \
-            .first()
-        
-        if next_player:
-            next_player.isActive = True
         
         self.db_session.commit()
 
+
+    def rebuild_movement_deck(self, gameID: int) -> None:
+        movement_cards = self.db_session.query(MovementCardDB).filter(
+            MovementCardDB.gameID == gameID,
+            MovementCardDB.playerID is None
+        ).all()
+
+        for card in movement_cards:
+            card.isDiscarded = False
+
+    
     def replacement_movement_card(self, gameID: int, playerID: int) -> None:
 
-        playable_cards = self.db_session.query(MovementCard).filter(
-            MovementCard.gameID == gameID,
-            MovementCard.playerID == playerID,
-            MovementCard.isDiscarded == False,
-            MovementCard.isPlayed == True
-        ).all()        
+        playable_cards = self.db_session.query(MovementCardDB).filter(
+            MovementCardDB.gameID == gameID,
+            MovementCardDB.playerID == playerID
+        )
 
         if len(playable_cards) < 3:
-            available_cards = self.db_session.query(MovementCard).filter(
-                MovementCard.gameID == gameID,
-                MovementCard.isDiscarded == False,
-                MovementCard.isPlayed == False
-            ).limit(3 - len(playable_cards)).all()
+            available_cards = self.db_session.query(MovementCardDB).filter(
+                MovementCardDB.gameID == gameID,
+                not MovementCardDB.isDiscarded,
+                MovementCardDB.playerID is None
+            ).order_by(func.random()).limit(3 - len(playable_cards))
 
-            if len(available_cards) > 0:
-                for card in available_cards:
-                        card.playerID = playerID
-                        card.isPlayed = True
-                        card.isDiscarded = False
+            if len(available_cards) < 3 - len(playable_cards):
+                self.rebuild_movement_deck(gameID)
+                available_cards = self.db_session.query(MovementCardDB).filter(
+                    MovementCardDB.gameID == gameID,
+                    not MovementCardDB.isDiscarded,
+                    MovementCardDB.playerID is None
+                ).order_by(func.random()).limit(3 - len(playable_cards))
+
+            for card in available_cards:
+                card.playerID = playerID
                 
         self.db_session.commit()
 
     def replacement_figure_card(self, gameID: int, playerID: int) -> None:
-        figure_cards = self.db_session.query(FigureCard).filter(
-            FigureCard.gameID == gameID,
-            FigureCard.playerID == playerID,
-        ).all()
+        figure_cards = self.db_session.query(FigureCardDB).filter(
+            FigureCardDB.gameID == gameID,
+            FigureCardDB.playerID == playerID,
+        )
 
-        blocked_cards = [card for card in figure_cards if card.isBlocked]
+        blocked = any([card.isBlocked for card in figure_cards])
  
-        if len(blocked_cards) == 0:
-            playable_cards = [card for card in figure_cards if card.isPlayable]
-            available_cards = self.db_session.query(FigureCard).filter(
-                FigureCard.gameID == gameID,
-                FigureCard.playerID == playerID,
-                FigureCard.isPlayable == False
-            ).limit(3 - len(playable_cards)).all()
+        if not blocked:
+            available_cards = self.db_session.query(FigureCardDB).filter(
+                FigureCardDB.gameID == gameID,
+                FigureCardDB.playerID == playerID,
+                not FigureCardDB.isPlayable
+            ).limit(3 - len(figure_cards))
 
-            if len(available_cards) > 0:
-                for card in available_cards:
-                    card.playerID = playerID
-                    card.isPlayable = True
-        self.db_session.commit()            
+
+            for card in available_cards:
+                card.isPlayable = True
+                
+        self.db_session.commit()      
        
 
-    def get_player_figure_cards(self, gameID:int, playerID:int) -> List[FigureCardDomain]:
-        player_cards = self.db_session.query(FigureCard).filter(FigureCard.gameID == gameID, FigureCard.playerID == playerID).all()
-        return [FigureCardDomain(type=card.type, isPlayable=card.isPlayable, isBlocked=card.isBlocked, cardID=card.cardID) for card in player_cards]
-    
-    def get_player_movement_cards(self, gameID:int, playerID:int) -> {MovementCardDomain}:
-        player_cards = self.db_session.query(MovementCard).filter(MovementCard.gameID == gameID, MovementCard.playerID == playerID).all()
-        return [MovementCardDomain(type=card.type, isDiscarded=card.isDiscarded, cardID=card.cardID) for card in player_cards]
-    
-    def get_player_private_info(self, gameID:int, playerID:int) -> PlayerInfoPrivate:
-        movement_cards = self.get_player_movement_cards(gameID, playerID)
-        return PlayerInfoPrivate(playerID=playerID, MovementCards=movement_cards)
-    
-    def get_player_public_info(self, gameID:int, playerID:int) -> PlayerInfoPublic:
-        player = self.db_session.query(Player).filter(Player.playerID == playerID).first()
-        figure_cards = self.get_player_figure_cards(gameID, playerID)
-        return PlayerInfoPublic(playerID=playerID, username=player.username, 
-                                position=player.position, isActive=player.isActive, 
-                                sizeDeckFigure=len(figure_cards), FigureCards=figure_cards)
-    
-    def get_game_info(self, gameID:int) -> GameDomain:
-        game = self.db_session.query(Game).filter(Game.gameID == gameID).first()
-        players = self.get_game_players(gameID)
-        player_info = [self.get_player_public_info(gameID, player.playerID) for player in players]
-        return GameDomain(gameID=gameID, board=game.board, posEnabledToPlay=game.posEnabledToPlay, 
-                          LastMovement=game.LastMovement, ProhibitedColor=game.ProhibitedColor, players=player_info)
+    def delete(self, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        self.db_session.delete(game)
+        self.db_session.commit()
+
+    def get(self, gameID: int) -> Optional[Game]:
+        game = self.db_session.get(GameDB, gameID)
+
+        if game is None:
+            return None
+
+        room_repository = RoomRepository(self.db_session)
+        room_repository.get_players(game.roomID)
+        return Game(
+            gameID=game.gameID,
+            board=self.get_board(gameID),
+            prohibitedColor=game.prohibitedColor,
+            posEnabledToPlay=game.posEnabledToPlay,
+            players=self.get_players(gameID),
+        )
+
+    def get_board(self, gameID: int) -> List[BoardPiece]:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        board_json = json.loads(game.board)
+        board: List[BoardPiece] = []
+        for piece_db in board_json:
+            is_partial = self.is_piece_partial(gameID, piece_db["posX"], piece_db["posY"])
+            piece = BoardPiece(
+                posX=piece_db["posX"], posY=piece_db["posY"], color=piece_db["color"], isPartial=is_partial
+            )
+            board.append(piece)
+        return board
+
+    def is_piece_partial(self, gameID: int, posX: int, posY: int) -> bool:
+        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
+        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
+        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
+        return False
+
+    def get_players(self, gameID: int) -> List[PlayerPublicInfo]:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        roomID = game.roomID
+
+        db_players = (
+            self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == roomID, PlayerRoomDB.isActive).all()
+        )
+        players = []
+
+        for player in db_players:
+            username = self.db_session.get(PlayerDB, player.playerID).username
+            amount_non_playable, playable_cards_figure = self.get_player_figure_cards(gameID, player.playerID)
+
+            players.append(
+                PlayerPublicInfo(
+                    playerID=player.playerID,
+                    username=username,
+                    position=player.position,
+                    isActive=player.isActive,
+                    sizeDeckFigure=amount_non_playable,
+                    cardsFigure=playable_cards_figure,
+                )
+            )
+        return players
+
+    def get_player_figure_cards(self, gameID: int, playerID: int) -> Tuple[int, List[FigureCard]]:
+        figure_cards = self.db_session.query(FigureCardDB).filter(
+            FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID
+        )
+        amount_non_playable = figure_cards.filter(not FigureCardDB.isPlayable).count()
+
+        playable_cards: List[FigureCard] = []
+        for card in figure_cards:
+            if card.isPlayable:
+                playable_cards.append(FigureCard(type=card.type, cardID=card.cardID, isBlocked=card.isBlocked))
+
+        return amount_non_playable, playable_cards
+
+    def get_player_movement_cards(self, gameID: int, playerID: int) -> List[MovementCard]:
+        cards_db = self.db_session.query(MovementCardDB).filter(
+            MovementCardDB.gameID == gameID, MovementCardDB.playerID == playerID
+        )
+        cards: List[MovementCard] = []
+        for card in cards_db:
+            isUsed = self.was_card_used_in_partial_movement(gameID, playerID, card.cardID)
+            cards.append(MovementCard(type=card.type, cardID=card.cardID, isUsed=isUsed))
+
+        return cards
+
+    def was_card_used_in_partial_movement(self, gameID: int, playerID: int, cardID: int) -> bool:
+        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
+        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
+        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
+        return False
+
+    def is_player_in_game(self, playerID, gameID):
+        players = self.get_players(gameID)
+        return playerID in [player.playerID for player in players]
+
+    def get_public_info(self, gameID: int, playerID: int) -> GamePublicInfo:
+        game = self.get(gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+
+        player = self.db_session.get(PlayerDB, playerID)
+        if player is None:
+            raise ValueError(f"Player with ID {playerID} not found")
+
+        return GamePublicInfo(
+            gameID=game.gameID,
+            board=game.board,
+            prohibitedColor=game.prohibitedColor,
+            posEnabledToPlay=game.posEnabledToPlay,
+            players=game.players,
+            figuresToUse=self.get_available_figures(gameID),
+            cardsMovement=self.get_player_movement_cards(gameID, playerID),
+        )
+
+    def get_available_figures(self, gameID: int) -> list:
+        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
+        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
+        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
+        return []
+
+
+class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
+    async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
+        """Establece la conexión con el websocket de un juego
+        y le envia el estado actual de la sala
+
+        Args:
+            playerID (int): ID del jugador
+            gameID (int): ID del juego
+            websocket (WebSocket): Conexión con el cliente
+        """
+        await ws_manager_game.connect(playerID, gameID, websocket)
+        game = self.get_public_info(gameID, playerID)
+        game_json = game.model_dump()
+        await ws_manager_game.send_personal_message(MessageType.STATUS, game_json, websocket)
+        await ws_manager_game.keep_listening(websocket)
+
+    async def broadcast_status_game(self, gameID: int) -> None:
+        """Envia el estado actual de la sala a todos los jugadores
+
+        Args:
+            gameID (int): ID del juego
+        """
+        players = self.get_players(gameID)
+        for player in players:
+            game = self.get_public_info(gameID, player.playerID)
+            game_json = game.model_dump()
+            await ws_manager_game.send_personal_message_by_id(MessageType.STATUS, game_json, player.playerID, gameID)
+

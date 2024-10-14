@@ -33,7 +33,7 @@ class FigureCard(Base):
     playerID = Column(ForeignKey("players.playerID"), nullable=False)
     gameID = Column(ForeignKey("games.gameID"), nullable=False)
 
-    player = relationship("Player", back_populates="figureCards")
+    player = relationship("Player", back_populates="cardsFigure")
     game = relationship("Game", back_populates="figureDeck")
 
     def __repr__(self):
