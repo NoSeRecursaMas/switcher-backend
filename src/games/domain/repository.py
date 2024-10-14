@@ -44,16 +44,6 @@ class GameRepository(ABC):
     def get_public_info(self, gameID: int, playerID: int) -> GamePublicInfo:
         pass
 
-
-class GameRepositoryWS(GameRepository):
-    @abstractmethod
-    async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
-        pass
-
-    @abstractmethod
-    async def broadcast_status_game(self, gameID: int) -> None:
-        pass
-
     @abstractmethod
     def skip(self, gameID: int) -> None:
         pass
@@ -65,4 +55,13 @@ class GameRepositoryWS(GameRepository):
     @abstractmethod
     def replacement_figure_card(self, gameID: int, playerID: int) -> None:
         pass
-    
+
+
+class GameRepositoryWS(GameRepository):
+    @abstractmethod
+    async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
+        pass
+
+    @abstractmethod
+    async def broadcast_status_game(self, gameID: int) -> None:
+        pass

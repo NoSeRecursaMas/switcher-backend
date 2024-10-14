@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple
 
 from fastapi.websockets import WebSocket
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import func
 
 from src.games.config import (
     BLUE_CARDS,
@@ -13,7 +14,6 @@ from src.games.config import (
     WHITE_CARDS,
     WHITE_CARDS_AMOUNT,
 )
-
 from src.games.domain.models import BoardPiece, FigureCard, Game, GameID, GamePublicInfo, MovementCard, PlayerPublicInfo
 from src.games.domain.repository import GameRepository, GameRepositoryWS
 from src.games.infrastructure.models import FigureCard as FigureCardDB
@@ -21,10 +21,10 @@ from src.games.infrastructure.models import Game as GameDB
 from src.games.infrastructure.models import MovementCard as MovementCardDB
 from src.games.infrastructure.websocket import MessageType, ws_manager_game
 from src.players.infrastructure.models import Player as PlayerDB
-from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB, Room as RoomDB
-
+from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
+from src.rooms.infrastructure.models import Room as RoomDB
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
-from sqlalchemy.sql.expression import func
+
 
 class SQLAlchemyRepository(GameRepository):
     def __init__(self, db_session: Session):
@@ -91,56 +91,58 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.add_all(new_cards)
         self.db_session.commit()
 
-
-        
-
-    def skip (self,gameID: int) -> None:
+    def skip(self, gameID: int) -> None:
         game = self.get(gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
         current_position = game.posEnabledToPlay
 
         if current_position == len(game.players):
-            game.posEnabledToPlay =  1
+            game.posEnabledToPlay = 1
         else:
             game.posEnabledToPlay = current_position + 1
-        
+
         self.db_session.commit()
 
-
     def rebuild_movement_deck(self, gameID: int) -> None:
-        movement_cards = self.db_session.query(MovementCardDB).filter(
-            MovementCardDB.gameID == gameID,
-            MovementCardDB.playerID is None
-        ).all()
+        movement_cards = (
+            self.db_session.query(MovementCardDB)
+            .filter(MovementCardDB.gameID == gameID, MovementCardDB.playerID is None)
+            .all()
+        )
 
         for card in movement_cards:
             card.isDiscarded = False
 
-    
     def replacement_movement_card(self, gameID: int, playerID: int) -> None:
-
         playable_cards = self.db_session.query(MovementCardDB).filter(
-            MovementCardDB.gameID == gameID,
-            MovementCardDB.playerID == playerID
+            MovementCardDB.gameID == gameID, MovementCardDB.playerID == playerID
         )
 
         if len(playable_cards) < 3:
-            available_cards = self.db_session.query(MovementCardDB).filter(
-                MovementCardDB.gameID == gameID,
-                not MovementCardDB.isDiscarded,
-                MovementCardDB.playerID is None
-            ).order_by(func.random()).limit(3 - len(playable_cards))
+            available_cards = (
+                self.db_session.query(MovementCardDB)
+                .filter(
+                    MovementCardDB.gameID == gameID, not MovementCardDB.isDiscarded, MovementCardDB.playerID is None
+                )
+                .order_by(func.random())
+                .limit(3 - len(playable_cards))
+            )
 
             if len(available_cards) < 3 - len(playable_cards):
                 self.rebuild_movement_deck(gameID)
-                available_cards = self.db_session.query(MovementCardDB).filter(
-                    MovementCardDB.gameID == gameID,
-                    not MovementCardDB.isDiscarded,
-                    MovementCardDB.playerID is None
-                ).order_by(func.random()).limit(3 - len(playable_cards))
+                available_cards = (
+                    self.db_session.query(MovementCardDB)
+                    .filter(
+                        MovementCardDB.gameID == gameID, not MovementCardDB.isDiscarded, MovementCardDB.playerID is None
+                    )
+                    .order_by(func.random())
+                    .limit(3 - len(playable_cards))
+                )
 
             for card in available_cards:
                 card.playerID = playerID
-                
+
         self.db_session.commit()
 
     def replacement_figure_card(self, gameID: int, playerID: int) -> None:
@@ -150,20 +152,18 @@ class SQLAlchemyRepository(GameRepository):
         )
 
         blocked = any([card.isBlocked for card in figure_cards])
- 
-        if not blocked:
-            available_cards = self.db_session.query(FigureCardDB).filter(
-                FigureCardDB.gameID == gameID,
-                FigureCardDB.playerID == playerID,
-                not FigureCardDB.isPlayable
-            ).limit(3 - len(figure_cards))
 
+        if not blocked:
+            available_cards = (
+                self.db_session.query(FigureCardDB)
+                .filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID, not FigureCardDB.isPlayable)
+                .limit(3 - len(figure_cards))
+            )
 
             for card in available_cards:
                 card.isPlayable = True
-                
-        self.db_session.commit()      
-       
+
+        self.db_session.commit()
 
     def delete(self, gameID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
@@ -320,4 +320,3 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
             game = self.get_public_info(gameID, player.playerID)
             game_json = game.model_dump()
             await ws_manager_game.send_personal_message_by_id(MessageType.STATUS, game_json, player.playerID, gameID)
-

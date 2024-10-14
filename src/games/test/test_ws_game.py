@@ -1,12 +1,13 @@
+import json
+
 import pytest
 from fastapi.websockets import WebSocketDisconnect
 
 from src.conftest import override_get_db
+from src.games.infrastructure.models import Game as GameDB
 from src.players.infrastructure.models import Player as PlayerDB
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoom
 from src.rooms.infrastructure.models import Room as RoomDB
-from src.games.infrastructure.models import Game as GameDB
-import json
 
 
 def test_connect_to_game_websocket_user_not_exist(client, test_db):
@@ -29,6 +30,7 @@ def test_connect_to_game_websocket_user_not_exist(client, test_db):
     assert "no existe" in e.value.reason
     assert "jugador" in e.value.reason
 
+
 def test_connect_to_game_websocket_game_not_exist(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -49,6 +51,7 @@ def test_connect_to_game_websocket_game_not_exist(client, test_db):
     assert "no existe" in e.value.reason
     assert "juego" in e.value.reason
 
+
 def test_connect_to_game_websocket_game_not_started(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -67,6 +70,7 @@ def test_connect_to_game_websocket_game_not_started(client, test_db):
     assert e.value.code == 4004
     assert "no existe" in e.value.reason
     assert "juego" in e.value.reason
+
 
 def test_connect_to_game_websocket_player_not_in_game(client, test_db):
     db = next(override_get_db())
@@ -89,6 +93,7 @@ def test_connect_to_game_websocket_player_not_in_game(client, test_db):
     assert "jugador" in e.value.reason
     assert "no se encuentra" in e.value.reason
     assert "juego" in e.value.reason
+
 
 def test_connect_to_game_websocket_player_in_game(client, test_db):
     db = next(override_get_db())
@@ -119,6 +124,7 @@ def test_connect_to_game_websocket_player_in_game(client, test_db):
         assert "cardsFigure" in payload["players"][0]
         assert "cardsMovement" in payload
 
+
 def test_close_connection_if_player_open_second(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -144,4 +150,3 @@ def test_close_connection_if_player_open_second(client, test_db):
                 websocket.receive_json()
     assert e.value.code == 4005
     assert e.value.reason == "Conexión abierta en otra pestaña"
-

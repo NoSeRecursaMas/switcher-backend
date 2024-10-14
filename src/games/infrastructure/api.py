@@ -26,15 +26,14 @@ async def start_game(roomID: int, playerID: PlayerID, db_session: Session = Depe
     gameID = await game_service.start_game(roomID, playerID)
     return gameID
 
-    
+
 @router.put(path="/{gameID}/turn", status_code=200)
-def skip_turn(gameID: int, playerID : PlayerID, db_session: Session = Depends(get_db)) -> None:
+async def skip_turn(gameID: int, playerID: PlayerID, db_session: Session = Depends(get_db)) -> None:
     game_repository = GameRepository(db_session)
     player_repository = PlayerRepository(db_session)
 
-    game_service = GameService(game_repository,player_repository)
-    game_service.skip_turn(playerID.playerID,gameID)
-
+    game_service = GameService(game_repository, player_repository)
+    await game_service.skip_turn(playerID.playerID, gameID)
 
 
 @router.websocket("/{playerID}/{gameID}")
@@ -45,4 +44,3 @@ async def room_websocket(playerID: int, gameID: int, websocket: WebSocket, db_se
         await service.connect_to_game_websocket(playerID, gameID, websocket)
     except WebSocketDisconnect as e:
         await websocket.close(code=e.code, reason=e.reason)
-

@@ -48,7 +48,7 @@ class RepositoryValidators:
             raise HTTPException(status_code=404, detail="La sala no existe.")
         if len(room.players) >= room.maxPlayers:
             raise HTTPException(status_code=403, detail="La sala está llena.")
-        
+
     async def validate_game_not_started(self, roomID: int, websocket: Optional[WebSocket] = None):
         if not self.room_repository.is_game_started(roomID):
             return

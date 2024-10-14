@@ -2,10 +2,10 @@ import pytest
 from fastapi.websockets import WebSocketDisconnect
 
 from src.conftest import override_get_db
+from src.games.infrastructure.models import Game as GameDB
 from src.players.infrastructure.models import Player as PlayerDB
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
 from src.rooms.infrastructure.models import Room as RoomDB
-from src.games.infrastructure.models import Game as GameDB
 
 
 def test_connect_to_room_list_websocket_user_not_exist(client, test_db):
@@ -204,6 +204,7 @@ def test_get_empty_room(client, test_db):
         assert data["type"] == "status"
         assert data["payload"] == []
 
+
 def test_get_room_with_password(client, test_db):
     db = next(override_get_db())
     player1 = PlayerDB(username="player1")
@@ -227,6 +228,7 @@ def test_get_room_with_password(client, test_db):
                 "private": True,
             },
         ]
+
 
 def test_get_room_started(client, test_db):
     db = next(override_get_db())

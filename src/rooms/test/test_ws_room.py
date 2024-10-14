@@ -2,10 +2,10 @@ import pytest
 from fastapi.websockets import WebSocketDisconnect
 
 from src.conftest import override_get_db
+from src.games.infrastructure.models import Game as GameDB
 from src.players.infrastructure.models import Player as PlayerDB
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoom
 from src.rooms.infrastructure.models import Room as RoomDB
-from src.games.infrastructure.models import Game as GameDB
 
 
 def test_connect_to_room_websocket_user_not_exist(client, test_db):
@@ -143,6 +143,7 @@ def test_close_first_connection_if_player_open_second(client, test_db):
 
     assert e.value.code == 4005
     assert e.value.reason == "Conexión abierta en otra pestaña"
+
 
 def test_connect_to_room_ws_game_started(client, test_db):
     db = next(override_get_db())

@@ -189,6 +189,7 @@ def test_create_rooms_with_same_name(client, test_db):
     assert response_2.json() == {"roomID": 2}
     assert response_1.json() != response_2.json()
 
+
 def test_create_room_with_password(client, test_db):
     db = next(override_get_db())
     player1 = PlayerDB(username="player1")

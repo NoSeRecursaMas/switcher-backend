@@ -1,3 +1,4 @@
+import json
 from typing import List, Optional
 
 from fastapi.websockets import WebSocket
@@ -135,7 +136,7 @@ class SQLAlchemyRepository(RoomRepository):
     def is_player_in_room(self, playerID: int, roomID: int) -> bool:
         player_in_room = self.db_session.query(PlayerRoom).filter_by(playerID=playerID, roomID=roomID).one_or_none()
         return player_in_room is not None
-    
+
     def is_game_started(self, roomID: int) -> bool:
         room = self.db_session.query(Room).filter_by(roomID=roomID).one_or_none()
         return room.game is not None
@@ -201,5 +202,5 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         Args:
             roomID (int): ID de la sala
         """
-        game_info = { "gameID": gameID }
+        game_info = json.dumps({"gameID": gameID})
         await ws_manager_room.broadcast(MessageType.START_GAME, game_info, roomID)
