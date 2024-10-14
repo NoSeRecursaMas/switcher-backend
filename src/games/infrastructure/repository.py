@@ -16,8 +16,9 @@ from src.games.domain.models import Game as GameDomain
 from src.games.domain.models import GameCreationRequest, GameID
 from src.games.domain.repository import GameRepository
 from src.games.infrastructure.models import FigureCard, Game, MovementCard
-from src.players.domain.models import Player
-from src.rooms.infrastructure.models import Room
+from src.players.infrastructure.models import Player
+from src.rooms.infrastructure.models import Room,PlayerRoom
+
 
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
 from src.games.domain.models import Game as GameDomain
@@ -130,30 +131,25 @@ class SQLAlchemyRepository(GameRepository):
         current_position = game.posEnabledToPlay
 
         current_player = self.db_session.query(Player) \
-            .join(Room.players) \
+            .join(PlayerRoom) \
+            .join(Room, Room.roomID == PlayerRoom.roomID) \
             .join(Game, Room.roomID == Game.roomID) \
-            .filter(Game.gameID == gameID, Player.position == current_position) \
+            .filter(Game.gameID == gameID, PlayerRoom.position == current_position) \
             .first()
         
         if current_player:
             current_player.isActive = False
 
-        min_players = (
-             self.db_session.query(Room.minPlayers)
-             .join(Game, Room.roomID == Game.roomID)
-             .filter(Game.gameID == gameID)
-             .first()
-            )
-
         if current_position == players:
-            game.posEnabledToPlay =  min_players
+            game.posEnabledToPlay =  1
         else:
             game.posEnabledToPlay = current_position + 1
 
-        next_player = self.db_session.query(Player)\
-            .join(Room.players)\
-            .join(Game, Room.roomID == Game.roomID)\
-            .filter(Game.gameID == gameID, Player.position == game.posEnabledToPlay)\
+        next_player = self.db_session.query(Player) \
+            .join(PlayerRoom) \
+            .join(Room, Room.roomID == PlayerRoom.roomID) \
+            .join(Game, Room.roomID == Game.roomID) \
+            .filter(Game.gameID == gameID, PlayerRoom.position == game.posEnabledToPlay) \
             .first()
         
         if next_player:
@@ -167,19 +163,21 @@ class SQLAlchemyRepository(GameRepository):
             MovementCard.gameID == gameID,
             MovementCard.playerID == playerID,
             MovementCard.isDiscarded == False,
-            MovementCard.isPlayable == True
+            MovementCard.isPlayed == True
         ).all()        
 
         if len(playable_cards) < 3:
             available_cards = self.db_session.query(MovementCard).filter(
                 MovementCard.gameID == gameID,
                 MovementCard.isDiscarded == False,
-                MovementCard.isPlayable == False
+                MovementCard.isPlayed == False
             ).limit(3 - len(playable_cards)).all()
 
             if len(available_cards) > 0:
                 for card in available_cards:
-                        card.isPlayable = True
+                        card.playerID = playerID
+                        card.isPlayed = True
+                        card.isDiscarded = False
                 
         self.db_session.commit()
 
@@ -201,6 +199,7 @@ class SQLAlchemyRepository(GameRepository):
 
             if len(available_cards) > 0:
                 for card in available_cards:
+                    card.playerID = playerID
                     card.isPlayable = True
         self.db_session.commit()            
        

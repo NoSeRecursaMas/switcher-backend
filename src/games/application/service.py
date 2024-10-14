@@ -8,11 +8,12 @@ from src.players.domain.repository import PlayerRepository
 from src.players.domain.service import RepositoryValidators as PlayerRepositoryValidators
 from src.rooms.domain.repository import RoomRepository
 from src.rooms.domain.service import RepositoryValidators as RoomRepositoryValidators
+from typing import Optional
 
 
 class GameService:
     def __init__(
-        self, game_repository: GameRepository, player_repository: PlayerRepository, room_repository: RoomRepository
+        self, game_repository: GameRepository, player_repository: PlayerRepository,room_repository: Optional[RoomRepository] = None,
     ):
         self.game_repository = game_repository
         self.player_repository = player_repository
@@ -39,14 +40,11 @@ class GameService:
 
         return gameID
     
-    def skip_turn(self,player: PlayerID, gameID: GameID) -> None:
+    def skip_turn(self, playerID: int, gameID: int) -> None:
+        self.player_domain_service.validate_player_exists(playerID)
 
-        game_service_domain = GameServiceDomain(self.game_repository, self.player_repository)
-        self.game_service_domain.player_exists_in_game(player.playerID, gameID.gameID)
-        self.game_service_domain.game_exists(gameID.gameID)
-        
         self.game_repository.skip(gameID)
-        self.game_repository.replacement_movement_card(gameID.gameID, player.playerID)
-        self.game_repository.replacement_figure_card(gameID.gameID, player.playerID)
+        self.game_repository.replacement_movement_card(gameID, playerID)
+        self.game_repository.replacement_figure_card(gameID, playerID)
         
 
