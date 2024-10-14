@@ -56,9 +56,9 @@ class GameServiceDomain:
         for i in range(6):
             for j in range(6):
                 token: Dict[str, Union[int, str]] = {}
-                token["PosX"] = i
-                token["PosY"] = j
-                token["Color"] = color_pool.pop()
+                token["posX"] = i
+                token["posY"] = j
+                token["color"] = color_pool.pop()
                 board.append(token)
 
         return board

@@ -90,4 +90,5 @@ class ConnectionManagerGame:
             for connection in self.active_connections[gameID].values():
                 await connection.send_json(message)
 
+
 ws_manager_game = ConnectionManagerGame()

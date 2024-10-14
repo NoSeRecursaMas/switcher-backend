@@ -6,6 +6,7 @@ from fastapi.websockets import WebSocket
 from src.games.domain.models import (
     Game,
     GameID,
+    GamePublicInfo,
 )
 from src.players.domain.models import Player as PlayerDomain
 
@@ -37,6 +38,10 @@ class GameRepository(ABC):
 
     @abstractmethod
     def is_player_in_game(self, playerID: int, gameID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def get_public_info(self, gameID: int, playerID: int) -> GamePublicInfo:
         pass
 
 
