@@ -190,3 +190,12 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
             raise ValueError(f"Room with ID {roomID} not found")
         room_json = room.model_dump()
         await ws_manager_room.broadcast(MessageType.STATUS, room_json, roomID)
+
+    async def broadcast_start_game(self, roomID: int, gameID: int) -> None:
+        """Envía la señal de inicio de juego a todos los clientes conectados a la sala
+
+        Args:
+            roomID (int): ID de la sala
+        """
+        game_info = { "gameID": gameID }
+        await ws_manager_room.broadcast(MessageType.START_GAME, game_info, roomID)

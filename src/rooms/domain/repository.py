@@ -77,3 +77,7 @@ class RoomRepositoryWS(RoomRepository):
     @abstractmethod
     async def broadcast_status_room(self, roomID: int) -> None:
         pass
+
+    @abstractmethod
+    async def broadcast_start_game(self, roomID: int, gameID: int) -> None:
+        pass

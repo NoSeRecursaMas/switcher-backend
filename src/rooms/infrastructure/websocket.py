@@ -6,6 +6,7 @@ from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
 class MessageType(str, Enum):
     STATUS = "status"
+    START_GAME = "start"
 
 
 class ConnectionManagerRoomList:

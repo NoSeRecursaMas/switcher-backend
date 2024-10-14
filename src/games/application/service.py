@@ -48,7 +48,8 @@ class GameService:
 
         game_service_domain.set_game_turn_order(gameID)
 
-        self.room_repository.broadcast_status_room_list()
+        await self.room_repository.broadcast_status_room_list()
+        await self.room_repository.broadcast_start_game(roomID, gameID)
 
         return response
 
