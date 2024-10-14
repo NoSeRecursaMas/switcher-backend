@@ -54,8 +54,8 @@ class GameService:
         return response
 
     async def connect_to_game_websocket(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
-        await self.player_domain_service.validate_player_exists(playerID)
+        await self.player_domain_service.validate_player_exists(playerID, websocket)
         await self.game_domain_service.validate_game_exists(gameID, websocket)
-        await self.game_domain_service.is_player_in_game(gameID, playerID, websocket)
+        await self.game_domain_service.is_player_in_game(playerID, gameID, websocket)
 
         await self.game_repository.setup_connection_game(playerID, gameID, websocket)

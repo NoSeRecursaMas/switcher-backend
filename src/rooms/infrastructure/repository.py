@@ -135,6 +135,10 @@ class SQLAlchemyRepository(RoomRepository):
     def is_player_in_room(self, playerID: int, roomID: int) -> bool:
         player_in_room = self.db_session.query(PlayerRoom).filter_by(playerID=playerID, roomID=roomID).one_or_none()
         return player_in_room is not None
+    
+    def is_game_started(self, roomID: int) -> bool:
+        room = self.db_session.query(Room).filter_by(roomID=roomID).one_or_none()
+        return room.game is not None
 
     def set_position(self, playerID: int, position: int) -> None:
         self.db_session.query(PlayerRoom).filter(PlayerRoom.playerID == playerID).update({"position": position})

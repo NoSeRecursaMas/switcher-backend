@@ -152,7 +152,7 @@ class SQLAlchemyRepository(GameRepository):
                     position=player.position,
                     isActive=player.isActive,
                     sizeDeckFigure=amount_non_playable,
-                    figureCards=playable_cards_figure,
+                    cardsFigure=playable_cards_figure,
                 )
             )
         return players

@@ -57,6 +57,10 @@ class RoomRepository(ABC):
         pass
 
     @abstractmethod
+    def is_game_started(self, roomID: int) -> bool:
+        pass
+
+    @abstractmethod
     def set_position(self, playerID: int, position: int) -> None:
         pass
 

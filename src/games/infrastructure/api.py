@@ -13,7 +13,7 @@ from src.games.infrastructure.repository import (
 )
 from src.players.domain.models import PlayerID
 from src.players.infrastructure.repository import SQLAlchemyRepository as PlayerRepository
-from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
+from src.rooms.infrastructure.repository import WebSocketRepository as RoomRepository
 
 router = APIRouter()
 

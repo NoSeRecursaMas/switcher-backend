@@ -5,6 +5,7 @@ from src.conftest import override_get_db
 from src.players.infrastructure.models import Player as PlayerDB
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
 from src.rooms.infrastructure.models import Room as RoomDB
+from src.games.infrastructure.models import Game as GameDB
 
 
 def test_connect_to_room_list_websocket_user_not_exist(client, test_db):
@@ -202,3 +203,53 @@ def test_get_empty_room(client, test_db):
         data = websocket.receive_json()
         assert data["type"] == "status"
         assert data["payload"] == []
+
+def test_get_room_with_password(client, test_db):
+    db = next(override_get_db())
+    player1 = PlayerDB(username="player1")
+    room1 = RoomDB(roomName="test_room", minPlayers=2, maxPlayers=4, hostID=player1.playerID, password="1234")
+    db.add(player1)
+    db.add(room1)
+    db.commit()
+    db.add(PlayerRoomDB(playerID=player1.playerID, roomID=room1.roomID))
+    db.commit()
+
+    with client.websocket_connect(f"/rooms/{player1.playerID}") as websocket:
+        data = websocket.receive_json()
+        assert data["type"] == "status"
+        assert data["payload"] == [
+            {
+                "roomID": 1,
+                "roomName": "test_room",
+                "maxPlayers": 4,
+                "actualPlayers": 1,
+                "started": False,
+                "private": True,
+            },
+        ]
+
+def test_get_room_started(client, test_db):
+    db = next(override_get_db())
+    player1 = PlayerDB(username="player1")
+    room1 = RoomDB(roomName="test_room", minPlayers=2, maxPlayers=4, hostID=player1.playerID, password="1234")
+    db.add(player1)
+    db.add(room1)
+    db.commit()
+    db.add(PlayerRoomDB(playerID=player1.playerID, roomID=room1.roomID))
+    game1 = GameDB(roomID=room1.roomID, board={}, lastMovements={}, prohibitedColor=None)
+    db.add(game1)
+    db.commit()
+
+    with client.websocket_connect(f"/rooms/{player1.playerID}") as websocket:
+        data = websocket.receive_json()
+        assert data["type"] == "status"
+        assert data["payload"] == [
+            {
+                "roomID": 1,
+                "roomName": "test_room",
+                "maxPlayers": 4,
+                "actualPlayers": 1,
+                "started": True,
+                "private": True,
+            },
+        ]

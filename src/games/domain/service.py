@@ -32,8 +32,8 @@ class RepositoryValidators:
             await websocket.accept()
             raise WebSocketDisconnect(4004, "El juego no existe.")
 
-    async def is_player_in_game(self, gameID: int, playerID: int, websocket: Optional[WebSocket] = None):
-        if self.game_repository.is_player_in_game(gameID, playerID):
+    async def is_player_in_game(self, playerID: int, gameID: int, websocket: Optional[WebSocket] = None):
+        if self.game_repository.is_player_in_game(playerID, gameID):
             return
         if websocket is None:
             raise HTTPException(status_code=403, detail="El jugador no se encuentra en el juego.")

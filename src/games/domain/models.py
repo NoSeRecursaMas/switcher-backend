@@ -32,9 +32,9 @@ class PlayerPublicInfo(BaseModel):
     position: int
     isActive: bool
     sizeDeckFigure: int
-    figureCards: List[FigureCard]
+    cardsFigure: List[FigureCard]
 
-    @field_validator("figureCards")
+    @field_validator("cardsFigure")
     @classmethod
     def check_size_deck(cls, value):
         if len(value) > 3:
