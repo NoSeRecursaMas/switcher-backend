@@ -44,6 +44,8 @@ class GameRepository(ABC):
     def get_public_info(self, gameID: int, playerID: int) -> GamePublicInfo:
         pass
 
+    def switch_board_positions(self, gameID: int, origin: Dict[str, int], destination: Dict[str, int]) -> None:
+        pass
 
 class GameRepositoryWS(GameRepository):
     @abstractmethod

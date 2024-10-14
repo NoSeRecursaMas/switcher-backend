@@ -14,6 +14,7 @@ from src.games.infrastructure.repository import (
 from src.players.domain.models import PlayerID
 from src.players.infrastructure.repository import SQLAlchemyRepository as PlayerRepository
 from src.rooms.infrastructure.repository import WebSocketRepository as RoomRepository
+from src.games.domain.models import MovementCardRequest
 
 router = APIRouter()
 
@@ -38,3 +39,12 @@ async def room_websocket(playerID: int, gameID: int, websocket: WebSocket, db_se
         await service.connect_to_game_websocket(playerID, gameID, websocket)
     except WebSocketDisconnect as e:
         await websocket.close(code=e.code, reason=e.reason)
+
+@router.post("/{gameID}/movement", status_code=201)
+async def play_movement_card(gameID: int, request: MovementCardRequest,  db_session: Session = Depends(get_db)):
+    game_repository = GameRepository(db_session)
+    player_repository = PlayerRepository(db_session)
+
+    game_service = GameService(game_repository, player_repository)
+
+    await game_service.play_movement_card(gameID, request)

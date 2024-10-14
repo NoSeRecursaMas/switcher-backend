@@ -25,6 +25,15 @@ class MovementCard(BaseModel):
     cardID: int
     isUsed: bool
 
+class Position(BaseModel):
+    posX: int
+    posY: int
+
+class MovementCardRequest(BaseModel):
+    card_movementID: int
+    playerID: int
+    origin: List[Position]
+    destination: List[Position]
 
 class PlayerPublicInfo(BaseModel):
     playerID: int

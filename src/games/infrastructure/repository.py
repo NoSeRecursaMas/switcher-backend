@@ -124,6 +124,26 @@ class SQLAlchemyRepository(GameRepository):
             board.append(piece)
         return board
 
+    def switch_board_positions(self, gameID: int, origin: dict, destination: dict) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        board = self.get_board(gameID)
+        origin_piece = next(piece for piece in board if piece.posX == origin["posX"] and piece.posY == origin["posY"])
+        destination_piece = next(
+            piece for piece in board if piece.posX == destination["posX"] and piece.posY == destination["posY"]
+        )
+
+        origin_piece.color, destination_piece.color = destination_piece.color, origin_piece.color
+
+        game.lastMovements = json.dumps(
+            {
+                "origin": {"posX": origin["posX"], "posY": origin["posY"]},
+                "destination": {"posX": destination["posX"], "posY": destination["posY"]},
+            }
+        )
+        board_json = json.dumps([piece.dict() for piece in board])
+        game.board = board_json
+        self.db_session.commit()
+
     def is_piece_partial(self, gameID: int, posX: int, posY: int) -> bool:
         # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
         # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
