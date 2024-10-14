@@ -22,6 +22,7 @@ from src.games.infrastructure.websocket import MessageType, ws_manager_game
 from src.players.infrastructure.models import Player as PlayerDB
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
+from src.games.domain.models import Position
 
 
 class SQLAlchemyRepository(GameRepository):
@@ -124,20 +125,20 @@ class SQLAlchemyRepository(GameRepository):
             board.append(piece)
         return board
 
-    def switch_board_positions(self, gameID: int, origin: dict, destination: dict) -> None:
+    def switch_board_positions(self, gameID: int, origin: List[Position], destination: List[Position]) -> None:
         game = self.db_session.get(GameDB, gameID)
         board = self.get_board(gameID)
-        origin_piece = next(piece for piece in board if piece.posX == origin["posX"] and piece.posY == origin["posY"])
-        destination_piece = next(
-            piece for piece in board if piece.posX == destination["posX"] and piece.posY == destination["posY"]
-        )
+    
+        for orig, dest in zip(origin, destination):
+            origin_piece = next(piece for piece in board if piece.posX == orig.posX and piece.posY == orig.posY)
+            destination_piece = next(piece for piece in board if piece.posX == dest.posX and piece.posY == dest.posY)
 
-        origin_piece.color, destination_piece.color = destination_piece.color, origin_piece.color
+            origin_piece.color, destination_piece.color = destination_piece.color, origin_piece.color
 
         game.lastMovements = json.dumps(
             {
-                "origin": {"posX": origin["posX"], "posY": origin["posY"]},
-                "destination": {"posX": destination["posX"], "posY": destination["posY"]},
+            "origin": [{"posX": orig.posX, "posY": orig.posY} for orig in origin],
+            "destination": [{"posX": dest.posX, "posY": dest.posY} for dest in destination],
             }
         )
         board_json = json.dumps([piece.dict() for piece in board])
