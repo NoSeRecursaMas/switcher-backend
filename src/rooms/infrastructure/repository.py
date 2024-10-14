@@ -161,6 +161,7 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         y le envia el estado actual de la sala
 
         Args:
+            playerID (int): ID del jugador
             roomID (int): ID de la sala
             websocket (WebSocket): Conexión con el cliente
         """
