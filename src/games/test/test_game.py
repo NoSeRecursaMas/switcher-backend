@@ -145,3 +145,32 @@ def test_player_exists(client, test_db):
     response = client.post(f"/games/{room.roomID}", json={"playerID": 3})
     assert response.status_code == 404
     assert response.json() == {"detail": "El jugador no existe."}
+
+    # IDEAS DE TESTS
+    # - Testear que se crean las cartas de figuras y de movimiento con la cantidad correcta
+    def test_create_game_cards(client, test_db):
+        pass
+
+    # - Testear que no se crean más de 2 cartas de figuras iguales por cada tipo
+    def test_create_game_figure_cards_unique(client, test_db):
+        pass
+
+    # - Testear que no se crean más de 7 cartas de movimiento iguales por cada tipo
+    def test_create_game_movement_cards_unique(client, test_db):
+        pass
+
+    # - Testear que se crea un tablero con 9 celdas de cada color
+    def test_create_game_board(client, test_db):
+        pass
+
+    # - Testear que se asigna el turno de los jugadores correctamente
+    def test_create_game_turn_order(client, test_db):
+        pass
+
+    # - Testear que se le asigna la cantidad correcta de cartas figura visibles y no visibles a cada jugador
+    def test_create_game_player_cards(client, test_db):
+        pass
+
+    # - Testear que se le asigna la cantidad correcta de cartas movimiento a cada jugador
+    def test_create_game_player_figures(client, test_db):
+        pass
