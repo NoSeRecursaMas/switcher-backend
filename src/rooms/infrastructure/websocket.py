@@ -75,7 +75,7 @@ class ConnectionManagerRoomList:
 
 
 class ConnectionManagerRoom:
-    active_connections: Dict[int, Dict[str, WebSocket]]
+    active_connections: Dict[int, Dict[int, WebSocket]]
 
     def __init__(self):
         self.active_connections = {}

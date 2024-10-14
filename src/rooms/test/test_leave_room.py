@@ -1,5 +1,5 @@
-from src.players.infrastructure.models import Player as PlayerDB
 from src.conftest import override_get_db
+from src.players.infrastructure.models import Player as PlayerDB
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
 from src.rooms.infrastructure.models import Room as RoomDB
 

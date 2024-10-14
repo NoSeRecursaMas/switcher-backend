@@ -18,7 +18,8 @@ class RoomService:
         self.room_repository = room_repository
 
         self.room_domain_service = RoomRepositoryValidators(room_repository, player_repository)
-        self.player_domain_service = PlayerRepositoryValidators(player_repository)
+        if player_repository is not None:
+            self.player_domain_service = PlayerRepositoryValidators(player_repository)
 
     async def create_room(self, room_data: RoomCreationRequest) -> RoomID:
         await self.player_domain_service.validate_player_exists(room_data.playerID)

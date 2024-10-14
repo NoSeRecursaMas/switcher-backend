@@ -30,8 +30,8 @@ class GameService:
 
         gameID = self.game_repository.create(roomID, board)
 
-        self.game_repository.create_figure_cards(roomID, gameID)
-        self.game_repository.create_movement_cards(roomID, gameID)
+        self.game_repository.create_figure_cards(roomID, gameID.gameID)
+        self.game_repository.create_movement_cards(roomID, gameID.gameID)
 
         game_service_domain = GameServiceDomain(self.game_repository, self.room_repository)
 

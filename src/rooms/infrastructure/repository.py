@@ -91,10 +91,14 @@ class SQLAlchemyRepository(RoomRepository):
 
     def get_player_count(self, roomID: int) -> int:
         room = self.get(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
         return len(room.players)
 
     def get_players(self, roomID: int) -> List[Player]:
         room = self.get(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
         return room.players
 
     def update(self, room: Room) -> None:
@@ -162,6 +166,8 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         """
         await ws_manager_room.connect(playerID, roomID, websocket)
         room = self.get_public_info(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
         room_json = room.model_dump()
         await ws_manager_room.send_personal_message(MessageType.STATUS, room_json, websocket)
         await ws_manager_room.keep_listening(websocket)
@@ -179,5 +185,7 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
             roomID (int): ID de la sala
         """
         room = self.get_public_info(roomID)
+        if room is None:
+            raise ValueError(f"Room with ID {roomID} not found")
         room_json = room.model_dump()
         await ws_manager_room.broadcast(MessageType.STATUS, room_json, roomID)

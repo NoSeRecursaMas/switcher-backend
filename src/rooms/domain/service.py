@@ -44,10 +44,14 @@ class RepositoryValidators:
 
     def validate_room_full(self, roomID: int):
         room = self.room_repository.get_public_info(roomID)
+        if room is None:
+            raise HTTPException(status_code=404, detail="La sala no existe.")
         if len(room.players) >= room.maxPlayers:
             raise HTTPException(status_code=403, detail="La sala está llena.")
 
     def validate_min_players_to_start(self, roomID: int):
         room = self.room_repository.get_public_info(roomID)
+        if room is None:
+            raise HTTPException(status_code=404, detail="La sala no existe.")
         if len(room.players) < room.minPlayers:
             raise HTTPException(status_code=403, detail="No hay suficientes jugadores para iniciar la partida.")

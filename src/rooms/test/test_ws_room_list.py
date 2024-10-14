@@ -1,17 +1,20 @@
 import pytest
 from fastapi.websockets import WebSocketDisconnect
-from src.rooms.infrastructure.models import Room as RoomDB
-from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
-from src.players.infrastructure.models import Player as PlayerDB
+
 from src.conftest import override_get_db
+from src.players.infrastructure.models import Player as PlayerDB
+from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
+from src.rooms.infrastructure.models import Room as RoomDB
 
 
 def test_connect_to_room_list_websocket_user_not_exist(client, test_db):
     db = next(override_get_db())
-    db.add_all([
-        PlayerDB(playerID=1, username="test user"),
-        PlayerDB(playerID=2, username="test user 2"),
-    ])
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            PlayerDB(playerID=2, username="test user 2"),
+        ]
+    )
     db.commit()
     with pytest.raises(WebSocketDisconnect) as e:
         with client.websocket_connect("/rooms/3") as websocket:
@@ -23,10 +26,12 @@ def test_connect_to_room_list_websocket_user_not_exist(client, test_db):
 
 def test_connect_to_room_list_websocket_player_exist_and_no_rooms(client, test_db):
     db = next(override_get_db())
-    db.add_all([
-        PlayerDB(playerID=1, username="test user"),
-        PlayerDB(playerID=2, username="test user 2"),
-    ])
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            PlayerDB(playerID=2, username="test user 2"),
+        ]
+    )
     db.commit()
 
     with client.websocket_connect("/rooms/1") as websocket:
@@ -40,7 +45,10 @@ def test_connect_to_room_list_websocket_player_exist_and_has_rooms(client, test_
     players = [PlayerDB(username=f"player{i}") for i in range(1, 6)]
     db.add_all(players)
 
-    rooms = [RoomDB(roomName=f"test_room{i}", minPlayers=2, maxPlayers=4, hostID=players[i-1].playerID) for i in range(1, 3)]
+    rooms = [
+        RoomDB(roomName=f"test_room{i}", minPlayers=2, maxPlayers=4, hostID=players[i - 1].playerID)
+        for i in range(1, 3)
+    ]
     db.add_all(rooms)
     db.commit()
 
@@ -74,15 +82,18 @@ def test_connect_to_room_list_websocket_player_exist_and_has_rooms(client, test_
             },
         ]
 
+
 def test_can_connect_2_times(client, test_db):
     db = next(override_get_db())
-    db.add_all([
-        PlayerDB(playerID=1, username="test user"),
-        PlayerDB(playerID=2, username="test user 2"),
-        RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
-        PlayerRoomDB(playerID=1, roomID=1),
-        PlayerRoomDB(playerID=2, roomID=1),
-    ])
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            PlayerDB(playerID=2, username="test user 2"),
+            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            PlayerRoomDB(playerID=1, roomID=1),
+            PlayerRoomDB(playerID=2, roomID=1),
+        ]
+    )
     db.commit()
     try:
         with client.websocket_connect("/rooms/1") as websocket:
@@ -117,13 +128,15 @@ def test_can_connect_2_times(client, test_db):
 
 
 def test_get_all_rooms_via_websocket(client, test_db):
-  
     db = next(override_get_db())
     players = [PlayerDB(username=f"player{i}") for i in range(1, 10)]
     db.add_all(players)
 
-    rooms = [RoomDB(roomName=f"test_room{i}", minPlayers=2, maxPlayers=4, hostID=players[i-1].playerID) for i in range(1, 5)]
-    db.add_all(rooms)    
+    rooms = [
+        RoomDB(roomName=f"test_room{i}", minPlayers=2, maxPlayers=4, hostID=players[i - 1].playerID)
+        for i in range(1, 5)
+    ]
+    db.add_all(rooms)
     db.commit()
 
     players_room_relations = [
@@ -176,10 +189,10 @@ def test_get_all_rooms_via_websocket(client, test_db):
                 "started": False,
                 "private": False,
             },
-
         ]
 
-def test_get_empty_room(client,test_db):
+
+def test_get_empty_room(client, test_db):
     db = next(override_get_db())
     player1 = PlayerDB(username="player1")
     db.add(player1)

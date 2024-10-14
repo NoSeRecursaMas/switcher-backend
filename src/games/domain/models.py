@@ -39,9 +39,11 @@ class PlayerInfoPublic(BaseModel):
     sizeDeckFigure: int
     FigureCards: List[FigureCard]
 
+
 class PlayerInfoPrivate(BaseModel):
     playerID: int
     MovementCards: List[MovementCard]
+
 
 class Game(BaseModel):
     GameID: int

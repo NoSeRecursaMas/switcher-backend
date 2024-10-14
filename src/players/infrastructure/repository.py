@@ -21,7 +21,7 @@ class SQLAlchemyRepository(PlayerRepository):
         return Player(playerID=new_player.playerID, username=new_player.username)
 
     def get(self, playerID: int) -> Optional[Player]:
-        player = self.db_session.query(PlayerDB).get(playerID)
+        player = self.db_session.get(PlayerDB, playerID)
 
         if player is None:
             return None
