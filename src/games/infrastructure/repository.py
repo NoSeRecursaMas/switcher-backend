@@ -13,7 +13,16 @@ from src.games.config import (
     WHITE_CARDS,
     WHITE_CARDS_AMOUNT,
 )
-from src.games.domain.models import BoardPiece, FigureCard, Game, GameID, GamePublicInfo, MovementCard, PlayerPublicInfo
+from src.games.domain.models import (
+    BoardPiece,
+    FigureCard,
+    Game,
+    GameID,
+    GamePublicInfo,
+    MovementCard,
+    PlayerPublicInfo,
+    Winner,
+)
 from src.games.domain.repository import GameRepository, GameRepositoryWS
 from src.games.infrastructure.models import FigureCard as FigureCardDB
 from src.games.infrastructure.models import Game as GameDB
@@ -136,9 +145,7 @@ class SQLAlchemyRepository(GameRepository):
             raise ValueError(f"Game with ID {gameID} not found")
         roomID = game.roomID
 
-        db_players = (
-            self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == roomID, PlayerRoomDB.isActive).all()
-        )
+        db_players = self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == roomID).all()
         players = []
 
         for player in db_players:
@@ -219,7 +226,7 @@ class SQLAlchemyRepository(GameRepository):
     def set_player_inactive(self, playerID: int, roomID: int) -> None:
         self.db_session.query(PlayerRoomDB).filter(
             PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == roomID
-        ).update({"active": False})
+        ).update({"isActive": False})
         self.db_session.commit()
 
     def is_player_active(self, playerID: int, roomID: int) -> bool:
@@ -263,3 +270,16 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
             game = self.get_public_info(gameID, player.playerID)
             game_json = game.model_dump()
             await ws_manager_game.send_personal_message_by_id(MessageType.STATUS, game_json, player.playerID, gameID)
+
+    async def broadcast_end_game(self, gameID: int, winnerID: int) -> None:
+        """Envia un mensaje de fin de juego a todos los jugadores
+
+        Args:
+            gameID (int): ID del juego
+            winnerID (int): ID del jugador ganador
+        """
+        players = self.get_players(gameID)
+        winner = Winner(playerID=winnerID, username=self.db_session.get(PlayerDB, winnerID).username)
+        winner_json = winner.model_dump()
+        for player in players:
+            await ws_manager_game.send_personal_message_by_id(MessageType.END, winner_json, player.playerID, gameID)

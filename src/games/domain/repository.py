@@ -65,3 +65,7 @@ class GameRepositoryWS(GameRepository):
     @abstractmethod
     async def broadcast_status_game(self, gameID: int) -> None:
         pass
+
+    @abstractmethod
+    async def broadcast_end_game(self, gameID: int, winnerID: int) -> None:
+        pass
