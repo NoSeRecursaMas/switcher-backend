@@ -206,3 +206,4 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         game_info = GameID(gameID=gameID)
         game_info_json = game_info.model_dump()
         await ws_manager_room.broadcast(MessageType.START_GAME, game_info_json, roomID)
+
