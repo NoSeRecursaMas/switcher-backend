@@ -228,7 +228,7 @@ class SQLAlchemyRepository(GameRepository):
             .filter(PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == roomID)
             .one_or_none()
         )
-        return player.isActive
+        return player is not None and player.isActive
 
     def get_active_players(self, gameID: int) -> List[PlayerPublicInfo]:
         players = self.get_players(gameID)
