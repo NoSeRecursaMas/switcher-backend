@@ -14,7 +14,16 @@ from src.games.config import (
     WHITE_CARDS,
     WHITE_CARDS_AMOUNT,
 )
-from src.games.domain.models import BoardPiece, FigureCard, Game, GameID, GamePublicInfo, MovementCard, PlayerPublicInfo
+from src.games.domain.models import (
+    BoardPiece,
+    FigureCard,
+    Game,
+    GameID,
+    GamePublicInfo,
+    MovementCard,
+    PlayerPublicInfo,
+    Winner,
+)
 from src.games.domain.repository import GameRepository, GameRepositoryWS
 from src.games.infrastructure.models import FigureCard as FigureCardDB
 from src.games.infrastructure.models import Game as GameDB
@@ -102,6 +111,14 @@ class SQLAlchemyRepository(GameRepository):
             game.posEnabledToPlay = 1
         else:
             game.posEnabledToPlay = current_position + 1
+
+        self.db_session.commit()
+
+        # Caso en el que el jugador que ahora tiene el turno no está activo
+        for player in game_players:
+            if player.position == game.posEnabledToPlay and not player.isActive:
+                self.skip(gameID)
+                return
 
         self.db_session.commit()
 
@@ -224,9 +241,7 @@ class SQLAlchemyRepository(GameRepository):
             raise ValueError(f"Game with ID {gameID} not found")
         roomID = game.roomID
 
-        db_players = (
-            self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == roomID, PlayerRoomDB.isActive).all()
-        )
+        db_players = self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == roomID).all()
         players = []
 
         for player in db_players:
@@ -322,6 +337,53 @@ class SQLAlchemyRepository(GameRepository):
         # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
         return []
 
+    def set_player_inactive(self, playerID: int, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        self.db_session.query(PlayerRoomDB).filter(
+            PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == game.roomID
+        ).update({"isActive": False})
+        figure_cards = self.db_session.query(FigureCardDB).filter(FigureCardDB.playerID == playerID)
+        for card in figure_cards:
+            self.db_session.delete(card)
+        movement_cards = self.db_session.query(MovementCardDB).filter(MovementCardDB.playerID == playerID)
+        for card in movement_cards:
+            card.isDiscarded = True
+            card.playerID = None
+
+        if game.posEnabledToPlay == self.get_position_player(gameID, playerID):
+            if game.posEnabledToPlay == len(self.get_players(gameID)):
+                game.posEnabledToPlay = 1
+            else:
+                game.posEnabledToPlay += 1
+
+        self.db_session.commit()
+
+    def is_player_active(self, playerID: int, gameID: int) -> bool:
+        roomID = self.db_session.get(GameDB, gameID).roomID
+        player = (
+            self.db_session.query(PlayerRoomDB)
+            .filter(PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == roomID)
+            .one_or_none()
+        )
+        return player is not None and player.isActive
+
+    def get_active_players(self, gameID: int) -> List[PlayerPublicInfo]:
+        players = self.get_players(gameID)
+        active_players = [player for player in players if self.is_player_active(player.playerID, gameID)]
+        return active_players
+
+    def delete_and_clean(self, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID).delete()
+        self.db_session.query(MovementCardDB).filter(MovementCardDB.gameID == gameID).delete()
+        self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == game.roomID).delete()
+        room = game.room
+        self.db_session.delete(game)
+        self.db_session.delete(room)
+        self.db_session.commit()
+
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
@@ -350,3 +412,25 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
             game = self.get_public_info(gameID, player.playerID)
             game_json = game.model_dump()
             await ws_manager_game.send_personal_message_by_id(MessageType.STATUS, game_json, player.playerID, gameID)
+
+    async def broadcast_end_game(self, gameID: int, winnerID: int) -> None:
+        """Envia un mensaje de fin de juego a todos los jugadores
+
+        Args:
+            gameID (int): ID del juego
+            winnerID (int): ID del jugador ganador
+        """
+        players = self.get_players(gameID)
+        winner = Winner(winnerID=winnerID, username=self.db_session.get(PlayerDB, winnerID).username)
+        winner_json = winner.model_dump()
+        for player in players:
+            await ws_manager_game.send_personal_message_by_id(MessageType.END, winner_json, player.playerID, gameID)
+
+    async def remove_player(self, playerID: int, gameID: int) -> None:
+        """Remueve al jugador de la lista de conexiones activas
+
+        Args:
+            playerID (int): ID del jugador
+            gameID (int): ID del juego
+        """
+        await ws_manager_game.disconnect_by_id(playerID, gameID)

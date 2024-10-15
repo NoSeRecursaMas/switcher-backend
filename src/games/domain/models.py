@@ -67,3 +67,8 @@ class GamePublicInfo(Game):
         if len(value) > 3:
             raise ValueError("The deck of movement cards must have a maximum of 3 cards")
         return value
+
+
+class Winner(BaseModel):
+    winnerID: int
+    username: str

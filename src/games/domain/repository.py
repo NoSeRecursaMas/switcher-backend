@@ -45,6 +45,17 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
+    def set_player_inactive(self, playerID: int, gameID: int) -> None:
+        pass
+
+    @abstractmethod
+    def is_player_active(self, playerID: int, gameID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def get_active_players(self, gameID: int) -> List[PlayerDomain]:
+        pass
+
     def skip(self, gameID: int) -> None:
         pass
 
@@ -63,7 +74,12 @@ class GameRepository(ABC):
     @abstractmethod
     def get_position_player(self, gameID: int, playerID: int) -> int:
         pass
-    
+
+    @abstractmethod
+    def delete_and_clean(self, gameID: int) -> None:
+        pass
+
+
 class GameRepositoryWS(GameRepository):
     @abstractmethod
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
@@ -71,4 +87,12 @@ class GameRepositoryWS(GameRepository):
 
     @abstractmethod
     async def broadcast_status_game(self, gameID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def broadcast_end_game(self, gameID: int, winnerID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def remove_player(self, playerID: int, gameID: int) -> None:
         pass

@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Dict, List
-from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
+from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
 
 class MessageType(str, Enum):
@@ -39,9 +39,9 @@ class ConnectionManagerRoomList:
                 await websocket.receive_text()
 
         except WebSocketDisconnect:
-            self.disconnect(websocket)
+            await self.disconnect(websocket)
 
-    def disconnect(self, websocket: WebSocket):
+    async def disconnect(self, websocket: WebSocket):
         """Remueve al cliente de la lista de conexiones activas
 
         Args:
@@ -50,7 +50,7 @@ class ConnectionManagerRoomList:
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
         if websocket.client_state != WebSocketState.DISCONNECTED:
-            websocket.close()
+            await websocket.close()
 
     async def send_personal_message(self, type: MessageType, payload, websocket: WebSocket):
         """Envía un mensaje personalizado al cliente
@@ -113,16 +113,16 @@ class ConnectionManagerRoom:
                 await websocket.receive_text()
 
         except WebSocketDisconnect:
-            self.disconnect(websocket)
+            await self.disconnect(websocket)
 
-    def disconnect(self, websocket: WebSocket):
+    async def disconnect(self, websocket: WebSocket):
         """Remueve al cliente de la lista de conexiones activas y cierra la conexión en caso de que no esté cerrada
 
         Args:
             websocket (WebSocket): Conexión con el cliente
         """
         if websocket.client_state != WebSocketState.DISCONNECTED:
-            websocket.close()
+            await websocket.close()
         active_connections = self.active_connections.copy()
         for roomID in active_connections:
             if websocket in active_connections[roomID].values():
