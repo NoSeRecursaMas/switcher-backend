@@ -14,6 +14,11 @@ class BoardPiece(BaseModel):
     isPartial: bool
 
 
+class BoardPiecePosition(BaseModel):
+    posX: int
+    posY: int
+
+
 class FigureCard(BaseModel):
     type: str
     cardID: int
@@ -38,7 +43,8 @@ class PlayerPublicInfo(BaseModel):
     @classmethod
     def check_size_deck(cls, value):
         if len(value) > 3:
-            raise ValueError("The deck of figure cards must have a maximum of 3 cards")
+            raise ValueError(
+                "The deck of figure cards must have a maximum of 3 cards")
         return value
 
 
@@ -65,5 +71,6 @@ class GamePublicInfo(Game):
     @classmethod
     def check_movement_cards(cls, value):
         if len(value) > 3:
-            raise ValueError("The deck of movement cards must have a maximum of 3 cards")
+            raise ValueError(
+                "The deck of movement cards must have a maximum of 3 cards")
         return value

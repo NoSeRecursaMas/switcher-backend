@@ -1,6 +1,9 @@
 import json
 import random
+import numpy as np
+from scipy.signal import convolve2d
 from typing import List, Optional, Tuple
+
 
 from fastapi.websockets import WebSocket
 from sqlalchemy.orm import Session
@@ -13,7 +16,8 @@ from src.games.config import (
     WHITE_CARDS,
     WHITE_CARDS_AMOUNT,
 )
-from src.games.domain.models import BoardPiece, FigureCard, Game, GameID, GamePublicInfo, MovementCard, PlayerPublicInfo
+from src.games.config import COLORS, FIGURE_CARDS_FORM
+from src.games.domain.models import BoardPiece, FigureCard, Game, GameID, GamePublicInfo, MovementCard, PlayerPublicInfo, BoardPiecePosition
 from src.games.domain.repository import GameRepository, GameRepositoryWS
 from src.games.infrastructure.models import FigureCard as FigureCardDB
 from src.games.infrastructure.models import Game as GameDB
@@ -31,7 +35,8 @@ class SQLAlchemyRepository(GameRepository):
     def create(self, roomID: int, new_board: list) -> GameID:
         board_json = json.dumps(new_board)
 
-        new_game = GameDB(board=board_json, lastMovements={}, prohibitedColor=None, roomID=roomID)
+        new_game = GameDB(board=board_json, lastMovements={},
+                          prohibitedColor=None, roomID=roomID)
 
         self.db_session.add(new_game)
         self.db_session.commit()
@@ -73,9 +78,11 @@ class SQLAlchemyRepository(GameRepository):
     def create_movement_cards(self, gameID: int) -> None:
         players = self.get_players(gameID)
 
-        movement_cards_amount = MOVEMENT_CARDS_AMOUNT[len(players) - 2] * len(players)
+        movement_cards_amount = MOVEMENT_CARDS_AMOUNT[len(
+            players) - 2] * len(players)
         all_movement_cards = MOVEMENT_CARDS * 7
-        selected_movement_cards = random.sample(all_movement_cards, movement_cards_amount)
+        selected_movement_cards = random.sample(
+            all_movement_cards, movement_cards_amount)
 
         new_cards: List[MovementCardDB] = []
         for card in selected_movement_cards:
@@ -117,7 +124,8 @@ class SQLAlchemyRepository(GameRepository):
         board_json = json.loads(game.board)
         board: List[BoardPiece] = []
         for piece_db in board_json:
-            is_partial = self.is_piece_partial(gameID, piece_db["posX"], piece_db["posY"])
+            is_partial = self.is_piece_partial(
+                gameID, piece_db["posX"], piece_db["posY"])
             piece = BoardPiece(
                 posX=piece_db["posX"], posY=piece_db["posY"], color=piece_db["color"], isPartial=is_partial
             )
@@ -137,13 +145,15 @@ class SQLAlchemyRepository(GameRepository):
         roomID = game.roomID
 
         db_players = (
-            self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == roomID, PlayerRoomDB.isActive).all()
+            self.db_session.query(PlayerRoomDB).filter(
+                PlayerRoomDB.roomID == roomID, PlayerRoomDB.isActive).all()
         )
         players = []
 
         for player in db_players:
             username = self.db_session.get(PlayerDB, player.playerID).username
-            amount_non_playable, playable_cards_figure = self.get_player_figure_cards(gameID, player.playerID)
+            amount_non_playable, playable_cards_figure = self.get_player_figure_cards(
+                gameID, player.playerID)
 
             players.append(
                 PlayerPublicInfo(
@@ -161,12 +171,14 @@ class SQLAlchemyRepository(GameRepository):
         figure_cards = self.db_session.query(FigureCardDB).filter(
             FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID
         )
-        amount_non_playable = figure_cards.filter(not FigureCardDB.isPlayable).count()
+        amount_non_playable = figure_cards.filter(
+            not FigureCardDB.isPlayable).count()
 
         playable_cards: List[FigureCard] = []
         for card in figure_cards:
             if card.isPlayable:
-                playable_cards.append(FigureCard(type=card.type, cardID=card.cardID, isBlocked=card.isBlocked))
+                playable_cards.append(FigureCard(
+                    type=card.type, cardID=card.cardID, isBlocked=card.isBlocked))
 
         return amount_non_playable, playable_cards
 
@@ -176,8 +188,10 @@ class SQLAlchemyRepository(GameRepository):
         )
         cards: List[MovementCard] = []
         for card in cards_db:
-            isUsed = self.was_card_used_in_partial_movement(gameID, playerID, card.cardID)
-            cards.append(MovementCard(type=card.type, cardID=card.cardID, isUsed=isUsed))
+            isUsed = self.was_card_used_in_partial_movement(
+                gameID, playerID, card.cardID)
+            cards.append(MovementCard(type=card.type,
+                         cardID=card.cardID, isUsed=isUsed))
 
         return cards
 
@@ -206,15 +220,69 @@ class SQLAlchemyRepository(GameRepository):
             prohibitedColor=game.prohibitedColor,
             posEnabledToPlay=game.posEnabledToPlay,
             players=game.players,
-            figuresToUse=self.get_available_figures(gameID),
+            figuresToUse=self.get_available_figures(gameID, game.board),
             cardsMovement=self.get_player_movement_cards(gameID, playerID),
         )
 
-    def get_available_figures(self, gameID: int) -> list:
-        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
-        return []
+    def get_available_figures(self, gameID: int, board: List[BoardPiece]) -> List[List[BoardPiecePosition]]:
+        board_matrix = np.empty((6, 6), dtype=object)
+
+        for piece in board:
+            board_matrix[piece.posX][piece.posY] = piece.color
+
+        color_layers = self.create_color_layers(board_matrix)
+
+        all_figures = []
+        rotated_figures = {figure_type: [np.rot90(shape, k) for k in range(4)]
+                           for figure_type, shape in FIGURE_CARDS_FORM.items()}
+
+        print(board_matrix)
+
+        for color, layer in color_layers.items():
+            for figure_type, rotations in rotated_figures.items():
+                for rotated_figure in rotations:
+                    figures_found = self.match_figure_in_layer(
+                        rotated_figure, layer)
+                    all_figures.extend(figures_found)
+
+        return all_figures
+
+    def create_color_layers(self, board_matrix: np.ndarray) -> dict:
+        return {
+            color: (board_matrix == color).astype(int)
+            for color in COLORS
+        }
+
+    def match_figure_in_layer(self, shape: np.ndarray, layer: np.ndarray) -> List[List[BoardPiecePosition]]:
+        matched_figures = []
+        shape_height, shape_width = shape.shape
+
+        result = convolve2d(layer, shape[::-1, ::-1], mode='valid')
+
+        for y, x in zip(*np.where(result == shape.sum())):
+            matched_positions = [
+                BoardPiecePosition(posX=x + shape_x, posY=y + shape_y)
+                for shape_y in range(shape_height)
+                for shape_x in range(shape_width)
+                if shape[shape_y, shape_x] == 1
+            ]
+
+            if self.check_border_validity(matched_positions, layer):
+                matched_figures.append(matched_positions)
+
+        return matched_figures
+
+    def check_border_validity(self, positions: List[BoardPiecePosition], layer: np.ndarray) -> bool:
+        position_set = {(pos.posX, pos.posY) for pos in positions}
+        for pos in positions:
+            x, y = pos.posX, pos.posY
+            adjacent_positions = [(x + dx, y + dy)
+                                  for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]]
+
+            for nx, ny in adjacent_positions:
+                if 0 <= nx < 6 and 0 <= ny < 6 and (nx, ny) not in position_set and layer[ny, nx] == 0:
+                    return False
+        return True
 
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
@@ -229,6 +297,8 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
         """
         await ws_manager_game.connect(playerID, gameID, websocket)
         game = self.get_public_info(gameID, playerID)
+        print(game.board)
+        print(game.figuresToUse)
         game_json = game.model_dump()
         await ws_manager_game.send_personal_message(MessageType.STATUS, game_json, websocket)
         await ws_manager_game.keep_listening(websocket)

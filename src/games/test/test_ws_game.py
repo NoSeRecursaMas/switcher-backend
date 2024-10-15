@@ -16,7 +16,8 @@ def test_connect_to_game_websocket_user_not_exist(client, test_db):
         [
             PlayerDB(playerID=1, username="test user"),
             PlayerDB(playerID=2, username="test user 2"),
-            RoomDB(roomID=1, roomName="test room", maxPlayers=4, minPlayers=2, hostID=1),
+            RoomDB(roomID=1, roomName="test room",
+                   maxPlayers=4, minPlayers=2, hostID=1),
             PlayerRoom(playerID=1, roomID=1),
             PlayerRoom(playerID=2, roomID=1),
             GameDB(roomID=1),
@@ -37,7 +38,8 @@ def test_connect_to_game_websocket_game_not_exist(client, test_db):
         [
             PlayerDB(playerID=1, username="test user"),
             PlayerDB(playerID=2, username="test user 2"),
-            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            RoomDB(roomID=1, roomName="test room",
+                   minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoom(playerID=1, roomID=1),
             PlayerRoom(playerID=2, roomID=1),
             GameDB(roomID=1),
@@ -58,7 +60,8 @@ def test_connect_to_game_websocket_game_not_started(client, test_db):
         [
             PlayerDB(playerID=1, username="test user"),
             PlayerDB(playerID=2, username="test user 2"),
-            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            RoomDB(roomID=1, roomName="test room",
+                   minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoom(playerID=1, roomID=1),
             PlayerRoom(playerID=2, roomID=1),
         ]
@@ -79,10 +82,12 @@ def test_connect_to_game_websocket_player_not_in_game(client, test_db):
             PlayerDB(playerID=1, username="test user"),
             PlayerDB(playerID=2, username="test user 2"),
             PlayerDB(playerID=3, username="test user 3"),
-            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            RoomDB(roomID=1, roomName="test room",
+                   minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoom(playerID=1, roomID=1),
             PlayerRoom(playerID=2, roomID=1),
-            GameDB(roomID=1, board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)])),
+            GameDB(roomID=1, board=json.dumps(
+                [{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)])),
         ]
     )
     db.commit()
@@ -102,11 +107,13 @@ def test_connect_to_game_websocket_player_in_game(client, test_db):
             PlayerDB(playerID=1, username="test user"),
             PlayerDB(playerID=2, username="test user 2"),
             PlayerDB(playerID=3, username="test user 3"),
-            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            RoomDB(roomID=1, roomName="test room",
+                   minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoom(playerID=1, roomID=1),
             PlayerRoom(playerID=2, roomID=1),
             PlayerRoom(playerID=3, roomID=1),
-            GameDB(roomID=1, board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)])),
+            GameDB(roomID=1, board=json.dumps(
+                [{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)])),
         ]
     )
     db.commit()
@@ -131,10 +138,12 @@ def test_close_connection_if_player_open_second(client, test_db):
         [
             PlayerDB(playerID=1, username="test user"),
             PlayerDB(playerID=2, username="test user 2"),
-            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            RoomDB(roomID=1, roomName="test room",
+                   minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoom(playerID=1, roomID=1),
             PlayerRoom(playerID=2, roomID=1),
-            GameDB(roomID=1, board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)])),
+            GameDB(roomID=1, board=json.dumps(
+                [{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)])),
         ]
     )
     db.commit()
