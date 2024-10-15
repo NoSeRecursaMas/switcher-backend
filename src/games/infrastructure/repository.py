@@ -108,12 +108,14 @@ class SQLAlchemyRepository(GameRepository):
     def rebuild_movement_deck(self, gameID: int) -> None:
         movement_cards = (
             self.db_session.query(MovementCardDB)
-            .filter(MovementCardDB.gameID == gameID, MovementCardDB.playerID is None)
+            .filter(MovementCardDB.gameID == gameID, MovementCardDB.playerID.is_(None))
             .all()
         )
 
         for card in movement_cards:
             card.isDiscarded = False
+
+        self.db_session.commit()
 
     def replacement_movement_card(self, gameID: int, playerID: int) -> None:
         playable_cards = self.db_session.query(MovementCardDB).filter(
@@ -124,7 +126,9 @@ class SQLAlchemyRepository(GameRepository):
             available_cards = (
                 self.db_session.query(MovementCardDB)
                 .filter(
-                    MovementCardDB.gameID == gameID, not MovementCardDB.isDiscarded, MovementCardDB.playerID is None
+                    MovementCardDB.gameID == gameID,
+                    MovementCardDB.isDiscarded.is_(False),
+                    MovementCardDB.playerID.is_(None),
                 )
                 .order_by(func.random())
                 .limit(3 - playable_cards.count())
@@ -135,7 +139,9 @@ class SQLAlchemyRepository(GameRepository):
                 available_cards = (
                     self.db_session.query(MovementCardDB)
                     .filter(
-                        MovementCardDB.gameID == gameID, not MovementCardDB.isDiscarded, MovementCardDB.playerID is None
+                        MovementCardDB.gameID == gameID,
+                        MovementCardDB.isDiscarded.is_(False),
+                        MovementCardDB.playerID.is_(None),
                     )
                     .order_by(func.random())
                     .limit(3 - playable_cards.count())
@@ -150,19 +156,24 @@ class SQLAlchemyRepository(GameRepository):
         figure_cards = self.db_session.query(FigureCardDB).filter(
             FigureCardDB.gameID == gameID,
             FigureCardDB.playerID == playerID,
+            FigureCardDB.isPlayable,
         )
 
         blocked = any([card.isBlocked for card in figure_cards])
 
-        if not blocked:
-            available_cards = (
-                self.db_session.query(FigureCardDB)
-                .filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID, not FigureCardDB.isPlayable)
-                .limit(3 - figure_cards.count())
-            )
+        if blocked:
+            return
 
-            for card in available_cards:
-                card.isPlayable = True
+        available_cards = (
+            self.db_session.query(FigureCardDB)
+            .filter(
+                FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID, FigureCardDB.isPlayable.is_(False)
+            )
+            .limit(3 - figure_cards.count())
+        )
+
+        for card in available_cards:
+            card.isPlayable = True
 
         self.db_session.commit()
 
@@ -267,19 +278,23 @@ class SQLAlchemyRepository(GameRepository):
     def is_player_in_game(self, playerID, gameID):
         players = self.get_players(gameID)
         return playerID in [player.playerID for player in players]
-    
+
     def get_current_turn(self, gameID: int) -> int:
         game = self.get(gameID)
         if game is None:
             raise ValueError(f"Game with ID {gameID} not found")
         return game.posEnabledToPlay
-    
+
     def get_position_player(self, gameID, playerID):
         game = self.db_session.get(GameDB, gameID)
         if game is None:
             raise ValueError(f"Game with ID {gameID} not found")
-        player_position = self.db_session.query(PlayerRoomDB).filter(
-                PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == game.roomID).one_or_none().position
+        player_position = (
+            self.db_session.query(PlayerRoomDB)
+            .filter(PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == game.roomID)
+            .one_or_none()
+            .position
+        )
         return player_position
 
     def get_public_info(self, gameID: int, playerID: int) -> GamePublicInfo:
