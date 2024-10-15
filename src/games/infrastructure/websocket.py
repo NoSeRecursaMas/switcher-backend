@@ -6,6 +6,7 @@ from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
 class MessageType(str, Enum):
     STATUS = "status"
+    END = "end"
 
 
 class ConnectionManagerGame:
@@ -46,22 +47,38 @@ class ConnectionManagerGame:
                 await websocket.receive_text()
 
         except WebSocketDisconnect:
-            self.disconnect(websocket)
+            await self.disconnect(websocket)
 
-    def disconnect(self, websocket: WebSocket):
+    async def disconnect(self, websocket: WebSocket):
         """Remueve al cliente de la lista de conexiones activas y cierra la conexión en caso de que no esté cerrada
 
         Args:
             websocket (WebSocket): Conexión con el cliente
         """
         if websocket.client_state != WebSocketState.DISCONNECTED:
-            websocket.close()
+            await websocket.close()
         active_connections = self.active_connections.copy()
         for gameID in active_connections:
             if websocket in active_connections[gameID].values():
                 playerID = list(active_connections[gameID].keys())[
                     list(active_connections[gameID].values()).index(websocket)
                 ]
+                self.active_connections[gameID].pop(playerID)
+                if not self.active_connections[gameID]:
+                    self.active_connections.pop(gameID)
+
+    async def disconnect_by_id(self, playerID: int, gameID: int):
+        """Remueve al cliente de la lista de conexiones activas y cierra la conexión en caso de que no esté cerrada
+
+        Args:
+            playerID (int): ID del jugador
+            gameID (int): ID del juego
+        """
+        if gameID in self.active_connections:
+            if playerID in self.active_connections[gameID]:
+                websocket = self.active_connections[gameID][playerID]
+                if websocket.client_state != WebSocketState.DISCONNECTED:
+                    await websocket.close()
                 self.active_connections[gameID].pop(playerID)
                 if not self.active_connections[gameID]:
                     self.active_connections.pop(gameID)

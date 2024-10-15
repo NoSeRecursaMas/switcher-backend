@@ -23,6 +23,11 @@ class RepositoryValidators:
         if len(room.players) < room.minPlayers:
             raise HTTPException(status_code=403, detail="No hay suficientes jugadores para iniciar la partida.")
 
+    def validate_is_player_turn(self, postion_player: int, gameID: int):
+        if self.game_repository.get_current_turn(gameID) == postion_player:
+            return
+        raise HTTPException(status_code=403, detail="No es el turno del jugador.")
+
     async def validate_game_exists(self, gameID: int, websocket: Optional[WebSocket] = None):
         if self.game_repository.get(gameID) is not None:
             return
@@ -33,7 +38,10 @@ class RepositoryValidators:
             raise WebSocketDisconnect(4004, "El juego no existe.")
 
     async def is_player_in_game(self, playerID: int, gameID: int, websocket: Optional[WebSocket] = None):
-        if self.game_repository.is_player_in_game(playerID, gameID):
+        player_in_game = self.game_repository.is_player_in_game(playerID, gameID)
+        player_active = self.game_repository.is_player_active(playerID, gameID)
+
+        if player_in_game and player_active:
             return
         if websocket is None:
             raise HTTPException(status_code=403, detail="El jugador no se encuentra en el juego.")
