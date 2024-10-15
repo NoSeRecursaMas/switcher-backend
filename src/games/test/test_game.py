@@ -1,11 +1,12 @@
 import json
+
 from src.conftest import override_get_db
 from src.games.infrastructure.models import FigureCard as FigureCardDB
+from src.games.infrastructure.models import Game as GameDB
 from src.games.infrastructure.models import MovementCard as MovementCardDB
 from src.players.infrastructure.models import Player as PlayerDB
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
 from src.rooms.infrastructure.models import Room as RoomDB
-from src.games.infrastructure.models import Game as GameDB
 
 
 def create_game_generalization_two_players(client, test_db):
@@ -14,8 +15,7 @@ def create_game_generalization_two_players(client, test_db):
     db.add_all(players)
     db.commit()
 
-    room = RoomDB(roomName="test_room1", minPlayers=2,
-                  maxPlayers=4, hostID=players[0].playerID)
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
     db.add(room)
     db.commit()
 
@@ -33,8 +33,7 @@ def create_game_generalization_two_players(client, test_db):
 def test_create_game(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
 
-    response = client.post(
-        f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+    response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
     assert response.status_code == 201
     assert response.json() == {"gameID": 1}
 
@@ -42,13 +41,10 @@ def test_create_game(client, test_db):
 def test_create_game_cards(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
 
-    response = client.post(
-        f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+    response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
 
-    figure_cards = db.query(FigureCardDB).filter(
-        FigureCardDB.gameID == 1).count()
-    movement_cards = db.query(MovementCardDB).filter(
-        MovementCardDB.gameID == 1).count()
+    figure_cards = db.query(FigureCardDB).filter(FigureCardDB.gameID == 1).count()
+    movement_cards = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1).count()
 
     assert figure_cards == 50
     assert movement_cards == 48
@@ -60,8 +56,7 @@ def test_create_game_not_minimum_players(client, test_db):
     db.add_all(players)
     db.commit()
 
-    room = RoomDB(roomName="test_room1", minPlayers=2,
-                  maxPlayers=4, hostID=players[0].playerID)
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
     db.add(room)
     db.commit()
 
@@ -72,11 +67,9 @@ def test_create_game_not_minimum_players(client, test_db):
     db.add_all(players_room_relations)
     db.commit()
 
-    response = client.post(
-        f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+    response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
     assert response.status_code == 403
-    assert response.json() == {
-        "detail": "No hay suficientes jugadores para iniciar la partida."}
+    assert response.json() == {"detail": "No hay suficientes jugadores para iniciar la partida."}
 
 
 def test_player_is_not_owner(client, test_db):
@@ -85,8 +78,7 @@ def test_player_is_not_owner(client, test_db):
     db.add_all(players)
     db.commit()
 
-    room = RoomDB(roomName="test_room1", minPlayers=2,
-                  maxPlayers=4, hostID=players[1].playerID)
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[1].playerID)
     db.add(room)
     db.commit()
 
@@ -98,11 +90,9 @@ def test_player_is_not_owner(client, test_db):
     db.add_all(players_room_relations)
     db.commit()
 
-    response = client.post(
-        f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+    response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
     assert response.status_code == 403
-    assert response.json() == {
-        "detail": "Solo el propietario puede iniciar la partida."}
+    assert response.json() == {"detail": "Solo el propietario puede iniciar la partida."}
 
 
 def test_game_room_not_exists(client, test_db):
@@ -111,8 +101,7 @@ def test_game_room_not_exists(client, test_db):
     db.add_all(players)
     db.commit()
 
-    room = RoomDB(roomName="test_room1", minPlayers=2,
-                  maxPlayers=4, hostID=players[1].playerID)
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[1].playerID)
     db.add(room)
     db.commit()
 
@@ -135,8 +124,7 @@ def test_player_exists(client, test_db):
     db.add_all(players)
     db.commit()
 
-    room = RoomDB(roomName="test_room1", minPlayers=2,
-                  maxPlayers=4, hostID=players[0].playerID)
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
     db.add(room)
     db.commit()
 
@@ -170,8 +158,7 @@ def test_create_game_send_update_room_list_ws(client, test_db):
             },
         ]
 
-        response = client.post(
-            f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+        response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
 
         data = websocket.receive_json()
         assert data["type"] == "status"
@@ -194,11 +181,9 @@ def test_create_game_send_update_room_list_ws(client, test_db):
 def test_create_game_figure_cards_unique(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
 
-    response = client.post(
-        f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+    response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
 
-    figure_cards = db.query(FigureCardDB).filter(
-        FigureCardDB.gameID == 1).all()
+    figure_cards = db.query(FigureCardDB).filter(FigureCardDB.gameID == 1).all()
     figure_cards_count_by_type = {}
     for card in figure_cards:
         if card.type not in figure_cards_count_by_type:
@@ -213,11 +198,9 @@ def test_create_game_figure_cards_unique(client, test_db):
 def test_create_game_movement_cards_unique(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
 
-    response = client.post(
-        f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+    response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
 
-    movement_cards = db.query(MovementCardDB).filter(
-        MovementCardDB.gameID == 1).all()
+    movement_cards = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1).all()
     movement_cards_count_by_type = {}
     for card in movement_cards:
         if card.type not in movement_cards_count_by_type:
@@ -232,8 +215,7 @@ def test_create_game_movement_cards_unique(client, test_db):
 def test_create_game_board(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
 
-    response = client.post(
-        f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+    response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
 
     game = db.query(GameDB).get(1)
     board = json.loads(game.board)
@@ -252,12 +234,10 @@ def test_create_game_board(client, test_db):
 def test_create_game_turn_order(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
 
-    response = client.post(
-        f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+    response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
 
     game = db.query(GameDB).get(1)
-    players = db.query(PlayerRoomDB).filter(
-        PlayerRoomDB.roomID == room.roomID).all()
+    players = db.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == room.roomID).all()
 
     assert game.posEnabledToPlay == 1
     assert len(players) == 2
@@ -267,13 +247,10 @@ def test_create_game_turn_order(client, test_db):
 # - Testear que se le asigna la cantidad correcta de cartas figura visibles y no visibles a cada jugador
 def test_create_game_player_cards(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
-    response = client.post(
-        f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+    response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
 
-    figure_cards = db.query(FigureCardDB).filter(
-        FigureCardDB.gameID == 1).all()
-    movement_cards = db.query(MovementCardDB).filter(
-        MovementCardDB.gameID == 1).all()
+    figure_cards = db.query(FigureCardDB).filter(FigureCardDB.gameID == 1).all()
+    movement_cards = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1).all()
 
     figure_cards_by_player = {}
     playable_figure_cards_by_player = {}

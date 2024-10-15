@@ -43,8 +43,7 @@ class PlayerPublicInfo(BaseModel):
     @classmethod
     def check_size_deck(cls, value):
         if len(value) > 3:
-            raise ValueError(
-                "The deck of figure cards must have a maximum of 3 cards")
+            raise ValueError("The deck of figure cards must have a maximum of 3 cards")
         return value
 
 
@@ -64,13 +63,12 @@ class Game(BaseModel):
 
 
 class GamePublicInfo(Game):
-    figuresToUse: List[List[BoardPiece]]
+    figuresToUse: List[List[BoardPiecePosition]]
     cardsMovement: List[MovementCard]
 
     @field_validator("cardsMovement")
     @classmethod
     def check_movement_cards(cls, value):
         if len(value) > 3:
-            raise ValueError(
-                "The deck of movement cards must have a maximum of 3 cards")
+            raise ValueError("The deck of movement cards must have a maximum of 3 cards")
         return value

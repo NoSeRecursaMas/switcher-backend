@@ -144,6 +144,7 @@ def test_close_first_connection_if_player_open_second(client, test_db):
     assert e.value.code == 4005
     assert e.value.reason == "Conexión abierta en otra pestaña"
 
+
 def test_connect_to_room_ws_game_started(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -163,4 +164,3 @@ def test_connect_to_room_ws_game_started(client, test_db):
     assert e.value.code == 4003
     assert "partida" in e.value.reason
     assert "comenzado" in e.value.reason
-

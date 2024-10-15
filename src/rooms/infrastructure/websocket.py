@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Dict, List
-from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
+from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
 
 class MessageType(str, Enum):
