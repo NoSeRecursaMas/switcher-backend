@@ -142,6 +142,22 @@ def test_player_exists(client, test_db):
 
 
 def test_create_game_send_update_room_list_ws(client, test_db):
+    db = next(override_get_db())
+    players = [PlayerDB(username=f"player{i}") for i in range(1, 3)]
+    db.add_all(players)
+    db.commit()
+
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
+    db.add(room)
+    db.commit()
+
+    players_room_relations = [
+        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID),
+        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID),
+    ]
+
+
+def test_create_game_send_update_room_list_ws_2(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
 
     with client.websocket_connect(f"/rooms/{players[1].playerID}") as websocket:
@@ -176,6 +192,491 @@ def test_create_game_send_update_room_list_ws(client, test_db):
         response.status_code == 201
         response.json() == {"gameID": 1}
 
+
+def test_skip_turn(client, test_db):
+    db = next(override_get_db())
+    players = [PlayerDB(username=f"player{i}") for i in range(1, 3)]
+    db.add_all(players)
+    db.commit()
+
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
+    db.add(room)
+    db.commit()
+
+    players_room_relations = [
+        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID, position=1),
+        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID, position=2),
+    ]
+
+    db.add_all(players_room_relations)
+    db.commit()
+    game = GameDB(
+        gameID=1,
+        roomID=room.roomID,
+        board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)]),
+        posEnabledToPlay=1,
+    )
+
+    db.add(game)
+    db.commit()
+
+    assert game.posEnabledToPlay == 1
+
+    response = client.put(f"/games/{game.gameID}/turn", json={"playerID": players[0].playerID})
+    assert response.status_code == 200
+    db.refresh(game)
+    assert game.posEnabledToPlay == 2
+
+
+def test_skip_turn_ws(client, test_db):
+    db = next(override_get_db())
+    players = [PlayerDB(username=f"player{i}") for i in range(1, 3)]
+    db.add_all(players)
+    db.commit()
+
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
+    db.add(room)
+    db.commit()
+
+    players_room_relations = [
+        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID, position=1),
+        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID, position=2),
+    ]
+
+    db.add_all(players_room_relations)
+    db.commit()
+    game = GameDB(
+        gameID=1,
+        roomID=room.roomID,
+        board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)]),
+        posEnabledToPlay=1,
+    )
+
+    db.add(game)
+    db.commit()
+
+    with client.websocket_connect(f"/games/{players[0].playerID}/1") as websocket:
+        data = websocket.receive_json()
+        assert data["type"] == "status"
+        payload = data["payload"]
+        assert payload["posEnabledToPlay"] == 1
+
+        response = client.put(f"/games/{game.gameID}/turn", json={"playerID": players[0].playerID})
+        data = websocket.receive_json()
+        assert data["type"] == "status"
+        payload = data["payload"]
+        assert payload["posEnabledToPlay"] == 2
+
+        response.status_code == 200
+
+
+def test_skip_turn_not_player_in_game(client, test_db):
+    db = next(override_get_db())
+    players = [PlayerDB(username=f"player{i}") for i in range(1, 4)]
+    db.add_all(players)
+    db.commit()
+
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
+    db.add(room)
+    db.commit()
+
+    players_room_relations = [
+        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID),
+        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID),
+    ]
+
+    db.add_all(players_room_relations)
+    db.commit()
+    game = GameDB(
+        gameID=1,
+        roomID=room.roomID,
+        board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)]),
+        posEnabledToPlay=1,
+    )
+
+    db.add(game)
+    db.commit()
+
+    assert game.posEnabledToPlay == 1
+
+    response = client.put(f"/games/{game.gameID}/turn", json={"playerID": 3})
+    assert response.status_code == 403
+    assert response.json() == {"detail": "El jugador no se encuentra en el juego."}
+
+
+def test_skip_turn_not_player_turn(client, test_db):
+    db = next(override_get_db())
+    players = [PlayerDB(username=f"player{i}") for i in range(1, 3)]
+    db.add_all(players)
+    db.commit()
+
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
+    db.add(room)
+    db.commit()
+
+    players_room_relations = [
+        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID, position=1),
+        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID, position=2),
+    ]
+
+    db.add_all(players_room_relations)
+    db.commit()
+    game = GameDB(
+        gameID=1,
+        roomID=room.roomID,
+        board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)]),
+        posEnabledToPlay=2,
+    )
+
+    db.add(game)
+    db.commit()
+
+    assert game.posEnabledToPlay == 2
+
+    response = client.put(f"/games/{game.gameID}/turn", json={"playerID": players[0].playerID})
+    assert response.status_code == 403
+    assert response.json() == {"detail": "No es el turno del jugador."}
+
+
+def test_skip_turn_not_game_exists(client, test_db):
+    db = next(override_get_db())
+    players = [PlayerDB(username=f"player{i}") for i in range(1, 3)]
+    db.add_all(players)
+    db.commit()
+
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
+    db.add(room)
+    db.commit()
+
+    players_room_relations = [
+        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID, position=1),
+        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID, position=2),
+    ]
+
+    db.add_all(players_room_relations)
+    db.commit()
+
+    game = GameDB(
+        gameID=1,
+        roomID=room.roomID,
+        board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)]),
+        posEnabledToPlay=2,
+    )
+
+    db.add(game)
+    db.commit()
+
+    assert game.posEnabledToPlay == 2
+
+    response = client.put(f"/games/2/turn", json={"playerID": players[0].playerID})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "El juego no existe."}
+
+
+def test_skip_turn_not_player_exists(client, test_db):
+    db = next(override_get_db())
+    players = [PlayerDB(username=f"player{i}") for i in range(1, 3)]
+    db.add_all(players)
+    db.commit()
+
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
+    db.add(room)
+    db.commit()
+
+    players_room_relations = [
+        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID, position=1),
+        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID, position=2),
+    ]
+
+    db.add_all(players_room_relations)
+    db.commit()
+    game = GameDB(
+        gameID=1,
+        roomID=room.roomID,
+        board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)]),
+        posEnabledToPlay=2,
+    )
+
+    db.add(game)
+    db.commit()
+
+    assert game.posEnabledToPlay == 2
+
+    response = client.put(f"/games/{game.gameID}/turn", json={"playerID": 3})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "El jugador no existe."}
+
+
+def test_skip_turn_not_game_started(client, test_db):
+    db = next(override_get_db())
+    players = [PlayerDB(username=f"player{i}") for i in range(1, 3)]
+    db.add_all(players)
+    db.commit()
+
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
+    db.add(room)
+    db.commit()
+
+    players_room_relations = [
+        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID, position=1),
+        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID, position=2),
+    ]
+
+    db.add_all(players_room_relations)
+    db.commit()
+    game = GameDB(
+        gameID=1,
+        roomID=room.roomID,
+        board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)]),
+        posEnabledToPlay=2,
+    )
+
+    db.add(game)
+    db.commit()
+
+    assert game.posEnabledToPlay == 2
+
+    response = client.put(f"/games/2/turn", json={"playerID": players[0].playerID})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "El juego no existe."}
+
+
+def test_skip_turn_full_round(client, test_db):
+    db = next(override_get_db())
+    players = [PlayerDB(username=f"player{i}") for i in range(1, 3)]
+    db.add_all(players)
+    db.commit()
+
+    room = RoomDB(roomName="test_room1", minPlayers=2, maxPlayers=4, hostID=players[0].playerID)
+    db.add(room)
+    db.commit()
+
+    players_room_relations = [
+        PlayerRoomDB(playerID=players[0].playerID, roomID=room.roomID, position=1),
+        PlayerRoomDB(playerID=players[1].playerID, roomID=room.roomID, position=2),
+    ]
+
+    db.add_all(players_room_relations)
+    db.commit()
+    game = GameDB(
+        gameID=1,
+        roomID=room.roomID,
+        board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)]),
+        posEnabledToPlay=1,
+    )
+
+    db.add(game)
+    db.commit()
+
+    assert game.posEnabledToPlay == 1
+
+    response = client.put(f"/games/{game.gameID}/turn", json={"playerID": players[0].playerID})
+    assert response.status_code == 200
+    db.refresh(game)
+    assert game.posEnabledToPlay == 2
+    assert response.status_code == 200
+
+    response = client.put(f"/games/{game.gameID}/turn", json={"playerID": players[1].playerID})
+    assert response.status_code == 200
+    db.refresh(game)
+    assert game.posEnabledToPlay == 1
+    assert response.status_code == 200
+
+    response = client.put(f"/games/{game.gameID}/turn", json={"playerID": players[0].playerID})
+    assert response.status_code == 200
+    db.refresh(game)
+    assert game.posEnabledToPlay == 2
+    assert response.status_code == 200
+
+    response = client.put(f"/games/{game.gameID}/turn", json={"playerID": players[1].playerID})
+    assert response.status_code == 200
+    db.refresh(game)
+    assert game.posEnabledToPlay == 1
+    assert response.status_code == 200
+
+
+def test_skip_turn_give_cards_figure(client, test_db):
+    db = next(override_get_db())
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            PlayerDB(playerID=2, username="test user 2"),
+            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            PlayerRoomDB(playerID=1, roomID=1, position=1),
+            PlayerRoomDB(playerID=2, roomID=1, position=2),
+            GameDB(roomID=1, board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)])),
+        ]
+    )
+
+    db.commit()
+
+    figure_cards = [
+        FigureCardDB(gameID=1, type="fig01", isPlayable=False, playerID=1),
+        FigureCardDB(gameID=1, type="fig02", isPlayable=False, playerID=1),
+        FigureCardDB(gameID=1, type="fig03", isPlayable=False, playerID=1),
+    ]
+
+    db.add_all(figure_cards)
+    db.commit()
+
+    response = client.put("/games/1/turn", json={"playerID": 1})
+    assert response.status_code == 200
+
+    db.refresh(figure_cards[0])
+    db.refresh(figure_cards[1])
+    db.refresh(figure_cards[2])
+    assert figure_cards[0].isPlayable
+    assert figure_cards[1].isPlayable
+    assert figure_cards[2].isPlayable
+
+
+def test_skip_turn_not_give_cards_figure_because_player_has_blocked_cards(client, test_db):
+    db = next(override_get_db())
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            PlayerDB(playerID=2, username="test user 2"),
+            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            PlayerRoomDB(playerID=1, roomID=1, position=1),
+            PlayerRoomDB(playerID=2, roomID=1, position=2),
+            GameDB(roomID=1, board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)])),
+        ]
+    )
+
+    db.commit()
+
+    figure_cards = [
+        FigureCardDB(gameID=1, type="fig01", isPlayable=True, isBlocked=True, playerID=1),
+        FigureCardDB(gameID=1, type="fig01", isPlayable=False, playerID=1),
+        FigureCardDB(gameID=1, type="fig02", isPlayable=False, playerID=1),
+        FigureCardDB(gameID=1, type="fig03", isPlayable=False, playerID=1),
+    ]
+
+    db.add_all(figure_cards)
+    db.commit()
+
+    response = client.put("/games/1/turn", json={"playerID": 1})
+    assert response.status_code == 200
+
+    db.refresh(figure_cards[0])
+    db.refresh(figure_cards[1])
+    db.refresh(figure_cards[2])
+    db.refresh(figure_cards[3])
+    assert figure_cards[0].isPlayable
+    assert not figure_cards[1].isPlayable
+    assert not figure_cards[2].isPlayable
+    assert not figure_cards[3].isPlayable
+
+
+def test_skip_can_give_less_than_3_cards_figure(client, test_db):
+    db = next(override_get_db())
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            PlayerDB(playerID=2, username="test user 2"),
+            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            PlayerRoomDB(playerID=1, roomID=1, position=1),
+            PlayerRoomDB(playerID=2, roomID=1, position=2),
+            GameDB(roomID=1, board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)])),
+        ]
+    )
+
+    db.commit()
+
+    figure_cards = [
+        FigureCardDB(gameID=1, type="fig01", isPlayable=False, playerID=1),
+        FigureCardDB(gameID=1, type="fig02", isPlayable=False, playerID=1),
+    ]
+
+    db.add_all(figure_cards)
+    db.commit()
+
+    response = client.put("/games/1/turn", json={"playerID": 1})
+    assert response.status_code == 200
+
+    db.refresh(figure_cards[0])
+    db.refresh(figure_cards[1])
+    assert figure_cards[0].isPlayable
+    assert figure_cards[1].isPlayable
+
+
+def test_skip_turn_give_cards_movement(client, test_db):
+    db = next(override_get_db())
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            PlayerDB(playerID=2, username="test user 2"),
+            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            PlayerRoomDB(playerID=1, roomID=1, position=1),
+            PlayerRoomDB(playerID=2, roomID=1, position=2),
+            GameDB(roomID=1, board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)])),
+        ]
+    )
+
+    db.commit()
+
+    movement_cards = [
+        MovementCardDB(gameID=1, type="mov01", isDiscarded=False),
+        MovementCardDB(gameID=1, type="mov02", isDiscarded=False),
+        MovementCardDB(gameID=1, type="mov03", isDiscarded=False),
+    ]
+
+    db.add_all(movement_cards)
+    db.commit()
+
+    response = client.put("/games/1/turn", json={"playerID": 1})
+    assert response.status_code == 200
+
+    db.refresh(movement_cards[0])
+    db.refresh(movement_cards[1])
+    db.refresh(movement_cards[2])
+    assert movement_cards[0].playerID == 1
+    assert movement_cards[1].playerID == 1
+    assert movement_cards[2].playerID == 1
+
+
+def test_skip_turn_give_cards_movement_rebuild_deck(client, test_db):
+    db = next(override_get_db())
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            PlayerDB(playerID=2, username="test user 2"),
+            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            PlayerRoomDB(playerID=1, roomID=1, position=1),
+            PlayerRoomDB(playerID=2, roomID=1, position=2),
+            GameDB(roomID=1, board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)])),
+        ]
+    )
+
+    db.commit()
+
+    movement_cards = [
+        MovementCardDB(gameID=1, type="mov01", isDiscarded=True),
+        MovementCardDB(gameID=1, type="mov02", isDiscarded=True),
+        MovementCardDB(gameID=1, type="mov03", isDiscarded=True),
+        MovementCardDB(gameID=1, type="mov04", isDiscarded=True),
+        MovementCardDB(gameID=1, type="mov05", isDiscarded=True),
+    ]
+
+    db.add_all(movement_cards)
+    db.commit()
+
+    response = client.put("/games/1/turn", json={"playerID": 1})
+    assert response.status_code == 200
+
+    db.refresh(movement_cards[0])
+    db.refresh(movement_cards[1])
+    db.refresh(movement_cards[2])
+    db.refresh(movement_cards[3])
+    db.refresh(movement_cards[4])
+    assert not movement_cards[0].isDiscarded
+    assert not movement_cards[1].isDiscarded
+    assert not movement_cards[2].isDiscarded
+    assert not movement_cards[3].isDiscarded
+    assert not movement_cards[4].isDiscarded
+
+    cards_player = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1, MovementCardDB.playerID == 1).count()
+    assert cards_player == 3
 
 # - Testear que no se crean más de 2 cartas de figuras iguales por cada tipo
 def test_create_game_figure_cards_unique(client, test_db):
@@ -236,7 +737,7 @@ def test_create_game_turn_order(client, test_db):
 
     response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
 
-    game = db.query(GameDB).get(1)
+    game = db.get(GameDB, 1)
     players = db.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == room.roomID).all()
 
     assert game.posEnabledToPlay == 1
