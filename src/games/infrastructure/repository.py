@@ -1,6 +1,7 @@
 import json
 import random
 import numpy as np
+import time
 from scipy.signal import convolve2d
 from typing import List, Optional, Tuple
 
@@ -225,6 +226,7 @@ class SQLAlchemyRepository(GameRepository):
         )
 
     def get_available_figures(self, gameID: int, board: List[BoardPiece]) -> List[List[BoardPiecePosition]]:
+        start_time = time.time()
         board_matrix = np.empty((6, 6), dtype=object)
 
         for piece in board:
@@ -245,6 +247,8 @@ class SQLAlchemyRepository(GameRepository):
                         rotated_figure, layer)
                     all_figures.extend(figures_found)
 
+        end_time = time.time()
+        print(f"Elapsed time: {end_time - start_time}")
         return all_figures
 
     def create_color_layers(self, board_matrix: np.ndarray) -> dict:
@@ -266,6 +270,7 @@ class SQLAlchemyRepository(GameRepository):
                 for shape_x in range(shape_width)
                 if shape[shape_y, shape_x] == 1
             ]
+            print(matched_positions)
 
             if self.check_border_validity(matched_positions, layer):
                 matched_figures.append(matched_positions)
@@ -297,8 +302,6 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
         """
         await ws_manager_game.connect(playerID, gameID, websocket)
         game = self.get_public_info(gameID, playerID)
-        print(game.board)
-        print(game.figuresToUse)
         game_json = game.model_dump()
         await ws_manager_game.send_personal_message(MessageType.STATUS, game_json, websocket)
         await ws_manager_game.keep_listening(websocket)
