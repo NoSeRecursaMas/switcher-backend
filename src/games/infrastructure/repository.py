@@ -28,6 +28,7 @@ from src.games.domain.models import (
     GamePublicInfo,
     MovementCard,
     PlayerPublicInfo,
+    Winner,
 )
 from src.games.domain.repository import GameRepository, GameRepositoryWS
 from src.games.infrastructure.models import FigureCard as FigureCardDB
