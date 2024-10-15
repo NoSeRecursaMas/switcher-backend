@@ -67,6 +67,22 @@ class ConnectionManagerGame:
                 if not self.active_connections[gameID]:
                     self.active_connections.pop(gameID)
 
+    async def disconnect_by_id(self, playerID: int, gameID: int):
+        """Remueve al cliente de la lista de conexiones activas y cierra la conexión en caso de que no esté cerrada
+
+        Args:
+            playerID (int): ID del jugador
+            gameID (int): ID del juego
+        """
+        if gameID in self.active_connections:
+            if playerID in self.active_connections[gameID]:
+                websocket = self.active_connections[gameID][playerID]
+                if websocket.client_state != WebSocketState.DISCONNECTED:
+                    await websocket.close()
+                self.active_connections[gameID].pop(playerID)
+                if not self.active_connections[gameID]:
+                    self.active_connections.pop(gameID)
+
     async def send_personal_message(self, type: MessageType, payload: str, websocket: WebSocket):
         """Envía un mensaje personalizado al cliente
 

@@ -231,6 +231,7 @@ def test_get_room_with_password(client, test_db):
             },
         ]
 
+
 def test_get_room_started(client, test_db):
 
     db = next(override_get_db())

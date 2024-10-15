@@ -70,5 +70,5 @@ class GamePublicInfo(Game):
 
 
 class Winner(BaseModel):
-    playerID: int
+    winnerID: int
     username: str

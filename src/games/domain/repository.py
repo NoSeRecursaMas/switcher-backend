@@ -45,15 +45,38 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def set_player_inactive(self, playerID: int, roomID: int) -> None:
+    def set_player_inactive(self, playerID: int, gameID: int) -> None:
         pass
 
     @abstractmethod
-    def is_player_active(self, playerID: int, roomID: int) -> bool:
+    def is_player_active(self, playerID: int, gameID: int) -> bool:
         pass
 
     @abstractmethod
     def get_active_players(self, gameID: int) -> List[PlayerDomain]:
+        pass
+
+    def skip(self, gameID: int) -> None:
+        pass
+
+    @abstractmethod
+    def replacement_movement_card(self, gameID: int, playerID: int) -> None:
+        pass
+
+    @abstractmethod
+    def replacement_figure_card(self, gameID: int, playerID: int) -> None:
+        pass
+
+    @abstractmethod
+    def get_current_turn(self, gameID: int) -> int:
+        pass
+
+    @abstractmethod
+    def get_position_player(self, gameID: int, playerID: int) -> int:
+        pass
+
+    @abstractmethod
+    def delete_and_clean(self, gameID: int) -> None:
         pass
 
 
@@ -68,4 +91,8 @@ class GameRepositoryWS(GameRepository):
 
     @abstractmethod
     async def broadcast_end_game(self, gameID: int, winnerID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def remove_player(self, playerID: int, gameID: int) -> None:
         pass

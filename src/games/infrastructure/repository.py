@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple
 
 from fastapi.websockets import WebSocket
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import func
 
 from src.games.config import (
     BLUE_CARDS,
@@ -30,6 +31,7 @@ from src.games.infrastructure.models import MovementCard as MovementCardDB
 from src.games.infrastructure.websocket import MessageType, ws_manager_game
 from src.players.infrastructure.models import Player as PlayerDB
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
+from src.rooms.infrastructure.models import Room as RoomDB
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
 
 
@@ -96,6 +98,100 @@ class SQLAlchemyRepository(GameRepository):
                 new_cards[index * 3 + i].playerID = player.playerID
 
         self.db_session.add_all(new_cards)
+        self.db_session.commit()
+
+    def skip(self, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        game_players = self.get_players(gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        current_position = game.posEnabledToPlay
+
+        if current_position == len(game_players):
+            game.posEnabledToPlay = 1
+        else:
+            game.posEnabledToPlay = current_position + 1
+
+        self.db_session.commit()
+
+        # Caso en el que el jugador que ahora tiene el turno no está activo
+        for player in game_players:
+            if player.position == game.posEnabledToPlay and not player.isActive:
+                self.skip(gameID)
+                return
+
+        self.db_session.commit()
+
+    def rebuild_movement_deck(self, gameID: int) -> None:
+        movement_cards = (
+            self.db_session.query(MovementCardDB)
+            .filter(MovementCardDB.gameID == gameID, MovementCardDB.playerID.is_(None))
+            .all()
+        )
+
+        for card in movement_cards:
+            card.isDiscarded = False
+
+        self.db_session.commit()
+
+    def replacement_movement_card(self, gameID: int, playerID: int) -> None:
+        playable_cards = self.db_session.query(MovementCardDB).filter(
+            MovementCardDB.gameID == gameID, MovementCardDB.playerID == playerID
+        )
+
+        if playable_cards.count() < 3:
+            available_cards = (
+                self.db_session.query(MovementCardDB)
+                .filter(
+                    MovementCardDB.gameID == gameID,
+                    MovementCardDB.isDiscarded.is_(False),
+                    MovementCardDB.playerID.is_(None),
+                )
+                .order_by(func.random())
+                .limit(3 - playable_cards.count())
+            )
+
+            if available_cards.count() < 3 - playable_cards.count():
+                self.rebuild_movement_deck(gameID)
+                available_cards = (
+                    self.db_session.query(MovementCardDB)
+                    .filter(
+                        MovementCardDB.gameID == gameID,
+                        MovementCardDB.isDiscarded.is_(False),
+                        MovementCardDB.playerID.is_(None),
+                    )
+                    .order_by(func.random())
+                    .limit(3 - playable_cards.count())
+                )
+
+            for card in available_cards:
+                card.playerID = playerID
+
+        self.db_session.commit()
+
+    def replacement_figure_card(self, gameID: int, playerID: int) -> None:
+        figure_cards = self.db_session.query(FigureCardDB).filter(
+            FigureCardDB.gameID == gameID,
+            FigureCardDB.playerID == playerID,
+            FigureCardDB.isPlayable,
+        )
+
+        blocked = any([card.isBlocked for card in figure_cards])
+
+        if blocked:
+            return
+
+        available_cards = (
+            self.db_session.query(FigureCardDB)
+            .filter(
+                FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID, FigureCardDB.isPlayable.is_(False)
+            )
+            .limit(3 - figure_cards.count())
+        )
+
+        for card in available_cards:
+            card.isPlayable = True
+
         self.db_session.commit()
 
     def delete(self, gameID: int) -> None:
@@ -198,6 +294,24 @@ class SQLAlchemyRepository(GameRepository):
         players = self.get_players(gameID)
         return playerID in [player.playerID for player in players]
 
+    def get_current_turn(self, gameID: int) -> int:
+        game = self.get(gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        return game.posEnabledToPlay
+
+    def get_position_player(self, gameID, playerID):
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        player_position = (
+            self.db_session.query(PlayerRoomDB)
+            .filter(PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == game.roomID)
+            .one_or_none()
+            .position
+        )
+        return player_position
+
     def get_public_info(self, gameID: int, playerID: int) -> GamePublicInfo:
         game = self.get(gameID)
         if game is None:
@@ -223,13 +337,29 @@ class SQLAlchemyRepository(GameRepository):
         # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
         return []
 
-    def set_player_inactive(self, playerID: int, roomID: int) -> None:
+    def set_player_inactive(self, playerID: int, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
         self.db_session.query(PlayerRoomDB).filter(
-            PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == roomID
+            PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == game.roomID
         ).update({"isActive": False})
+        figure_cards = self.db_session.query(FigureCardDB).filter(FigureCardDB.playerID == playerID)
+        for card in figure_cards:
+            self.db_session.delete(card)
+        movement_cards = self.db_session.query(MovementCardDB).filter(MovementCardDB.playerID == playerID)
+        for card in movement_cards:
+            card.isDiscarded = True
+            card.playerID = None
+
+        if game.posEnabledToPlay == self.get_position_player(gameID, playerID):
+            if game.posEnabledToPlay == len(self.get_players(gameID)):
+                game.posEnabledToPlay = 1
+            else:
+                game.posEnabledToPlay += 1
+
         self.db_session.commit()
 
-    def is_player_active(self, playerID: int, roomID: int) -> bool:
+    def is_player_active(self, playerID: int, gameID: int) -> bool:
+        roomID = self.db_session.get(GameDB, gameID).roomID
         player = (
             self.db_session.query(PlayerRoomDB)
             .filter(PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == roomID)
@@ -241,6 +371,18 @@ class SQLAlchemyRepository(GameRepository):
         players = self.get_players(gameID)
         active_players = [player for player in players if self.is_player_active(player.playerID, gameID)]
         return active_players
+
+    def delete_and_clean(self, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID).delete()
+        self.db_session.query(MovementCardDB).filter(MovementCardDB.gameID == gameID).delete()
+        self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == game.roomID).delete()
+        room = game.room
+        self.db_session.delete(game)
+        self.db_session.delete(room)
+        self.db_session.commit()
 
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
@@ -279,7 +421,16 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
             winnerID (int): ID del jugador ganador
         """
         players = self.get_players(gameID)
-        winner = Winner(playerID=winnerID, username=self.db_session.get(PlayerDB, winnerID).username)
+        winner = Winner(winnerID=winnerID, username=self.db_session.get(PlayerDB, winnerID).username)
         winner_json = winner.model_dump()
         for player in players:
             await ws_manager_game.send_personal_message_by_id(MessageType.END, winner_json, player.playerID, gameID)
+
+    async def remove_player(self, playerID: int, gameID: int) -> None:
+        """Remueve al jugador de la lista de conexiones activas
+
+        Args:
+            playerID (int): ID del jugador
+            gameID (int): ID del juego
+        """
+        await ws_manager_game.disconnect_by_id(playerID, gameID)
