@@ -38,3 +38,14 @@ async def room_websocket(playerID: int, gameID: int, websocket: WebSocket, db_se
         await service.connect_to_game_websocket(playerID, gameID, websocket)
     except WebSocketDisconnect as e:
         await websocket.close(code=e.code, reason=e.reason)
+
+
+@router.put(path="/{gameID}/leave", status_code=200)
+async def leave_game(gameID: int, playerID: int, db_session: Session = Depends(get_db)) -> None:
+    game_repository = GameRepository(db_session)
+    player_repository = PlayerRepository(db_session)
+    room_repository = RoomRepository(db_session)
+
+    game_service = GameService(game_repository, player_repository, room_repository)
+
+    await game_service.leave_game(gameID, playerID)

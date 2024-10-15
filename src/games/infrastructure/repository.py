@@ -216,6 +216,25 @@ class SQLAlchemyRepository(GameRepository):
         # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
         return []
 
+    def set_player_inactive(self, playerID: int, roomID: int) -> None:
+        self.db_session.query(PlayerRoomDB).filter(
+            PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == roomID
+        ).update({"active": False})
+        self.db_session.commit()
+
+    def is_player_active(self, playerID: int, roomID: int) -> bool:
+        player = (
+            self.db_session.query(PlayerRoomDB)
+            .filter(PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == roomID)
+            .one_or_none()
+        )
+        return player.isActive
+
+    def get_active_players(self, gameID: int) -> List[PlayerPublicInfo]:
+        players = self.get_players(gameID)
+        active_players = [player for player in players if self.is_player_active(player.playerID, gameID)]
+        return active_players
+
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:

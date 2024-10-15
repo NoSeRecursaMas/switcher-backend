@@ -59,3 +59,23 @@ class GameService:
         await self.game_domain_service.is_player_in_game(playerID, gameID, websocket)
 
         await self.game_repository.setup_connection_game(playerID, gameID, websocket)
+
+    async def leave_game(self, gameID: int, playerID: int) -> None:
+        await self.player_domain_service.validate_player_exists(playerID)
+        await self.game_domain_service.validate_game_exists(gameID)
+        await self.game_domain_service.is_player_in_game(playerID, gameID)
+
+        self.game_repository.set_player_inactive(playerID, gameID)
+
+        await self.game_repository.broadcast_status_game(gameID)
+
+        active_players = self.game_repository.get_active_players(gameID)
+        if len(active_players) == 1:
+            await self.give_victory(gameID, active_players[0].playerID)
+
+    async def give_victory(self, gameID: int, winnerID: int) -> None:
+        # Enviar una actualización a todos los jugadores de la partida
+        # await self.game_repository.broadcast_winner(gameID, winnerID)
+
+        # Eliminar la partida en el sistema
+        self.game_repository.delete(gameID)

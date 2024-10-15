@@ -44,6 +44,18 @@ class GameRepository(ABC):
     def get_public_info(self, gameID: int, playerID: int) -> GamePublicInfo:
         pass
 
+    @abstractmethod
+    def set_player_inactive(self, playerID: int, roomID: int) -> None:
+        pass
+
+    @abstractmethod
+    def is_player_active(self, playerID: int, roomID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def get_active_players(self, gameID: int) -> List[PlayerDomain]:
+        pass
+
 
 class GameRepositoryWS(GameRepository):
     @abstractmethod
