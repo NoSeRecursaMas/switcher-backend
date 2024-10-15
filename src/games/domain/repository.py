@@ -44,7 +44,26 @@ class GameRepository(ABC):
     def get_public_info(self, gameID: int, playerID: int) -> GamePublicInfo:
         pass
 
+    @abstractmethod
+    def skip(self, gameID: int) -> None:
+        pass
 
+    @abstractmethod
+    def replacement_movement_card(self, gameID: int, playerID: int) -> None:
+        pass
+
+    @abstractmethod
+    def replacement_figure_card(self, gameID: int, playerID: int) -> None:
+        pass
+
+    @abstractmethod
+    def get_current_turn(self, gameID: int) -> int:
+        pass
+
+    @abstractmethod
+    def get_position_player(self, gameID: int, playerID: int) -> int:
+        pass
+    
 class GameRepositoryWS(GameRepository):
     @abstractmethod
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:

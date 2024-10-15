@@ -8,9 +8,6 @@ from src.games.domain.models import GameID
 from src.games.infrastructure.repository import (
     WebSocketRepository as GameRepository,
 )
-from src.games.infrastructure.repository import (
-    WebSocketRepository as GameWebSocketRepository,
-)
 from src.players.domain.models import PlayerID
 from src.players.infrastructure.repository import SQLAlchemyRepository as PlayerRepository
 from src.rooms.infrastructure.repository import WebSocketRepository as RoomRepository
@@ -30,9 +27,19 @@ async def start_game(roomID: int, playerID: PlayerID, db_session: Session = Depe
     return gameID
 
 
+@router.put(path="/{gameID}/turn", status_code=200)
+async def skip_turn(gameID: int, playerID: PlayerID, db_session: Session = Depends(get_db)) -> None:
+    game_repository = GameRepository(db_session)
+    player_repository = PlayerRepository(db_session)
+    room_repository = RoomRepository(db_session)
+
+    game_service = GameService(game_repository, player_repository, room_repository)
+    await game_service.skip_turn(playerID.playerID, gameID)
+
+
 @router.websocket("/{playerID}/{gameID}")
 async def room_websocket(playerID: int, gameID: int, websocket: WebSocket, db_session: Session = Depends(get_db)):
-    service = GameService(GameWebSocketRepository(db_session), PlayerRepository(db_session))
+    service = GameService(GameRepository(db_session), PlayerRepository(db_session))
 
     try:
         await service.connect_to_game_websocket(playerID, gameID, websocket)
