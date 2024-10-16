@@ -1,8 +1,8 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from fastapi import WebSocket
 
-from src.games.domain.models import GameID, BoardPiecePosition
+from src.games.domain.models import BoardPiecePosition, GameID
 from src.games.domain.repository import GameRepositoryWS
 from src.games.domain.service import GameServiceDomain
 from src.games.domain.service import RepositoryValidators as GameRepositoryValidators
@@ -23,19 +23,15 @@ class GameService:
         self.game_repository = game_repository
         self.player_repository = player_repository
         self.room_repository = room_repository
-        self.player_domain_service = PlayerRepositoryValidators(
-            player_repository)
+        self.player_domain_service = PlayerRepositoryValidators(player_repository)
         if room_repository is not None:
-            self.room_domain_service = RoomRepositoryValidators(
-                room_repository, player_repository)
-        self.game_domain_service = GameRepositoryValidators(
-            game_repository, room_repository)
+            self.room_domain_service = RoomRepositoryValidators(room_repository, player_repository)
+        self.game_domain_service = GameRepositoryValidators(game_repository, room_repository)
 
     async def start_game(self, roomID: int, playerID: PlayerID) -> GameID:
         await self.player_domain_service.validate_player_exists(playerID.playerID)
         await self.room_domain_service.validate_room_exists(roomID)
-        self.room_domain_service.validate_player_is_owner(
-            playerID.playerID, roomID)
+        self.room_domain_service.validate_player_is_owner(playerID.playerID, roomID)
         self.game_domain_service.validate_min_players_to_start(roomID)
 
         board = GameServiceDomain.create_board()
@@ -48,8 +44,7 @@ class GameService:
 
         if self.room_repository is None:
             raise ValueError("RoomRepository is required to start a game")
-        game_service_domain = GameServiceDomain(
-            self.game_repository, self.room_repository)
+        game_service_domain = GameServiceDomain(self.game_repository, self.room_repository)
 
         game_service_domain.set_game_turn_order(gameID)
         await self.room_repository.broadcast_status_room_list()
@@ -98,14 +93,12 @@ class GameService:
         await self.game_domain_service.is_player_in_game(playerID, gameID)
         self.game_domain_service.validate_is_player_turn(playerID, gameID)
 
-        self.game_domain_service.validate_figure_card_exists(
-            gameID, playerID, figureID)
+        self.game_domain_service.validate_figure_card_exists(gameID, playerID, figureID)
         self.game_domain_service.validate_figure_is_empty(figure)
         self.game_domain_service.validate_figure_color(gameID, figure)
         self.game_domain_service.validate_figure_matches_board(gameID, figure)
         self.game_domain_service.validate_figure_matches_card(figureID, figure)
-        self.game_domain_service.validate_figure_border_validity(
-            gameID, figure)
+        self.game_domain_service.validate_figure_border_validity(gameID, figure)
 
         self.game_repository.play_figure(figureID)
         await self.game_repository.broadcast_status_game(gameID)

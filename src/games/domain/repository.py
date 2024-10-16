@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
-import numpy as np
 
+import numpy as np
 from fastapi.websockets import WebSocket
 
 from src.games.domain.models import (
+    BoardPiece,
+    BoardPiecePosition,
+    FigureCard,
     Game,
     GameID,
     GamePublicInfo,
-    BoardPiecePosition,
-    FigureCard,
-    BoardPiece,
 )
 from src.players.domain.models import Player as PlayerDomain
 
