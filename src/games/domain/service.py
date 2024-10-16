@@ -98,7 +98,7 @@ class RepositoryValidators:
             raise ValueError("Movement card not supported")
         
         if not self.movement_validators[movement_card.type](request):
-            raise ValueError("Movement card is not valid")
+            raise HTTPException(status_code=403, detail="Movimiento inválido.")
         
         return
 
@@ -126,28 +126,28 @@ class RepositoryValidators:
         return deltaX == 1 and deltaY == 1
 
     def validate_mov5(self, request:MovementCardRequest) -> bool:
-        up_posX_correct = (request.origin.posX + 1) == request.destination.posX
-        up_posY_correct = (request.origin.posY + 2) == request.destination.posY
+        up_posX_correct = (request.origin.posX - 2) == request.destination.posX
+        up_posY_correct = (request.origin.posY + 1) == request.destination.posY
         up_correct = up_posX_correct and up_posY_correct
 
-        down_posX_correct = (request.origin.posX - 1) == request.destination.posX
-        down_posY_correct = (request.origin.posY - 2) == request.destination.posY
+        down_posX_correct = (request.origin.posX + 2) == request.destination.posX
+        down_posY_correct = (request.origin.posY - 1) == request.destination.posY
         down_correct = down_posX_correct and down_posY_correct
         return up_correct or down_correct
 
     def validate_mov6(self,  request:MovementCardRequest) -> bool:
-        up_posX_correct = (request.origin.posX - 1) == request.destination.posX
-        up_posY_correct = (request.origin.posY + 2) == request.destination.posY
+        up_posX_correct = (request.origin.posX - 2) == request.destination.posX
+        up_posY_correct = (request.origin.posY - 1) == request.destination.posY
         up_correct = up_posX_correct and up_posY_correct
 
-        down_posX_correct = (request.origin.posX + 1) == request.destination.posX 
-        down_posY_correct = (request.origin.posY - 2) == request.destination.posY
+        down_posX_correct = (request.origin.posX + 2) == request.destination.posX 
+        down_posY_correct = (request.origin.posY + 1) == request.destination.posY
         down_correct = down_posX_correct and down_posY_correct
         return up_correct or down_correct
 
     def validate_mov7(self, request:MovementCardRequest) -> bool:
         deltaX, deltaY = self.mov_calc(request)
-        return deltaX == 0 and deltaY == 3
+        return deltaX == 3 and deltaY == 0
 
 
 

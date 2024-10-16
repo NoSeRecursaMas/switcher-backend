@@ -77,7 +77,7 @@ class GameService:
 
     async def play_movement_card(self, gameID: int, request: MovementCardRequest) -> None:
         await self.game_domain_service.validate_game_exists(gameID)
-        #await self.game_domain_service.validate_player_turn(request.playerID, gameID)
+        await self.game_domain_service.validate_player_turn(request.playerID, gameID)
         self.game_domain_service.validate_movement_card(gameID, request)
 
         self.game_repository.switch_board_positions(gameID, 
