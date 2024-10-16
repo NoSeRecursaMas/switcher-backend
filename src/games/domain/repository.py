@@ -9,6 +9,7 @@ from src.games.domain.models import (
     GamePublicInfo,
 )
 from src.players.domain.models import Player as PlayerDomain
+from src.games.domain.models import MovementCard as MovementCardDomain
 
 
 class GameRepository(ABC):
@@ -87,6 +88,9 @@ class GameRepository(ABC):
     def delete_and_clean(self, gameID: int) -> None:
         pass
 
+    @abstractmethod
+    def get_movement_card(self, cardID: int) -> MovementCardDomain:
+        pass
 
 class GameRepositoryWS(GameRepository):
     @abstractmethod

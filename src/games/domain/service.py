@@ -15,6 +15,16 @@ class RepositoryValidators:
         self.game_repository = game_repository
         self.room_repository = room_repository
 
+        self.movement_validators = {
+            "mov1": self.validate_mov1,
+            "mov2": self.validate_mov2,
+            "mov3": self.validate_mov3,
+            "mov4": self.validate_mov4,
+            "mov5": self.validate_mov5,
+            "mov6": self.validate_mov6,
+            "mov7": self.validate_mov7,
+        }
+
     def validate_min_players_to_start(self, roomID: int):
         if self.room_repository is None:
             raise ValueError("RoomRepository is required to start a game")
@@ -71,48 +81,74 @@ class RepositoryValidators:
             raise WebSocketDisconnect(4005, "No es el turno del jugador.")
         
     def validate_movement_card(self, gameID: int, request:MovementCardRequest) -> bool:
-        pass 
+        if request.origin.posX < 0 or request.origin.posX > 5:
+            raise ValueError("Origin position is out of the board")
+        if request.origin.posY < 0 or request.origin.posY > 5:
+            raise ValueError("Origin position is out of the board")
+        if request.destination.posX < 0 or request.destination.posX > 5:
+            raise ValueError("Destination position is out of the board")
+        if request.destination.posY < 0 or request.destination.posY > 5:
+            raise ValueError("Destination position is out of the board")
+        
+        movement_card = self.game_repository.get_movement_card(request.card_movementID)
+        if movement_card is None:
+            raise ValueError("Movement card does not exist")
+        
+        if movement_card.name not in self.movement_validators:
+            raise ValueError("Movement card not supported")
+        
+        if not self.movement_validators[movement_card.name](request):
+            raise ValueError("Movement card is not valid")
+        
+        return
 
-    def validate_mov01(self, request:MovementCardRequest) -> bool:
-        #Caso donde yo quiero mover en direccion derecha arriba
-        mov_up_rightX = (request.origin.posX+2) == request.destination.posX
-        mov_up_rightY = (request.origin.posY+2) == request.destination.posY 
-        mov_up_right = mov_up_rightX and mov_up_rightY
+        
 
-        #Caso donde yo quiero mover en direccion izquierda arriba
-        mov_up_leftX = (request.origin.posX-2) == request.destination.posX
-        mov_up_leftY = (request.origin.posY+2) == request.destination.posY
-        mov_up_left = mov_up_leftX and mov_up_leftY
+    def mov_calc(self, request:MovementCardRequest):
+        deltaX = abs(request.origin.posX - request.destination.posX)
+        deltaY = abs(request.origin.posY - request.destination.posY)
+        return deltaX, deltaY
 
-        #Caso donde yo quiero mover en direccion derecha abajo
-        mov_down_rightX = (request.origin.posX+2) == request.destination.posX
-        mov_down_rightY = (request.origin.posY-2) == request.destination.posY
-        mov_down_right = mov_down_rightX and mov_down_rightY
+    def validate_mov1(self, request:MovementCardRequest) -> bool:
+        deltaX, deltaY = self.validate_mov_calc(request)
+        return deltaX == 2 and deltaY == 2
 
-        #Caso donde yo quiero mover en direccion izquierda abajo
-        mov_down_leftX = (request.origin.posX-2) == request.destination.posX
-        mov_down_leftY = (request.origin.posY-2) == request.destination.posY
-        mov_down_left = mov_down_leftX and mov_down_leftY
+    def validate_mov2(self, request:MovementCardRequest) -> bool:
+        deltaX, deltaY = self.validate_mov_calc(request)
+        return deltaX == 0 and deltaY == 2
 
-        return mov_up_right or mov_up_left or mov_down_right or mov_down_left
+    def validate_mov3(self, request:MovementCardRequest) -> bool:
+        deltaX, deltaY = self.validate_mov_calc(request)
+        return deltaX == 0 and deltaY == 1
 
-    def validate_mov02(self, request:MovementCardRequest) -> bool:
-        pass
+    def validate_mov4(self, request:MovementCardRequest) -> bool:
+        deltaX, deltaY = self.validate_mov_calc(request)
+        return deltaX == 1 and deltaY == 1
 
-    def validate_mov03(self, request:MovementCardRequest) -> bool:
-        pass
+    def validate_mov5(self, request:MovementCardRequest) -> bool:
+        up_posX_correct = (request.origin.posX + 1) == request.destination.posX
+        up_posY_correct = (request.origin.posY + 2) == request.destination.posY
+        up_correct = up_posX_correct and up_posY_correct
 
-    def validate_mov04(self, request:MovementCardRequest) -> bool:
-        pass
+        down_posX_correct = (request.origin.posX - 1) == request.destination.posX
+        down_posY_correct = (request.origin.posY - 2) == request.destination.posY
+        down_correct = down_posX_correct and down_posY_correct
+        return up_correct or down_correct
 
-    def validate_mov05(self, request:MovementCardRequest) -> bool:
-        pass
+    def validate_mov6(self,  request:MovementCardRequest) -> bool:
+        up_posX_correct = (request.origin.posX - 1) == request.destination.posX
+        up_posY_correct = (request.origin.posY + 2) == request.destination.posY
+        up_correct = up_posX_correct and up_posY_correct
 
-    def validate_mov06(self,  request:MovementCardRequest) -> bool:
-        pass
+        down_posX_correct = (request.origin.posX + 1) == request.destination.posX 
+        down_posY_correct = (request.origin.posY - 2) == request.destination.posY
+        down_correct = down_posX_correct and down_posY_correct
+        return up_correct or down_correct
 
-    def validate_mov07(self, request:MovementCardRequest) -> bool:
-        pass
+    def validate_mov7(self, request:MovementCardRequest) -> bool:
+        deltaX, deltaY = self.validate_mov_calc(request)
+        return deltaX == 0 and deltaY == 3
+
 
 
 

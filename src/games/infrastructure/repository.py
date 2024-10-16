@@ -21,6 +21,7 @@ from src.games.domain.models import (
     GameID,
     GamePublicInfo,
     MovementCard,
+    MovementCard as MovementCardDomain,
     PlayerPublicInfo,
     Winner,
 )
@@ -411,6 +412,12 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.delete(room)
         self.db_session.commit()
 
+    def get_movement_card(self, cardID: int) -> MovementCardDomain:
+        card = self.db_session.get(MovementCardDB, cardID)
+        if card is None:
+            raise ValueError(f"Card with ID {cardID} not found")
+        return MovementCardDomain(type=card.type, cardID=card.cardID, isUsed=card.isUsed)
+        
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
