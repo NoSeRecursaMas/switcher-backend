@@ -7,6 +7,7 @@ from fastapi.websockets import WebSocket, WebSocketDisconnect
 from src.games.config import COLORS
 from src.games.domain.repository import GameRepository
 from src.rooms.domain.repository import RoomRepository
+from src.games.domain.models import MovementCardRequest
 
 
 class RepositoryValidators:
@@ -68,6 +69,52 @@ class RepositoryValidators:
         else:
             await websocket.accept()
             raise WebSocketDisconnect(4005, "No es el turno del jugador.")
+        
+    def validate_movement_card(self, gameID: int, request:MovementCardRequest) -> bool:
+        pass 
+
+    def validate_mov01(self, request:MovementCardRequest) -> bool:
+        #Caso donde yo quiero mover en direccion derecha arriba
+        mov_up_rightX = (request.origin.posX+2) == request.destination.posX
+        mov_up_rightY = (request.origin.posY+2) == request.destination.posY 
+        mov_up_right = mov_up_rightX and mov_up_rightY
+
+        #Caso donde yo quiero mover en direccion izquierda arriba
+        mov_up_leftX = (request.origin.posX-2) == request.destination.posX
+        mov_up_leftY = (request.origin.posY+2) == request.destination.posY
+        mov_up_left = mov_up_leftX and mov_up_leftY
+
+        #Caso donde yo quiero mover en direccion derecha abajo
+        mov_down_rightX = (request.origin.posX+2) == request.destination.posX
+        mov_down_rightY = (request.origin.posY-2) == request.destination.posY
+        mov_down_right = mov_down_rightX and mov_down_rightY
+
+        #Caso donde yo quiero mover en direccion izquierda abajo
+        mov_down_leftX = (request.origin.posX-2) == request.destination.posX
+        mov_down_leftY = (request.origin.posY-2) == request.destination.posY
+        mov_down_left = mov_down_leftX and mov_down_leftY
+
+        return mov_up_right or mov_up_left or mov_down_right or mov_down_left
+
+    def validate_mov02(self, request:MovementCardRequest) -> bool:
+        pass
+
+    def validate_mov03(self, request:MovementCardRequest) -> bool:
+        pass
+
+    def validate_mov04(self, request:MovementCardRequest) -> bool:
+        pass
+
+    def validate_mov05(self, request:MovementCardRequest) -> bool:
+        pass
+
+    def validate_mov06(self,  request:MovementCardRequest) -> bool:
+        pass
+
+    def validate_mov07(self, request:MovementCardRequest) -> bool:
+        pass
+
+
 
 class GameServiceDomain:
     def __init__(self, game_repository: GameRepository, room_repository: RoomRepository):

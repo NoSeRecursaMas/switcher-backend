@@ -32,8 +32,8 @@ class Position(BaseModel):
 class MovementCardRequest(BaseModel):
     card_movementID: int
     playerID: int
-    origin: List[Position]
-    destination: List[Position]
+    origin: Position
+    destination: Position
 
 class PlayerPublicInfo(BaseModel):
     playerID: int

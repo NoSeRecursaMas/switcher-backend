@@ -11,6 +11,7 @@ from src.players.domain.repository import PlayerRepository
 from src.players.domain.service import RepositoryValidators as PlayerRepositoryValidators
 from src.rooms.domain.repository import RoomRepositoryWS
 from src.rooms.domain.service import RepositoryValidators as RoomRepositoryValidators
+from src.games.domain.models import MovementCardRequest
 
 
 class GameService:
@@ -74,10 +75,14 @@ class GameService:
 
         await self.game_repository.setup_connection_game(playerID, gameID, websocket)
 
-    async def play_movement_card(self, gameID, request) -> None:
+    async def play_movement_card(self, gameID: int, request: MovementCardRequest) -> None:
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.validate_player_turn(request.playerID, gameID)
-        #await self.game_domain_service.validate_movement_card(gameID, request)
+        await self.game_domain_service.validate_movement_card(gameID, request)
+
+        self.game_repository.switch_board_positions(gameID, request.origin, request.destination)
+        await self.game_repository.broadcast_status_game(gameID)
+
 
         self.game_repository.switch_board_positions(gameID, request.origin, request.destination)
     async def leave_game(self, gameID: int, playerID: int) -> None:
