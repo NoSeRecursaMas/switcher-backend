@@ -16,13 +16,13 @@ class RepositoryValidators:
         self.room_repository = room_repository
 
         self.movement_validators = {
-            "mov1": self.validate_mov1,
-            "mov2": self.validate_mov2,
-            "mov3": self.validate_mov3,
-            "mov4": self.validate_mov4,
-            "mov5": self.validate_mov5,
-            "mov6": self.validate_mov6,
-            "mov7": self.validate_mov7,
+            "mov01": self.validate_mov1,
+            "mov02": self.validate_mov2,
+            "mov03": self.validate_mov3,
+            "mov04": self.validate_mov4,
+            "mov05": self.validate_mov5,
+            "mov06": self.validate_mov6,
+            "mov07": self.validate_mov7,
         }
 
     def validate_min_players_to_start(self, roomID: int):
@@ -94,10 +94,10 @@ class RepositoryValidators:
         if movement_card is None:
             raise ValueError("Movement card does not exist")
         
-        if movement_card.name not in self.movement_validators:
+        if movement_card.type not in self.movement_validators:
             raise ValueError("Movement card not supported")
         
-        if not self.movement_validators[movement_card.name](request):
+        if not self.movement_validators[movement_card.type](request):
             raise ValueError("Movement card is not valid")
         
         return
@@ -110,19 +110,19 @@ class RepositoryValidators:
         return deltaX, deltaY
 
     def validate_mov1(self, request:MovementCardRequest) -> bool:
-        deltaX, deltaY = self.validate_mov_calc(request)
+        deltaX, deltaY = self.mov_calc(request)
         return deltaX == 2 and deltaY == 2
 
     def validate_mov2(self, request:MovementCardRequest) -> bool:
-        deltaX, deltaY = self.validate_mov_calc(request)
+        deltaX, deltaY = self.mov_calc(request)
         return deltaX == 0 and deltaY == 2
 
     def validate_mov3(self, request:MovementCardRequest) -> bool:
-        deltaX, deltaY = self.validate_mov_calc(request)
+        deltaX, deltaY = self.mov_calc(request)
         return deltaX == 0 and deltaY == 1
 
     def validate_mov4(self, request:MovementCardRequest) -> bool:
-        deltaX, deltaY = self.validate_mov_calc(request)
+        deltaX, deltaY = self.mov_calc(request)
         return deltaX == 1 and deltaY == 1
 
     def validate_mov5(self, request:MovementCardRequest) -> bool:
@@ -146,7 +146,7 @@ class RepositoryValidators:
         return up_correct or down_correct
 
     def validate_mov7(self, request:MovementCardRequest) -> bool:
-        deltaX, deltaY = self.validate_mov_calc(request)
+        deltaX, deltaY = self.mov_calc(request)
         return deltaX == 0 and deltaY == 3
 
 

@@ -231,25 +231,28 @@ class SQLAlchemyRepository(GameRepository):
             board.append(piece)
         return board
 
-    def switch_board_positions(self, gameID: int, origin: List[Position], destination: List[Position]) -> None:
+    def board_piece_to_dict(self, piece):
+        return {
+            "posX": piece.posX,
+            "posY": piece.posY,
+            "color": piece.color
+        }
+
+    def switch_board_positions(self, gameID: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
         game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
         board = self.get_board(gameID)
-    
-        for orig, dest in zip(origin, destination):
-            origin_piece = next(piece for piece in board if piece.posX == orig.posX and piece.posY == orig.posY)
-            destination_piece = next(piece for piece in board if piece.posX == dest.posX and piece.posY == dest.posY)
-
-            origin_piece.color, destination_piece.color = destination_piece.color, origin_piece.color
-
-        game.lastMovements = json.dumps(
-            {
-            "origin": [{"posX": orig.posX, "posY": orig.posY} for orig in origin],
-            "destination": [{"posX": dest.posX, "posY": dest.posY} for dest in destination],
-            }
-        )
-        board_json = json.dumps([piece.dict() for piece in board])
-        game.board = board_json
+        origin_piece = next(piece for piece in board if piece.posX == originX and piece.posY == originY)
+        destination_piece = next(piece for piece in board if piece.posX == destinationX and piece.posY == destinationY)
+        aux = origin_piece.color
+        origin_piece.color = destination_piece.color
+        destination_piece.color = aux
+        game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
         self.db_session.commit()
+        
+
+
 
     def is_player_turn(self, playerID: int, gameID: int) -> bool:
         game = self.db_session.get(GameDB, gameID)
@@ -416,7 +419,7 @@ class SQLAlchemyRepository(GameRepository):
         card = self.db_session.get(MovementCardDB, cardID)
         if card is None:
             raise ValueError(f"Card with ID {cardID} not found")
-        return MovementCardDomain(type=card.type, cardID=card.cardID, isUsed=card.isUsed)
+        return MovementCardDomain(type=card.type, cardID=card.cardID, isUsed=card.isDiscarded)
         
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):

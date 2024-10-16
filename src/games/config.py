@@ -1,8 +1,3 @@
-from src.games.domain.service import RepositoryValidators as GameRepositoryValidators
-
-
-
-
 COLORS = ["R", "G", "B", "Y"]
 
 WHITE_CARDS_AMOUNT = [18 * 2, 12 * 2, 9 * 2]

@@ -774,3 +774,42 @@ def test_create_game_player_cards(client, test_db):
     for playerID in figure_cards_by_player.keys():
         assert playable_figure_cards_by_player[playerID] == 3
         assert movements_cards_by_player[playerID] == 3
+
+def test_play_mov1_card(client, test_db):
+    db = next(override_get_db())
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            PlayerDB(playerID=2, username="test user 2"),
+            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            PlayerRoomDB(playerID=1, roomID=1, position=1),
+            PlayerRoomDB(playerID=2, roomID=1, position=2),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 0 and y == 0) else "B" if (x == 2 and y == 2) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
+            MovementCardDB(gameID=1, type="mov1", isDiscarded=False, playerID=1),
+        ]
+    )
+
+    db.commit()
+
+    board = db.get(GameDB, 1).board
+    board = json.loads(board)
+    origin = next(item for item in board if item["posX"] == 0 and item["posY"] == 0)
+    destination = next(item for item in board if item["posX"] == 2 and item["posY"] == 2)
+    assert origin["color"] == "R"
+    assert destination["color"] == "B"
+
+    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 2, "posY": 2}})
+    assert response.status_code == 201
+
+    board = db.get(GameDB, 1).board
+    board = json.loads(board)
+    origin = next(item for item in board if item["posX"] == 0 and item["posY"] == 0)
+    destination = next(item for item in board if item["posX"] == 2 and item["posY"] == 2)
+    assert origin["color"] == "B"
+    assert destination["color"] == "R"
+
+
+

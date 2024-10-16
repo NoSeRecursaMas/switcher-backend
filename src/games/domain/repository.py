@@ -46,7 +46,7 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def switch_board_positions(self, gameID: int, origin: Dict[str, int], destination: Dict[str, int]) -> None:
+    def switch_board_positions(self, gameID: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
         pass
 
     @abstractmethod
