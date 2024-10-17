@@ -86,7 +86,7 @@ class GameService:
                                                     originY=request.origin.posY, 
                                                     destinationX=request.destination.posX, 
                                                     destinationY=request.destination.posY)
-        self.game_repository.remove_movement_card(gameID, request.card_movementID)
+        self.game_repository.remove_movement_card(request.card_movementID)
         await self.game_repository.broadcast_status_game(gameID)
 
     async def leave_game(self, gameID: int, playerID: int) -> None:

@@ -93,7 +93,7 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def remove_movement_card(self, gameID: int, cardID: int) -> None:
+    def remove_movement_card(self, cardID: int) -> None:
         pass
 
 class GameRepositoryWS(GameRepository):

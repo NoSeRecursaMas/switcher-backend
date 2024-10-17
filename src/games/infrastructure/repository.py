@@ -264,9 +264,12 @@ class SQLAlchemyRepository(GameRepository):
         game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
         self.db_session.commit()
         
-    def remove_movement_card(self, gameID: int, cardID: int) -> None:
-        pass
-
+    def remove_movement_card(self, cardID: int) -> None:
+        card = self.db_session.get(MovementCardDB, cardID)
+        card.isDiscarded = True
+        card.playerID = None
+        card.isPlayed = True
+        self.db_session.commit()
 
     def is_player_turn(self, playerID: int, gameID: int) -> bool:
         game = self.db_session.get(GameDB, gameID)
