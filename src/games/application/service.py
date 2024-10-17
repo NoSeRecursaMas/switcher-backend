@@ -80,11 +80,13 @@ class GameService:
         await self.game_domain_service.validate_player_turn(request.playerID, gameID)
         self.game_domain_service.validate_movement_card(gameID, request)
 
-        self.game_repository.switch_board_positions(gameID, 
+        self.game_repository.switch_board_positions(gameID,
+                                                    card_id=request.card_movementID, 
                                                     originX=request.origin.posX, 
                                                     originY=request.origin.posY, 
                                                     destinationX=request.destination.posX, 
                                                     destinationY=request.destination.posY)
+        self.game_repository.remove_movement_card(gameID, request.card_movementID)
         await self.game_repository.broadcast_status_game(gameID)
 
     async def leave_game(self, gameID: int, playerID: int) -> None:

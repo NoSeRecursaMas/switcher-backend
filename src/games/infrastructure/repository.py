@@ -238,7 +238,7 @@ class SQLAlchemyRepository(GameRepository):
             "color": piece.color
         }
 
-    def switch_board_positions(self, gameID: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
+    def switch_board_positions(self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
         game = self.db_session.get(GameDB, gameID)
         if game is None:
             raise ValueError(f"Game with ID {gameID} not found")
@@ -248,10 +248,24 @@ class SQLAlchemyRepository(GameRepository):
         aux = origin_piece.color
         origin_piece.color = destination_piece.color
         destination_piece.color = aux
+        
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+    
+        
+        last_movements.append({
+            "CardID": card_id,
+            "origin": self.board_piece_to_dict(origin_piece),
+            "destination": self.board_piece_to_dict(destination_piece),
+            "Order" : len(last_movements) + 1
+        })
+    
+        game.lastMovements = json.dumps(last_movements)
+
         game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
         self.db_session.commit()
         
-
+    def remove_movement_card(self, gameID: int, cardID: int) -> None:
+        pass
 
 
     def is_player_turn(self, playerID: int, gameID: int) -> bool:

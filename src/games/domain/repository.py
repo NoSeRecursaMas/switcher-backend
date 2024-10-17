@@ -46,7 +46,7 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def switch_board_positions(self, gameID: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
+    def switch_board_positions(self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
         pass
 
     @abstractmethod
@@ -90,6 +90,10 @@ class GameRepository(ABC):
 
     @abstractmethod
     def get_movement_card(self, cardID: int) -> MovementCardDomain:
+        pass
+
+    @abstractmethod
+    def remove_movement_card(self, gameID: int, cardID: int) -> None:
         pass
 
 class GameRepositoryWS(GameRepository):
