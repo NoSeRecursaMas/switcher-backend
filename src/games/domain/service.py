@@ -147,7 +147,14 @@ class RepositoryValidators:
 
     def validate_mov7(self, request:MovementCardRequest) -> bool:
         deltaX, deltaY = self.mov_calc(request)
-        return deltaX == 3 and deltaY == 0
+        posX_non_affected = deltaX == 0 
+        posY_non_affected = deltaY == 0
+        right_side = posX_non_affected and request.destination.posY == 5 
+        left_side = posX_non_affected and request.destination.posY == 0
+        top_side = request.destination.posX == 5 and posY_non_affected
+        bottom_side = request.destination.posX == 0 and posY_non_affected
+
+        return right_side or left_side or top_side or bottom_side
 
 
 
