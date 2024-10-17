@@ -96,6 +96,14 @@ class GameRepository(ABC):
     def remove_movement_card(self, cardID: int) -> None:
         pass
 
+    @abstractmethod
+    def has_movement_card(self, gameID: int, playerID: int, cardID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def card_exists(self, cardID: int) -> bool:
+        pass
+
 class GameRepositoryWS(GameRepository):
     @abstractmethod
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:

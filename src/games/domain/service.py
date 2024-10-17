@@ -102,7 +102,15 @@ class RepositoryValidators:
         
         return
 
-        
+    def card_exists(self, card_movementID: int):
+        if self.game_repository.card_exists(card_movementID):
+            return
+        raise HTTPException(status_code=403, detail="La carta de movimiento no existe.")
+
+    def has_movement_card(self, gameID: int, playerID: int, card_movementID: int):
+        if self.game_repository.has_movement_card(gameID, playerID, card_movementID):
+            return
+        raise HTTPException(status_code=403, detail="El jugador no tiene la carta de movimiento.")
 
     def mov_calc(self, request:MovementCardRequest):
         deltaX = abs(request.origin.posX - request.destination.posX)

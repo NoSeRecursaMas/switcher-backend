@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from src.conftest import override_get_db
 from src.games.infrastructure.models import FigureCard as FigureCardDB
 from src.games.infrastructure.models import Game as GameDB
@@ -1265,3 +1267,27 @@ def test_movement_card_discarded(client, test_db):
     assert is_played
     player_is_null = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1).filter(MovementCardDB.playerID == None).count() == 1
     assert player_is_null 
+
+def test_player_did_not_has_movement_card(client, test_db):
+    db = next(override_get_db())
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            PlayerDB(playerID=2, username="test user 2"),
+            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            PlayerRoomDB(playerID=1, roomID=1, position=1),
+            PlayerRoomDB(playerID=2, roomID=1, position=2),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 3 and y == 1) else "B" if (x == 0 and y == 1) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
+            MovementCardDB(cardID=1, gameID=1, type="mov07", isDiscarded=True, playerID=2),
+            MovementCardDB(cardID=2, gameID=1, type="mov07", isDiscarded=True, playerID=1),
+        ]
+
+    )
+    db.commit()
+
+    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 5, "posY": 1}, "destination": {"posX": 0, "posY": 1}})
+    assert response.status_code == 403
+    assert response.json() == {"detail": "El jugador no tiene la carta de movimiento."}

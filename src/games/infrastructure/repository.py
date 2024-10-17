@@ -264,6 +264,16 @@ class SQLAlchemyRepository(GameRepository):
         game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
         self.db_session.commit()
         
+    def has_movement_card(self, gameID: int, playerID: int, cardID: int) -> bool:
+        card = self.db_session.get(MovementCardDB, cardID)
+        if card is None:
+            raise ValueError(f"Card with ID {cardID} not found")
+        return card.playerID == playerID
+    
+    def card_exists(self, cardID: int) -> bool:
+        card = self.db_session.get(MovementCardDB, cardID)
+        return card is not None
+
     def remove_movement_card(self, cardID: int) -> None:
         card = self.db_session.get(MovementCardDB, cardID)
         card.isDiscarded = True
