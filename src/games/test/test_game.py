@@ -678,7 +678,10 @@ def test_skip_turn_give_cards_movement_rebuild_deck(client, test_db):
     cards_player = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1, MovementCardDB.playerID == 1).count()
     assert cards_player == 3
 
+
 # - Testear que no se crean más de 2 cartas de figuras iguales por cada tipo
+
+
 def test_create_game_figure_cards_unique(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
 
@@ -718,7 +721,7 @@ def test_create_game_board(client, test_db):
 
     response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
 
-    game = db.query(GameDB).get(1)
+    game = db.get(GameDB, 1)
     board = json.loads(game.board)
 
     color_count = {}

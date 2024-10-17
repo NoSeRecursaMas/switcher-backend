@@ -28,6 +28,7 @@ from src.games.domain.models import (
     GamePublicInfo,
     MovementCard,
     PlayerPublicInfo,
+    Winner,
 )
 from src.games.domain.repository import GameRepository, GameRepositoryWS
 from src.games.infrastructure.models import FigureCard as FigureCardDB
@@ -349,11 +350,21 @@ class SQLAlchemyRepository(GameRepository):
             figure_type: [np.rot90(shape, k) for k in range(4)] for figure_type, shape in FIGURE_CARDS_FORM.items()
         }
 
+        seen_figures = set()  # Usaremos un conjunto para almacenar figuras únicas
+
         for color, layer in color_layers.items():
             for figure_type, rotations in rotated_figures.items():
                 for rotated_figure in rotations:
                     figures_found = self.match_figure_in_layer(rotated_figure, layer)
-                    all_figures.extend(figures_found)
+
+                    for figure in figures_found:
+                        # Convertimos la figura en una tupla de posiciones para compararlas
+                        figure_tuple = tuple((pos.posX, pos.posY) for pos in figure)
+
+                        # Solo agregamos la figura si no ha sido vista previamente
+                        if figure_tuple not in seen_figures:
+                            seen_figures.add(figure_tuple)
+                            all_figures.append(figure)
 
         return all_figures
 
