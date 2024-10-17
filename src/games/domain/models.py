@@ -14,6 +14,11 @@ class BoardPiece(BaseModel):
     isPartial: bool
 
 
+class BoardPiecePosition(BaseModel):
+    posX: int
+    posY: int
+
+
 class FigureCard(BaseModel):
     type: str
     cardID: int
@@ -25,6 +30,15 @@ class MovementCard(BaseModel):
     cardID: int
     isUsed: bool
 
+class Position(BaseModel):
+    posX: int
+    posY: int
+
+class MovementCardRequest(BaseModel):
+    card_movementID: int
+    playerID: int
+    origin: Position
+    destination: Position
 
 class PlayerPublicInfo(BaseModel):
     playerID: int
@@ -58,7 +72,7 @@ class Game(BaseModel):
 
 
 class GamePublicInfo(Game):
-    figuresToUse: List[List[BoardPiece]]
+    figuresToUse: List[List[BoardPiecePosition]]
     cardsMovement: List[MovementCard]
 
     @field_validator("cardsMovement")
@@ -67,3 +81,8 @@ class GamePublicInfo(Game):
         if len(value) > 3:
             raise ValueError("The deck of movement cards must have a maximum of 3 cards")
         return value
+
+
+class Winner(BaseModel):
+    winnerID: int
+    username: str

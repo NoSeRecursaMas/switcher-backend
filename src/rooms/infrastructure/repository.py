@@ -4,6 +4,7 @@ from typing import List, Optional
 from fastapi.websockets import WebSocket
 from sqlalchemy.orm import Session
 
+from src.games.domain.models import GameID
 from src.players.domain.models import Player
 from src.rooms.domain.models import Room as RoomDomain
 from src.rooms.domain.models import (
@@ -202,5 +203,6 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         Args:
             roomID (int): ID de la sala
         """
-        game_info = json.dumps({"gameID": gameID})
-        await ws_manager_room.broadcast(MessageType.START_GAME, game_info, roomID)
+        game_info = GameID(gameID=gameID)
+        game_info_json = game_info.model_dump()
+        await ws_manager_room.broadcast(MessageType.START_GAME, game_info_json, roomID)

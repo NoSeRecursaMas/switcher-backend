@@ -1,19 +1,36 @@
 import json
 import random
+import time
 from typing import List, Optional, Tuple
 
+import numpy as np
 from fastapi.websockets import WebSocket
+from scipy.signal import convolve2d
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import func
 
 from src.games.config import (
     BLUE_CARDS,
     BLUE_CARDS_AMOUNT,
+    COLORS,
+    FIGURE_CARDS_FORM,
     MOVEMENT_CARDS,
     MOVEMENT_CARDS_AMOUNT,
     WHITE_CARDS,
     WHITE_CARDS_AMOUNT,
 )
-from src.games.domain.models import BoardPiece, FigureCard, Game, GameID, GamePublicInfo, MovementCard, PlayerPublicInfo
+from src.games.domain.models import (
+    BoardPiece,
+    BoardPiecePosition,
+    FigureCard,
+    Game,
+    GameID,
+    GamePublicInfo,
+    MovementCard,
+    MovementCard as MovementCardDomain,
+    PlayerPublicInfo,
+    Winner,
+)
 from src.games.domain.repository import GameRepository, GameRepositoryWS
 from src.games.infrastructure.models import FigureCard as FigureCardDB
 from src.games.infrastructure.models import Game as GameDB
@@ -21,7 +38,9 @@ from src.games.infrastructure.models import MovementCard as MovementCardDB
 from src.games.infrastructure.websocket import MessageType, ws_manager_game
 from src.players.infrastructure.models import Player as PlayerDB
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
+from src.rooms.infrastructure.models import Room as RoomDB
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
+from src.games.domain.models import Position
 
 
 class SQLAlchemyRepository(GameRepository):
@@ -89,6 +108,100 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.add_all(new_cards)
         self.db_session.commit()
 
+    def skip(self, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        game_players = self.get_players(gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        current_position = game.posEnabledToPlay
+
+        if current_position == len(game_players):
+            game.posEnabledToPlay = 1
+        else:
+            game.posEnabledToPlay = current_position + 1
+
+        self.db_session.commit()
+
+        # Caso en el que el jugador que ahora tiene el turno no está activo
+        for player in game_players:
+            if player.position == game.posEnabledToPlay and not player.isActive:
+                self.skip(gameID)
+                return
+
+        self.db_session.commit()
+
+    def rebuild_movement_deck(self, gameID: int) -> None:
+        movement_cards = (
+            self.db_session.query(MovementCardDB)
+            .filter(MovementCardDB.gameID == gameID, MovementCardDB.playerID.is_(None))
+            .all()
+        )
+
+        for card in movement_cards:
+            card.isDiscarded = False
+
+        self.db_session.commit()
+
+    def replacement_movement_card(self, gameID: int, playerID: int) -> None:
+        playable_cards = self.db_session.query(MovementCardDB).filter(
+            MovementCardDB.gameID == gameID, MovementCardDB.playerID == playerID
+        )
+
+        if playable_cards.count() < 3:
+            available_cards = (
+                self.db_session.query(MovementCardDB)
+                .filter(
+                    MovementCardDB.gameID == gameID,
+                    MovementCardDB.isDiscarded.is_(False),
+                    MovementCardDB.playerID.is_(None),
+                )
+                .order_by(func.random())
+                .limit(3 - playable_cards.count())
+            )
+
+            if available_cards.count() < 3 - playable_cards.count():
+                self.rebuild_movement_deck(gameID)
+                available_cards = (
+                    self.db_session.query(MovementCardDB)
+                    .filter(
+                        MovementCardDB.gameID == gameID,
+                        MovementCardDB.isDiscarded.is_(False),
+                        MovementCardDB.playerID.is_(None),
+                    )
+                    .order_by(func.random())
+                    .limit(3 - playable_cards.count())
+                )
+
+            for card in available_cards:
+                card.playerID = playerID
+
+        self.db_session.commit()
+
+    def replacement_figure_card(self, gameID: int, playerID: int) -> None:
+        figure_cards = self.db_session.query(FigureCardDB).filter(
+            FigureCardDB.gameID == gameID,
+            FigureCardDB.playerID == playerID,
+            FigureCardDB.isPlayable,
+        )
+
+        blocked = any([card.isBlocked for card in figure_cards])
+
+        if blocked:
+            return
+
+        available_cards = (
+            self.db_session.query(FigureCardDB)
+            .filter(
+                FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID, FigureCardDB.isPlayable.is_(False)
+            )
+            .limit(3 - figure_cards.count())
+        )
+
+        for card in available_cards:
+            card.isPlayable = True
+
+        self.db_session.commit()
+
     def delete(self, gameID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
         self.db_session.delete(game)
@@ -124,6 +237,55 @@ class SQLAlchemyRepository(GameRepository):
             board.append(piece)
         return board
 
+    def board_piece_to_dict(self, piece):
+        return {
+            "posX": piece.posX,
+            "posY": piece.posY,
+            "color": piece.color
+        }
+
+    def play_movement(self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        board = self.get_board(gameID)
+        origin_piece = next(piece for piece in board if piece.posX == originX and piece.posY == originY)
+        destination_piece = next(piece for piece in board if piece.posX == destinationX and piece.posY == destinationY)
+        aux = origin_piece.color
+        origin_piece.color = destination_piece.color
+        destination_piece.color = aux
+        
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+    
+        
+        last_movements.append({
+            "CardID": card_id,
+            "origin": self.board_piece_to_dict(origin_piece),
+            "destination": self.board_piece_to_dict(destination_piece),
+            "Order" : len(last_movements) + 1
+        })
+    
+        game.lastMovements = json.dumps(last_movements)
+
+        game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
+        self.db_session.commit()
+        
+    def has_movement_card(self, playerID: int, cardID: int) -> bool:
+        card = self.db_session.get(MovementCardDB, cardID)
+        if card is None:
+            raise ValueError(f"Card with ID {cardID} not found")
+        return card.playerID == playerID
+    
+    def card_exists(self, cardID: int) -> bool:
+        card = self.db_session.get(MovementCardDB, cardID)
+        return card is not None
+
+    def is_player_turn(self, playerID: int, gameID: int) -> bool:
+        game = self.db_session.get(GameDB, gameID)
+        players = self.get_players(gameID)
+        player = next(player for player in players if player.playerID == playerID)
+        return player.position == game.posEnabledToPlay
+
     def is_piece_partial(self, gameID: int, posX: int, posY: int) -> bool:
         # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
         # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
@@ -136,9 +298,7 @@ class SQLAlchemyRepository(GameRepository):
             raise ValueError(f"Game with ID {gameID} not found")
         roomID = game.roomID
 
-        db_players = (
-            self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == roomID, PlayerRoomDB.isActive).all()
-        )
+        db_players = self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == roomID).all()
         players = []
 
         for player in db_players:
@@ -191,6 +351,24 @@ class SQLAlchemyRepository(GameRepository):
         players = self.get_players(gameID)
         return playerID in [player.playerID for player in players]
 
+    def get_current_turn(self, gameID: int) -> int:
+        game = self.get(gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        return game.posEnabledToPlay
+
+    def get_position_player(self, gameID, playerID):
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        player_position = (
+            self.db_session.query(PlayerRoomDB)
+            .filter(PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == game.roomID)
+            .one_or_none()
+            .position
+        )
+        return player_position
+
     def get_public_info(self, gameID: int, playerID: int) -> GamePublicInfo:
         game = self.get(gameID)
         if game is None:
@@ -206,16 +384,126 @@ class SQLAlchemyRepository(GameRepository):
             prohibitedColor=game.prohibitedColor,
             posEnabledToPlay=game.posEnabledToPlay,
             players=game.players,
-            figuresToUse=self.get_available_figures(gameID),
+            figuresToUse=self.get_available_figures(game.board),
             cardsMovement=self.get_player_movement_cards(gameID, playerID),
         )
 
-    def get_available_figures(self, gameID: int) -> list:
-        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
-        return []
+    def get_available_figures(self, board: List[BoardPiece]) -> List[List[BoardPiecePosition]]:
+        board_matrix = np.empty((6, 6), dtype=object)
 
+        for piece in board:
+            board_matrix[piece.posY][piece.posX] = piece.color
+
+        color_layers = self.create_color_layers(board_matrix)
+
+        all_figures = []
+        rotated_figures = {
+            figure_type: [np.rot90(shape, k) for k in range(4)] for figure_type, shape in FIGURE_CARDS_FORM.items()
+        }
+
+        seen_figures = set()
+
+        for color, layer in color_layers.items():
+            for figure_type, rotations in rotated_figures.items():
+                for rotated_figure in rotations:
+                    figures_found = self.match_figure_in_layer(rotated_figure, layer)
+
+                    for figure in figures_found:
+                        figure_tuple = tuple((pos.posX, pos.posY) for pos in figure)
+
+                        if figure_tuple not in seen_figures:
+                            seen_figures.add(figure_tuple)
+                            all_figures.append(figure)
+
+        return all_figures
+
+    def create_color_layers(self, board_matrix: np.ndarray) -> dict:
+        return {color: (board_matrix == color).astype(int) for color in COLORS}
+
+    def match_figure_in_layer(self, shape: np.ndarray, layer: np.ndarray) -> List[List[BoardPiecePosition]]:
+        matched_figures = []
+        shape_height, shape_width = shape.shape
+
+        result = convolve2d(layer, shape[::-1, ::-1], mode="valid")
+
+        for y, x in zip(*np.where(result == shape.sum())):
+            matched_positions = [
+                BoardPiecePosition(posX=x + shape_x, posY=y + shape_y)
+                for shape_y in range(shape_height)
+                for shape_x in range(shape_width)
+                if shape[shape_y, shape_x] == 1
+            ]
+
+            if self.check_border_validity(matched_positions, layer):
+                matched_figures.append(matched_positions)
+
+        return matched_figures
+
+    def check_border_validity(self, positions: List[BoardPiecePosition], layer: np.ndarray) -> bool:
+        position_set = {(pos.posX, pos.posY) for pos in positions}
+        for pos in positions:
+            x, y = pos.posX, pos.posY
+            adjacent_positions = [(x + dx, y + dy) for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]]
+
+            for nx, ny in adjacent_positions:
+                if 0 <= nx < 6 and 0 <= ny < 6 and (nx, ny) not in position_set:
+                    if layer[ny, nx] == layer[y, x]:
+                        return False
+        return True
+
+    def set_player_inactive(self, playerID: int, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        self.db_session.query(PlayerRoomDB).filter(
+            PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == game.roomID
+        ).update({"isActive": False})
+        figure_cards = self.db_session.query(FigureCardDB).filter(FigureCardDB.playerID == playerID)
+        for card in figure_cards:
+            self.db_session.delete(card)
+        movement_cards = self.db_session.query(MovementCardDB).filter(MovementCardDB.playerID == playerID)
+        for card in movement_cards:
+            card.isDiscarded = True
+            card.playerID = None
+
+        if game.posEnabledToPlay == self.get_position_player(gameID, playerID):
+            if game.posEnabledToPlay == len(self.get_players(gameID)):
+                game.posEnabledToPlay = 1
+            else:
+                game.posEnabledToPlay += 1
+
+        self.db_session.commit()
+
+    def is_player_active(self, playerID: int, gameID: int) -> bool:
+        roomID = self.db_session.get(GameDB, gameID).roomID
+        player = (
+            self.db_session.query(PlayerRoomDB)
+            .filter(PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == roomID)
+            .one_or_none()
+        )
+        return player is not None and player.isActive
+
+    def get_active_players(self, gameID: int) -> List[PlayerPublicInfo]:
+        players = self.get_players(gameID)
+        active_players = [player for player in players if self.is_player_active(player.playerID, gameID)]
+        return active_players
+
+    def delete_and_clean(self, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID).delete()
+        self.db_session.query(MovementCardDB).filter(MovementCardDB.gameID == gameID).delete()
+        self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == game.roomID).delete()
+        room = game.room
+        self.db_session.delete(game)
+        self.db_session.delete(room)
+        self.db_session.commit()
+
+    def get_movement_card(self, cardID: int) -> MovementCardDomain:
+        card = self.db_session.get(MovementCardDB, cardID)
+        if card is None:
+            raise ValueError(f"Card with ID {cardID} not found")
+        return MovementCardDomain(type=card.type, cardID=card.cardID, isUsed=card.isDiscarded)
+        
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
@@ -244,3 +532,25 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
             game = self.get_public_info(gameID, player.playerID)
             game_json = game.model_dump()
             await ws_manager_game.send_personal_message_by_id(MessageType.STATUS, game_json, player.playerID, gameID)
+
+    async def broadcast_end_game(self, gameID: int, winnerID: int) -> None:
+        """Envia un mensaje de fin de juego a todos los jugadores
+
+        Args:
+            gameID (int): ID del juego
+            winnerID (int): ID del jugador ganador
+        """
+        players = self.get_players(gameID)
+        winner = Winner(winnerID=winnerID, username=self.db_session.get(PlayerDB, winnerID).username)
+        winner_json = winner.model_dump()
+        for player in players:
+            await ws_manager_game.send_personal_message_by_id(MessageType.END, winner_json, player.playerID, gameID)
+
+    async def remove_player(self, playerID: int, gameID: int) -> None:
+        """Remueve al jugador de la lista de conexiones activas
+
+        Args:
+            playerID (int): ID del jugador
+            gameID (int): ID del juego
+        """
+        await ws_manager_game.disconnect_by_id(playerID, gameID)

@@ -11,6 +11,7 @@ from src.players.domain.repository import PlayerRepository
 from src.players.domain.service import RepositoryValidators as PlayerRepositoryValidators
 from src.rooms.domain.repository import RoomRepositoryWS
 from src.rooms.domain.service import RepositoryValidators as RoomRepositoryValidators
+from src.games.domain.models import MovementCardRequest
 
 
 class GameService:
@@ -47,11 +48,25 @@ class GameService:
         game_service_domain = GameServiceDomain(self.game_repository, self.room_repository)
 
         game_service_domain.set_game_turn_order(gameID)
-
         await self.room_repository.broadcast_status_room_list()
         await self.room_repository.broadcast_start_game(roomID, gameID)
 
         return response
+
+    async def skip_turn(self, playerID: int, gameID: int) -> None:
+        await self.player_domain_service.validate_player_exists(playerID)
+        await self.game_domain_service.validate_game_exists(gameID)
+        await self.game_domain_service.is_player_in_game(playerID, gameID)
+
+        position_player = self.game_repository.get_position_player(gameID, playerID)
+
+        self.game_domain_service.validate_is_player_turn(position_player, gameID)
+
+        self.game_repository.skip(gameID)
+        self.game_repository.replacement_movement_card(gameID, playerID)
+        self.game_repository.replacement_figure_card(gameID, playerID)
+
+        await self.game_repository.broadcast_status_game(gameID)
 
     async def connect_to_game_websocket(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
         await self.player_domain_service.validate_player_exists(playerID, websocket)
@@ -59,3 +74,34 @@ class GameService:
         await self.game_domain_service.is_player_in_game(playerID, gameID, websocket)
 
         await self.game_repository.setup_connection_game(playerID, gameID, websocket)
+
+    async def play_movement_card(self, gameID: int, request: MovementCardRequest) -> None:
+        await self.game_domain_service.validate_game_exists(gameID)
+        await self.game_domain_service.validate_player_turn(request.playerID, gameID)
+        await self.game_domain_service.is_player_in_game(request.playerID, gameID)
+        await self.game_domain_service.validate_game_exists(gameID)
+        self.game_domain_service.card_exists(request.card_movementID)
+        self.game_domain_service.has_movement_card(request.playerID, request.card_movementID)
+        self.game_domain_service.validate_movement_card(request)
+        self.game_repository.play_movement(gameID,
+                                                    card_id=request.card_movementID, 
+                                                    originX=request.origin.posX, 
+                                                    originY=request.origin.posY, 
+                                                    destinationX=request.destination.posX, 
+                                                    destinationY=request.destination.posY)
+        await self.game_repository.broadcast_status_game(gameID)
+
+    async def leave_game(self, gameID: int, playerID: int) -> None:
+        await self.player_domain_service.validate_player_exists(playerID)
+        await self.game_domain_service.validate_game_exists(gameID)
+        await self.game_domain_service.is_player_in_game(playerID, gameID)
+
+        self.game_repository.set_player_inactive(playerID, gameID)
+        await self.game_repository.remove_player(playerID, gameID)
+
+        active_players = self.game_repository.get_active_players(gameID)
+        if len(active_players) == 1:
+            await self.game_repository.broadcast_end_game(gameID, active_players[0].playerID)
+            self.game_repository.delete_and_clean(gameID)
+        else:
+            await self.game_repository.broadcast_status_game(gameID)

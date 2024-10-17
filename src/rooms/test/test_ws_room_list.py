@@ -83,6 +83,7 @@ def test_connect_to_room_list_websocket_player_exist_and_has_rooms(client, test_
             },
         ]
 
+
 def test_can_connect_2_times(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -111,7 +112,6 @@ def test_can_connect_2_times(client, test_db):
                     "private": False,
                 },
             ]
-
 
             with client.websocket_connect("/rooms/1") as websocket2:
                 data = websocket2.receive_json()
@@ -231,8 +231,8 @@ def test_get_room_with_password(client, test_db):
             },
         ]
 
-def test_get_room_started(client, test_db):
 
+def test_get_room_started(client, test_db):
     db = next(override_get_db())
     player1 = PlayerDB(username="player1")
     room1 = RoomDB(roomName="test_room", minPlayers=2, maxPlayers=4, hostID=player1.playerID, password="1234")
