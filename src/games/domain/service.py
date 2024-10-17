@@ -7,12 +7,23 @@ from fastapi.websockets import WebSocket, WebSocketDisconnect
 from src.games.config import COLORS
 from src.games.domain.repository import GameRepository
 from src.rooms.domain.repository import RoomRepository
+from src.games.domain.models import MovementCardRequest
 
 
 class RepositoryValidators:
     def __init__(self, game_repository: GameRepository, room_repository: Optional[RoomRepository] = None):
         self.game_repository = game_repository
         self.room_repository = room_repository
+
+        self.movement_validators = {
+            "mov01": self.validate_mov1,
+            "mov02": self.validate_mov2,
+            "mov03": self.validate_mov3,
+            "mov04": self.validate_mov4,
+            "mov05": self.validate_mov5,
+            "mov06": self.validate_mov6,
+            "mov07": self.validate_mov7,
+        }
 
     def validate_min_players_to_start(self, roomID: int):
         if self.room_repository is None:
@@ -48,6 +59,112 @@ class RepositoryValidators:
         else:
             await websocket.accept()
             raise WebSocketDisconnect(4003, "El jugador no se encuentra en el juego.")
+
+    async def validate_player_exists(self, playerID: int, websocket: Optional[WebSocket] = None):
+        if self.room_repository is None:
+            raise ValueError("RoomRepository is required to validate player exists")
+        if self.room_repository.get_player(playerID) is not None:
+            return
+        if websocket is None:
+            raise HTTPException(status_code=404, detail="El jugador no existe.")
+        else:
+            await websocket.accept()
+            raise WebSocketDisconnect(4001, "El jugador no existe.")
+        
+    async def validate_player_turn(self, playerID: int, gameID: int, websocket: Optional[WebSocket] = None):
+        if self.game_repository.is_player_turn(playerID, gameID):
+            return
+        if websocket is None:
+            raise HTTPException(status_code=403, detail="No es el turno del jugador.")
+        else:
+            await websocket.accept()
+            raise WebSocketDisconnect(4005, "No es el turno del jugador.")
+        
+    def validate_movement_card(self, request:MovementCardRequest) -> bool:
+        if request.origin.posX < 0 or request.origin.posX > 5:
+            raise ValueError("Posicion de origen fuera del tablero")
+        if request.origin.posY < 0 or request.origin.posY > 5:
+            raise ValueError("Posicion de origen fuera del tablero")
+        if request.destination.posX < 0 or request.destination.posX > 5:
+            raise ValueError("Posicion de destino fuera del tablero")
+        if request.destination.posY < 0 or request.destination.posY > 5:
+            raise ValueError("Posicion de destino fuera del tablero")
+        
+        movement_card = self.game_repository.get_movement_card(request.card_movementID)
+        if movement_card is None:
+            raise ValueError("No existe carta de movimiento")
+        
+        if movement_card.type not in self.movement_validators:
+            raise ValueError("No existe carta de movimiento")
+        
+        if not self.movement_validators[movement_card.type](request):
+            raise HTTPException(status_code=403, detail="Movimiento inválido.")
+        
+        return
+
+    def card_exists(self, card_movementID: int):
+        if self.game_repository.card_exists(card_movementID):
+            return
+        raise HTTPException(status_code=403, detail="La carta de movimiento no existe.")
+
+    def has_movement_card(self, playerID: int, card_movementID: int):
+        if self.game_repository.has_movement_card(playerID, card_movementID):
+            return
+        raise HTTPException(status_code=403, detail="El jugador no tiene la carta de movimiento.")
+
+    def mov_calc(self, request:MovementCardRequest):
+        deltaX = abs(request.origin.posX - request.destination.posX)
+        deltaY = abs(request.origin.posY - request.destination.posY)
+        return deltaX, deltaY
+
+    def validate_mov1(self, request:MovementCardRequest) -> bool:
+        deltaX, deltaY = self.mov_calc(request)
+        return deltaX == 2 and deltaY == 2
+
+    def validate_mov2(self, request:MovementCardRequest) -> bool:
+        deltaX, deltaY = self.mov_calc(request)
+        return deltaX == 0 and deltaY == 2
+
+    def validate_mov3(self, request:MovementCardRequest) -> bool:
+        deltaX, deltaY = self.mov_calc(request)
+        return deltaX == 0 and deltaY == 1
+
+    def validate_mov4(self, request:MovementCardRequest) -> bool:
+        deltaX, deltaY = self.mov_calc(request)
+        return deltaX == 1 and deltaY == 1
+
+    def validate_mov5(self, request:MovementCardRequest) -> bool:
+        up_posX_correct = (request.origin.posX - 2) == request.destination.posX
+        up_posY_correct = (request.origin.posY + 1) == request.destination.posY
+        up_correct = up_posX_correct and up_posY_correct
+
+        down_posX_correct = (request.origin.posX + 2) == request.destination.posX
+        down_posY_correct = (request.origin.posY - 1) == request.destination.posY
+        down_correct = down_posX_correct and down_posY_correct
+        return up_correct or down_correct
+
+    def validate_mov6(self,  request:MovementCardRequest) -> bool:
+        up_posX_correct = (request.origin.posX - 2) == request.destination.posX
+        up_posY_correct = (request.origin.posY - 1) == request.destination.posY
+        up_correct = up_posX_correct and up_posY_correct
+
+        down_posX_correct = (request.origin.posX + 2) == request.destination.posX 
+        down_posY_correct = (request.origin.posY + 1) == request.destination.posY
+        down_correct = down_posX_correct and down_posY_correct
+        return up_correct or down_correct
+
+    def validate_mov7(self, request:MovementCardRequest) -> bool:
+        deltaX, deltaY = self.mov_calc(request)
+        posX_non_affected = deltaX == 0 
+        posY_non_affected = deltaY == 0
+        right_side = posX_non_affected and request.destination.posY == 5 
+        left_side = posX_non_affected and request.destination.posY == 0
+        top_side = request.destination.posX == 5 and posY_non_affected
+        bottom_side = request.destination.posX == 0 and posY_non_affected
+
+        return right_side or left_side or top_side or bottom_side
+
+
 
 
 class GameServiceDomain:

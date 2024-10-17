@@ -9,6 +9,7 @@ from src.games.domain.models import (
     GamePublicInfo,
 )
 from src.players.domain.models import Player as PlayerDomain
+from src.games.domain.models import MovementCard as MovementCardDomain
 
 
 class GameRepository(ABC):
@@ -42,6 +43,14 @@ class GameRepository(ABC):
 
     @abstractmethod
     def get_public_info(self, gameID: int, playerID: int) -> GamePublicInfo:
+        pass
+
+    @abstractmethod
+    def play_movement(self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
+        pass
+
+    @abstractmethod
+    def is_player_turn(self, playerID: int, gameID: int) -> bool:
         pass
 
     @abstractmethod
@@ -79,6 +88,17 @@ class GameRepository(ABC):
     def delete_and_clean(self, gameID: int) -> None:
         pass
 
+    @abstractmethod
+    def get_movement_card(self, cardID: int) -> MovementCardDomain:
+        pass
+
+    @abstractmethod
+    def has_movement_card(self, playerID: int, cardID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def card_exists(self, cardID: int) -> bool:
+        pass
 
 class GameRepositoryWS(GameRepository):
     @abstractmethod
