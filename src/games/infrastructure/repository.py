@@ -48,7 +48,8 @@ class SQLAlchemyRepository(GameRepository):
     def create(self, roomID: int, new_board: list) -> GameID:
         board_json = json.dumps(new_board)
 
-        new_game = GameDB(board=board_json, lastMovements={}, prohibitedColor=None, roomID=roomID)
+        new_game = GameDB(board=board_json, lastMovements={},
+                          prohibitedColor=None, roomID=roomID)
 
         self.db_session.add(new_game)
         self.db_session.commit()
@@ -90,9 +91,11 @@ class SQLAlchemyRepository(GameRepository):
     def create_movement_cards(self, gameID: int) -> None:
         players = self.get_players(gameID)
 
-        movement_cards_amount = MOVEMENT_CARDS_AMOUNT[len(players) - 2] * len(players)
+        movement_cards_amount = MOVEMENT_CARDS_AMOUNT[len(
+            players) - 2] * len(players)
         all_movement_cards = MOVEMENT_CARDS * 7
-        selected_movement_cards = random.sample(all_movement_cards, movement_cards_amount)
+        selected_movement_cards = random.sample(
+            all_movement_cards, movement_cards_amount)
 
         new_cards: List[MovementCardDB] = []
         for card in selected_movement_cards:
@@ -190,7 +193,8 @@ class SQLAlchemyRepository(GameRepository):
         available_cards = (
             self.db_session.query(FigureCardDB)
             .filter(
-                FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID, FigureCardDB.isPlayable.is_(False)
+                FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID, FigureCardDB.isPlayable.is_(
+                    False)
             )
             .limit(3 - figure_cards.count())
         )
@@ -228,7 +232,8 @@ class SQLAlchemyRepository(GameRepository):
         board_json = json.loads(game.board)
         board: List[BoardPiece] = []
         for piece_db in board_json:
-            is_partial = self.is_piece_partial(gameID, piece_db["posX"], piece_db["posY"])
+            is_partial = self.is_piece_partial(
+                gameID, piece_db["posX"], piece_db["posY"])
             piece = BoardPiece(
                 posX=piece_db["posX"], posY=piece_db["posY"], color=piece_db["color"], isPartial=is_partial
             )
@@ -247,12 +252,14 @@ class SQLAlchemyRepository(GameRepository):
             raise ValueError(f"Game with ID {gameID} not found")
         roomID = game.roomID
 
-        db_players = self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == roomID).all()
+        db_players = self.db_session.query(PlayerRoomDB).filter(
+            PlayerRoomDB.roomID == roomID).all()
         players = []
 
         for player in db_players:
             username = self.db_session.get(PlayerDB, player.playerID).username
-            amount_non_playable, playable_cards_figure = self.get_player_figure_cards(gameID, player.playerID)
+            amount_non_playable, playable_cards_figure = self.get_player_figure_cards(
+                gameID, player.playerID)
 
             players.append(
                 PlayerPublicInfo(
@@ -270,12 +277,14 @@ class SQLAlchemyRepository(GameRepository):
         figure_cards = self.db_session.query(FigureCardDB).filter(
             FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID
         )
-        amount_non_playable = figure_cards.filter(not FigureCardDB.isPlayable).count()
+        amount_non_playable = figure_cards.filter(
+            not FigureCardDB.isPlayable).count()
 
         playable_cards: List[FigureCard] = []
         for card in figure_cards:
             if card.isPlayable:
-                playable_cards.append(FigureCard(type=card.type, cardID=card.cardID, isBlocked=card.isBlocked))
+                playable_cards.append(FigureCard(
+                    type=card.type, cardID=card.cardID, isBlocked=card.isBlocked))
 
         return amount_non_playable, playable_cards
 
@@ -285,8 +294,10 @@ class SQLAlchemyRepository(GameRepository):
         )
         cards: List[MovementCard] = []
         for card in cards_db:
-            isUsed = self.was_card_used_in_partial_movement(gameID, playerID, card.cardID)
-            cards.append(MovementCard(type=card.type, cardID=card.cardID, isUsed=isUsed))
+            isUsed = self.was_card_used_in_partial_movement(
+                gameID, playerID, card.cardID)
+            cards.append(MovementCard(type=card.type,
+                         cardID=card.cardID, isUsed=isUsed))
 
         return cards
 
@@ -350,18 +361,18 @@ class SQLAlchemyRepository(GameRepository):
             figure_type: [np.rot90(shape, k) for k in range(4)] for figure_type, shape in FIGURE_CARDS_FORM.items()
         }
 
-        seen_figures = set()  # Usaremos un conjunto para almacenar figuras únicas
+        seen_figures = set()
 
         for color, layer in color_layers.items():
             for figure_type, rotations in rotated_figures.items():
                 for rotated_figure in rotations:
-                    figures_found = self.match_figure_in_layer(rotated_figure, layer)
+                    figures_found = self.match_figure_in_layer(
+                        rotated_figure, layer)
 
                     for figure in figures_found:
-                        # Convertimos la figura en una tupla de posiciones para compararlas
-                        figure_tuple = tuple((pos.posX, pos.posY) for pos in figure)
+                        figure_tuple = tuple((pos.posX, pos.posY)
+                                             for pos in figure)
 
-                        # Solo agregamos la figura si no ha sido vista previamente
                         if figure_tuple not in seen_figures:
                             seen_figures.add(figure_tuple)
                             all_figures.append(figure)
@@ -394,7 +405,8 @@ class SQLAlchemyRepository(GameRepository):
         position_set = {(pos.posX, pos.posY) for pos in positions}
         for pos in positions:
             x, y = pos.posX, pos.posY
-            adjacent_positions = [(x + dx, y + dy) for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]]
+            adjacent_positions = [(x + dx, y + dy)
+                                  for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]]
 
             for nx, ny in adjacent_positions:
                 if 0 <= nx < 6 and 0 <= ny < 6 and (nx, ny) not in position_set:
@@ -407,10 +419,12 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.query(PlayerRoomDB).filter(
             PlayerRoomDB.playerID == playerID, PlayerRoomDB.roomID == game.roomID
         ).update({"isActive": False})
-        figure_cards = self.db_session.query(FigureCardDB).filter(FigureCardDB.playerID == playerID)
+        figure_cards = self.db_session.query(FigureCardDB).filter(
+            FigureCardDB.playerID == playerID)
         for card in figure_cards:
             self.db_session.delete(card)
-        movement_cards = self.db_session.query(MovementCardDB).filter(MovementCardDB.playerID == playerID)
+        movement_cards = self.db_session.query(MovementCardDB).filter(
+            MovementCardDB.playerID == playerID)
         for card in movement_cards:
             card.isDiscarded = True
             card.playerID = None
@@ -434,16 +448,20 @@ class SQLAlchemyRepository(GameRepository):
 
     def get_active_players(self, gameID: int) -> List[PlayerPublicInfo]:
         players = self.get_players(gameID)
-        active_players = [player for player in players if self.is_player_active(player.playerID, gameID)]
+        active_players = [player for player in players if self.is_player_active(
+            player.playerID, gameID)]
         return active_players
 
     def delete_and_clean(self, gameID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
         if game is None:
             raise ValueError(f"Game with ID {gameID} not found")
-        self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID).delete()
-        self.db_session.query(MovementCardDB).filter(MovementCardDB.gameID == gameID).delete()
-        self.db_session.query(PlayerRoomDB).filter(PlayerRoomDB.roomID == game.roomID).delete()
+        self.db_session.query(FigureCardDB).filter(
+            FigureCardDB.gameID == gameID).delete()
+        self.db_session.query(MovementCardDB).filter(
+            MovementCardDB.gameID == gameID).delete()
+        self.db_session.query(PlayerRoomDB).filter(
+            PlayerRoomDB.roomID == game.roomID).delete()
         room = game.room
         self.db_session.delete(game)
         self.db_session.delete(room)
@@ -486,7 +504,8 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
             winnerID (int): ID del jugador ganador
         """
         players = self.get_players(gameID)
-        winner = Winner(winnerID=winnerID, username=self.db_session.get(PlayerDB, winnerID).username)
+        winner = Winner(winnerID=winnerID, username=self.db_session.get(
+            PlayerDB, winnerID).username)
         winner_json = winner.model_dump()
         for player in players:
             await ws_manager_game.send_personal_message_by_id(MessageType.END, winner_json, player.playerID, gameID)
