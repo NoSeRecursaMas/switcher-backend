@@ -264,6 +264,37 @@ class SQLAlchemyRepository(GameRepository):
         game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
         self.db_session.commit()
         
+    def delete_partial_movement(self, gameID: int, playerID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+        if len(last_movements) == 0:
+            return
+        
+        last_movement = last_movements[-1]
+        last_movement_card = self.db_session.get(MovementCardDB, last_movement["CardID"])
+        last_movement_card.playerID = playerID
+        last_movement_card.isDiscarded = False
+        last_movement_card.isPlayed = False
+
+        last_movement_origin = last_movement["origin"]
+        last_movement_destination = last_movement["destination"]
+
+        board = self.get_board(gameID)
+        origin_piece = next(piece for piece in board if piece.posX == last_movement_origin["posX"] and piece.posY == last_movement_origin["posY"])
+        destination_piece = next(piece for piece in board if piece.posX == last_movement_destination["posX"] and piece.posY == last_movement_destination["posY"])
+
+        aux = origin_piece.color
+        origin_piece.color = destination_piece.color
+        destination_piece.color = aux
+
+        game.lastMovements = json.dumps(last_movements[:-1])
+        game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
+        self.db_session.commit()
+        
+
     def has_movement_card(self, gameID: int, playerID: int, cardID: int) -> bool:
         card = self.db_session.get(MovementCardDB, cardID)
         if card is None:

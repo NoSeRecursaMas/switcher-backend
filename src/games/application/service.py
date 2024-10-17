@@ -92,6 +92,14 @@ class GameService:
         self.game_repository.remove_movement_card(request.card_movementID)
         await self.game_repository.broadcast_status_game(gameID)
 
+    async def delete_partial_movement(self, gameID: int, playerID: int) -> None:
+        await self.game_domain_service.validate_game_exists(gameID)
+        await self.game_domain_service.validate_player_turn(playerID, gameID)
+        await self.game_domain_service.validate_game_exists(gameID)
+        await self.game_domain_service.is_player_in_game(playerID, gameID)
+        self.game_repository.delete_partial_movement(gameID, playerID)
+        await self.game_repository.broadcast_status_game(gameID)
+
     async def leave_game(self, gameID: int, playerID: int) -> None:
         await self.player_domain_service.validate_player_exists(playerID)
         await self.game_domain_service.validate_game_exists(gameID)
