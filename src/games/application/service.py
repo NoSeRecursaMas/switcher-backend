@@ -65,7 +65,7 @@ class GameService:
         self.game_repository.skip(gameID)
         self.game_repository.replacement_movement_card(gameID, playerID)
         self.game_repository.replacement_figure_card(gameID, playerID)
-
+        self.game_repository.clean_partial_movements(gameID)
         await self.game_repository.broadcast_status_game(gameID)
 
     async def connect_to_game_websocket(self, playerID: int, gameID: int, websocket: WebSocket) -> None:

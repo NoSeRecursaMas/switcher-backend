@@ -377,6 +377,11 @@ class SQLAlchemyRepository(GameRepository):
 
         return cards
 
+    def clean_partial_movements(self, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        game.lastMovements = json.dumps([])
+        self.db_session.commit()
+
     def was_card_used_in_partial_movement(self, gameID: int, cardID: int) -> bool:
         game = self.db_session.get(GameDB, gameID)
         last_movements = json.loads(game.lastMovements) if game.lastMovements else []
