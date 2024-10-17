@@ -274,13 +274,6 @@ class SQLAlchemyRepository(GameRepository):
         card = self.db_session.get(MovementCardDB, cardID)
         return card is not None
 
-    def remove_movement_card(self, cardID: int) -> None:
-        card = self.db_session.get(MovementCardDB, cardID)
-        card.isDiscarded = True
-        card.playerID = None
-        card.isPlayed = True
-        self.db_session.commit()
-
     def is_player_turn(self, playerID: int, gameID: int) -> bool:
         game = self.db_session.get(GameDB, gameID)
         players = self.get_players(gameID)
