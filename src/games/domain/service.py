@@ -80,22 +80,22 @@ class RepositoryValidators:
             await websocket.accept()
             raise WebSocketDisconnect(4005, "No es el turno del jugador.")
         
-    def validate_movement_card(self, gameID: int, request:MovementCardRequest) -> bool:
+    def validate_movement_card(self, request:MovementCardRequest) -> bool:
         if request.origin.posX < 0 or request.origin.posX > 5:
-            raise ValueError("Origin position is out of the board")
+            raise ValueError("Posicion de origen fuera del tablero")
         if request.origin.posY < 0 or request.origin.posY > 5:
-            raise ValueError("Origin position is out of the board")
+            raise ValueError("Posicion de origen fuera del tablero")
         if request.destination.posX < 0 or request.destination.posX > 5:
-            raise ValueError("Destination position is out of the board")
+            raise ValueError("Posicion de destino fuera del tablero")
         if request.destination.posY < 0 or request.destination.posY > 5:
-            raise ValueError("Destination position is out of the board")
+            raise ValueError("Posicion de destino fuera del tablero")
         
         movement_card = self.game_repository.get_movement_card(request.card_movementID)
         if movement_card is None:
-            raise ValueError("Movement card does not exist")
+            raise ValueError("No existe carta de movimiento")
         
         if movement_card.type not in self.movement_validators:
-            raise ValueError("Movement card not supported")
+            raise ValueError("No existe carta de movimiento")
         
         if not self.movement_validators[movement_card.type](request):
             raise HTTPException(status_code=403, detail="Movimiento inválido.")
@@ -107,8 +107,8 @@ class RepositoryValidators:
             return
         raise HTTPException(status_code=403, detail="La carta de movimiento no existe.")
 
-    def has_movement_card(self, gameID: int, playerID: int, card_movementID: int):
-        if self.game_repository.has_movement_card(gameID, playerID, card_movementID):
+    def has_movement_card(self, playerID: int, card_movementID: int):
+        if self.game_repository.has_movement_card(playerID, card_movementID):
             return
         raise HTTPException(status_code=403, detail="El jugador no tiene la carta de movimiento.")
 
