@@ -81,15 +81,14 @@ class GameService:
         await self.game_domain_service.is_player_in_game(request.playerID, gameID)
         await self.game_domain_service.validate_game_exists(gameID)
         self.game_domain_service.card_exists(request.card_movementID)
-        self.game_domain_service.has_movement_card(gameID, request.playerID, request.card_movementID)
-        self.game_domain_service.validate_movement_card(gameID, request)
-        self.game_repository.switch_board_positions(gameID,
+        self.game_domain_service.has_movement_card(request.playerID, request.card_movementID)
+        self.game_domain_service.validate_movement_card(request)
+        self.game_repository.play_movement(gameID,
                                                     card_id=request.card_movementID, 
                                                     originX=request.origin.posX, 
                                                     originY=request.origin.posY, 
                                                     destinationX=request.destination.posX, 
                                                     destinationY=request.destination.posY)
-        self.game_repository.remove_movement_card(request.card_movementID)
         await self.game_repository.broadcast_status_game(gameID)
 
     async def delete_partial_movement(self, gameID: int, playerID: int) -> None:

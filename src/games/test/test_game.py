@@ -682,6 +682,8 @@ def test_skip_turn_give_cards_movement_rebuild_deck(client, test_db):
 
 
 # - Testear que no se crean más de 2 cartas de figuras iguales por cada tipo
+
+
 def test_create_game_figure_cards_unique(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
 
@@ -1240,33 +1242,6 @@ def test_play_correct_mov7_card(client,test_db):
     destination = next(item for item in board if item["posX"] == 0 and item["posY"] == 1)
     assert origin["color"] == "B"
     assert destination["color"] == "R"
-
-def test_movement_card_discarded(client, test_db):
-    db = next(override_get_db())
-    db.add_all(
-        [
-            PlayerDB(playerID=1, username="test user"),
-            PlayerDB(playerID=2, username="test user 2"),
-            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
-            PlayerRoomDB(playerID=1, roomID=1, position=1),
-            PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(roomID=1, board=json.dumps([
-                {"posX": x, "posY": y, "color": "R" if (x == 3 and y == 1) else "B" if (x == 0 and y == 1) else "G"}
-                for x in range(6) for y in range(6)
-            ])),
-            MovementCardDB(gameID=1, type="mov07", isDiscarded=True, playerID=1),
-        ]
-    )
-    db.commit()
-
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 5, "posY": 1}, "destination": {"posX": 0, "posY": 1}})
-    assert response.status_code == 201
-    is_discarded = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1).filter(MovementCardDB.isDiscarded == False).count() == 0
-    assert is_discarded
-    is_played = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1).filter(MovementCardDB.isPlayed == True).count() == 1
-    assert is_played
-    player_is_null = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1).filter(MovementCardDB.playerID == None).count() == 1
-    assert player_is_null 
 
 def test_player_did_not_has_movement_card(client, test_db):
     db = next(override_get_db())

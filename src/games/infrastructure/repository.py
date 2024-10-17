@@ -1,14 +1,19 @@
 import json
 import random
+import time
 from typing import List, Optional, Tuple
 
+import numpy as np
 from fastapi.websockets import WebSocket
+from scipy.signal import convolve2d
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import func
 
 from src.games.config import (
     BLUE_CARDS,
     BLUE_CARDS_AMOUNT,
+    COLORS,
+    FIGURE_CARDS_FORM,
     MOVEMENT_CARDS,
     MOVEMENT_CARDS_AMOUNT,
     WHITE_CARDS,
@@ -16,6 +21,7 @@ from src.games.config import (
 )
 from src.games.domain.models import (
     BoardPiece,
+    BoardPiecePosition,
     FigureCard,
     Game,
     GameID,
@@ -238,7 +244,7 @@ class SQLAlchemyRepository(GameRepository):
             "color": piece.color
         }
 
-    def switch_board_positions(self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
+    def play_movement(self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
         game = self.db_session.get(GameDB, gameID)
         if game is None:
             raise ValueError(f"Game with ID {gameID} not found")
@@ -300,8 +306,7 @@ class SQLAlchemyRepository(GameRepository):
         game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
         self.db_session.commit()
         
-
-    def has_movement_card(self, gameID: int, playerID: int, cardID: int) -> bool:
+    def has_movement_card(self, playerID: int, cardID: int) -> bool:
         card = self.db_session.get(MovementCardDB, cardID)
         if card is None:
             raise ValueError(f"Card with ID {cardID} not found")
@@ -310,13 +315,6 @@ class SQLAlchemyRepository(GameRepository):
     def card_exists(self, cardID: int) -> bool:
         card = self.db_session.get(MovementCardDB, cardID)
         return card is not None
-
-    def remove_movement_card(self, cardID: int) -> None:
-        card = self.db_session.get(MovementCardDB, cardID)
-        card.isDiscarded = True
-        card.playerID = None
-        card.isPlayed = True
-        self.db_session.commit()
 
     def is_player_turn(self, playerID: int, gameID: int) -> bool:
         game = self.db_session.get(GameDB, gameID)
@@ -422,15 +420,72 @@ class SQLAlchemyRepository(GameRepository):
             prohibitedColor=game.prohibitedColor,
             posEnabledToPlay=game.posEnabledToPlay,
             players=game.players,
-            figuresToUse=self.get_available_figures(gameID),
+            figuresToUse=self.get_available_figures(game.board),
             cardsMovement=self.get_player_movement_cards(gameID, playerID),
         )
 
-    def get_available_figures(self, gameID: int) -> list:
-        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MARCAR FIGURAS DISPONIBLES
-        return []
+    def get_available_figures(self, board: List[BoardPiece]) -> List[List[BoardPiecePosition]]:
+        board_matrix = np.empty((6, 6), dtype=object)
+
+        for piece in board:
+            board_matrix[piece.posY][piece.posX] = piece.color
+
+        color_layers = self.create_color_layers(board_matrix)
+
+        all_figures = []
+        rotated_figures = {
+            figure_type: [np.rot90(shape, k) for k in range(4)] for figure_type, shape in FIGURE_CARDS_FORM.items()
+        }
+
+        seen_figures = set()
+
+        for color, layer in color_layers.items():
+            for figure_type, rotations in rotated_figures.items():
+                for rotated_figure in rotations:
+                    figures_found = self.match_figure_in_layer(rotated_figure, layer)
+
+                    for figure in figures_found:
+                        figure_tuple = tuple((pos.posX, pos.posY) for pos in figure)
+
+                        if figure_tuple not in seen_figures:
+                            seen_figures.add(figure_tuple)
+                            all_figures.append(figure)
+
+        return all_figures
+
+    def create_color_layers(self, board_matrix: np.ndarray) -> dict:
+        return {color: (board_matrix == color).astype(int) for color in COLORS}
+
+    def match_figure_in_layer(self, shape: np.ndarray, layer: np.ndarray) -> List[List[BoardPiecePosition]]:
+        matched_figures = []
+        shape_height, shape_width = shape.shape
+
+        result = convolve2d(layer, shape[::-1, ::-1], mode="valid")
+
+        for y, x in zip(*np.where(result == shape.sum())):
+            matched_positions = [
+                BoardPiecePosition(posX=x + shape_x, posY=y + shape_y)
+                for shape_y in range(shape_height)
+                for shape_x in range(shape_width)
+                if shape[shape_y, shape_x] == 1
+            ]
+
+            if self.check_border_validity(matched_positions, layer):
+                matched_figures.append(matched_positions)
+
+        return matched_figures
+
+    def check_border_validity(self, positions: List[BoardPiecePosition], layer: np.ndarray) -> bool:
+        position_set = {(pos.posX, pos.posY) for pos in positions}
+        for pos in positions:
+            x, y = pos.posX, pos.posY
+            adjacent_positions = [(x + dx, y + dy) for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]]
+
+            for nx, ny in adjacent_positions:
+                if 0 <= nx < 6 and 0 <= ny < 6 and (nx, ny) not in position_set:
+                    if layer[ny, nx] == layer[y, x]:
+                        return False
+        return True
 
     def set_player_inactive(self, playerID: int, gameID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
