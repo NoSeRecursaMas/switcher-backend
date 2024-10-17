@@ -1290,12 +1290,6 @@ def test_cancel_movement(client, test_db):
     assert response.status_code == 201
     response = client.delete("/games/1/movement", params={"playerID": 1})
     assert response.status_code == 200
-    is_discarded = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1).filter(MovementCardDB.isDiscarded == False).count() != 0
-    assert is_discarded
-    is_played = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1).filter(MovementCardDB.isPlayed == True).count() == 0
-    assert is_played
-    player_is_null = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1).filter(MovementCardDB.playerID == None).count() == 0
-    assert player_is_null
 
 def test_cancel_movement_player_did_not_make_any_movement(client, test_db):
     db = next(override_get_db())
@@ -1323,4 +1317,3 @@ def test_cancel_movement_player_did_not_make_any_movement(client, test_db):
     response = client.delete("/games/1/movement", params={"playerID": 1})
     assert response.status_code == 403
     assert response.json() == {"detail": "El jugador no ha realizado ningún movimiento."}
-

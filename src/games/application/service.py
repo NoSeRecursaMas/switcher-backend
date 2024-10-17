@@ -97,7 +97,7 @@ class GameService:
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.is_player_in_game(playerID, gameID)
         self.game_domain_service.partial_movement_exists(gameID)
-        self.game_repository.delete_partial_movement(gameID, playerID)
+        self.game_repository.delete_partial_movement(gameID)
         await self.game_repository.broadcast_status_game(gameID)
 
     async def leave_game(self, gameID: int, playerID: int) -> None:

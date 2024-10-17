@@ -101,7 +101,7 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def delete_partial_movement(self, gameID: int, playerID: int) -> None:
+    def delete_partial_movement(self, gameID: int) -> None:
         pass
 
     @abstractmethod

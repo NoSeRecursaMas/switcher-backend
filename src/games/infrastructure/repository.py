@@ -276,7 +276,7 @@ class SQLAlchemyRepository(GameRepository):
             raise ValueError(f"Game with ID {gameID} not found")
         return len(json.loads(game.lastMovements)) > 0
 
-    def delete_partial_movement(self, gameID: int, playerID: int) -> None:
+    def delete_partial_movement(self, gameID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
         if game is None:
             raise ValueError(f"Game with ID {gameID} not found")
@@ -286,10 +286,6 @@ class SQLAlchemyRepository(GameRepository):
             return
         
         last_movement = last_movements[-1]
-        last_movement_card = self.db_session.get(MovementCardDB, last_movement["CardID"])
-        last_movement_card.playerID = playerID
-        last_movement_card.isDiscarded = False
-        last_movement_card.isPlayed = False
 
         last_movement_origin = last_movement["origin"]
         last_movement_destination = last_movement["destination"]
@@ -376,12 +372,12 @@ class SQLAlchemyRepository(GameRepository):
         )
         cards: List[MovementCard] = []
         for card in cards_db:
-            isUsed = self.was_card_used_in_partial_movement(gameID, playerID, card.cardID)
+            isUsed = self.was_card_used_in_partial_movement(gameID, card.cardID)
             cards.append(MovementCard(type=card.type, cardID=card.cardID, isUsed=isUsed))
 
         return cards
 
-    def was_card_used_in_partial_movement(self, gameID: int, playerID: int, cardID: int) -> bool:
+    def was_card_used_in_partial_movement(self, gameID: int, cardID: int) -> bool:
         game = self.db_session.get(GameDB, gameID)
         last_movements = json.loads(game.lastMovements) if game.lastMovements else []
         for movement in last_movements:
