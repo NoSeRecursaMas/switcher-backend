@@ -264,6 +264,12 @@ class SQLAlchemyRepository(GameRepository):
         game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
         self.db_session.commit()
         
+    def partial_movement_exists(self, gameID: int) -> bool:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        return len(json.loads(game.lastMovements)) > 0
+
     def delete_partial_movement(self, gameID: int, playerID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
         if game is None:

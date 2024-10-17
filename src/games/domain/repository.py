@@ -108,6 +108,10 @@ class GameRepository(ABC):
     def delete_partial_movement(self, gameID: int, playerID: int) -> None:
         pass
 
+    @abstractmethod
+    def partial_movement_exists(self, gameID: int) -> bool:
+        pass
+
 class GameRepositoryWS(GameRepository):
     @abstractmethod
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:

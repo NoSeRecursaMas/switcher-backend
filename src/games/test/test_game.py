@@ -1322,4 +1322,30 @@ def test_cancel_movement(client, test_db):
     player_is_null = db.query(MovementCardDB).filter(MovementCardDB.gameID == 1).filter(MovementCardDB.playerID == None).count() == 0
     assert player_is_null
 
+def test_cancel_movement_player_did_not_make_any_movement(client, test_db):
+    db = next(override_get_db())
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            PlayerRoomDB(playerID=1, roomID=1, position=1),
+            GameDB(
+                gameID=1,
+                roomID=1,
+                board=json.dumps([
+                    {"posX": x, "posY": y, "color": "R" if (x == 3 and y == 1) else "B" if (x == 0 and y == 1) else "G"}
+                    for x in range(6) for y in range(6)
+                ])
+            ),
+            MovementCardDB(gameID=1, type="mov07", isDiscarded=False, playerID=1),
+        ]
+    )
+    db.commit()
+    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 5, "posY": 1}, "destination": {"posX": 0, "posY": 1}})
+    assert response.status_code == 201
+    response = client.delete("/games/1/movement", params={"playerID": 1})
+    assert response.status_code == 200
+    response = client.delete("/games/1/movement", params={"playerID": 1})
+    assert response.status_code == 403
+    assert response.json() == {"detail": "El jugador no ha realizado ningún movimiento."}
 
