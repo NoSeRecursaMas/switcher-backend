@@ -305,7 +305,7 @@ class SQLAlchemyRepository(GameRepository):
         game.lastMovements = json.dumps(last_movements[:-1])
         game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
         self.db_session.commit()
-        
+
     def has_movement_card(self, playerID: int, cardID: int) -> bool:
         card = self.db_session.get(MovementCardDB, cardID)
         if card is None:
@@ -323,9 +323,13 @@ class SQLAlchemyRepository(GameRepository):
         return player.position == game.posEnabledToPlay
 
     def is_piece_partial(self, gameID: int, posX: int, posY: int) -> bool:
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
+        game = self.db_session.get(GameDB, gameID)
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+        for movement in last_movements:
+            if movement["origin"]["posX"] == posX and movement["origin"]["posY"] == posY:
+                return True
+            if movement["destination"]["posX"] == posX and movement["destination"]["posY"] == posY:
+                return True
         return False
 
     def get_players(self, gameID: int) -> List[PlayerPublicInfo]:
@@ -378,9 +382,11 @@ class SQLAlchemyRepository(GameRepository):
         return cards
 
     def was_card_used_in_partial_movement(self, gameID: int, playerID: int, cardID: int) -> bool:
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
+        game = self.db_session.get(GameDB, gameID)
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+        for movement in last_movements:
+            if movement["CardID"] == cardID:
+                return True
         return False
 
     def is_player_in_game(self, playerID, gameID):
