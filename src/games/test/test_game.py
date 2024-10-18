@@ -805,7 +805,7 @@ def test_play__correct_mov1_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 2, "posY": 2}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 2, "posY": 2}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -842,7 +842,7 @@ def test_play__incorrect_mov1_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 3, "posY": 3}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 3, "posY": 3}})
     assert response.status_code == 403
     assert response.json() == {"detail": "Movimiento inválido."}
 
@@ -879,7 +879,7 @@ def test_play_correct_mov2_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 2}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 2}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -915,7 +915,7 @@ def test_play_incorrect_mov2_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}})
     assert response.status_code == 403
     assert response.json() == {"detail": "Movimiento inválido."}
 
@@ -951,7 +951,7 @@ def test_play_correct_mov3_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 1}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 1}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -986,7 +986,7 @@ def test_play_incorrect_mov3_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}})
     assert response.status_code == 403
     assert response.json() == {"detail": "Movimiento inválido."}
 
@@ -1022,7 +1022,7 @@ def test_play_correct_mov4_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1057,7 +1057,7 @@ def test_play_incorrect_mov4_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 1}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 1}})
     assert response.status_code == 403
     assert response.json() == {"detail": "Movimiento inválido."}
 
@@ -1093,7 +1093,7 @@ def test_play_correct_mov5_card_down(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 2}, "destination": {"posX": 2, "posY": 1}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 2}, "destination": {"posX": 2, "posY": 1}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1128,7 +1128,7 @@ def test_play_correct_mov5_card_up(client,test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 2, "posY": 1}, "destination": {"posX": 0, "posY": 2}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 2, "posY": 1}, "destination": {"posX": 0, "posY": 2}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1163,7 +1163,7 @@ def test_play_correct_mov6_card_up(client,test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 2, "posY": 1}, "destination": {"posX": 0, "posY": 0}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 2, "posY": 1}, "destination": {"posX": 0, "posY": 0}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1198,7 +1198,7 @@ def test_play_correct_mov6_card_down(client,test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 2, "posY": 1}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 2, "posY": 1}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1233,7 +1233,7 @@ def test_play_correct_mov7_card(client,test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 3, "posY": 1}, "destination": {"posX": 0, "posY": 1}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 3, "posY": 1}, "destination": {"posX": 0, "posY": 1}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1263,6 +1263,6 @@ def test_player_did_not_has_movement_card(client, test_db):
     )
     db.commit()
 
-    response = client.post("/games/1/movement", json={"card_movementID": 1, "playerID": 1, "origin": {"posX": 5, "posY": 1}, "destination": {"posX": 0, "posY": 1}})
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 5, "posY": 1}, "destination": {"posX": 0, "posY": 1}})
     assert response.status_code == 403
     assert response.json() == {"detail": "El jugador no tiene la carta de movimiento."}
