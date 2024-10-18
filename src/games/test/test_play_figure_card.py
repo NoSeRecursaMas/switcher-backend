@@ -83,7 +83,7 @@ def create_board_version_1():
             {"posX": 1, "posY": 5, "color": "G", "isPartial": False},
             {"posX": 2, "posY": 0, "color": "G", "isPartial": False},
             {"posX": 2, "posY": 1, "color": "G", "isPartial": False},
-            {"posX": 2, "posY": 2, "color": "G", "isPartial": False},
+            {"posX": 2, "posY": 2, "color": "R", "isPartial": False},
             {"posX": 2, "posY": 3, "color": "G", "isPartial": False},
             {"posX": 2, "posY": 4, "color": "G", "isPartial": False},
             {"posX": 2, "posY": 5, "color": "G", "isPartial": False},
@@ -171,5 +171,96 @@ def test_figure_not_match_card(client, test_db, create_game, create_board_versio
         },
     )
     print(response.json())
+    assert response.status_code == 403
+    assert response.json() == {"detail": "La figura no coincide con la carta."}
+
+
+def test_figure_card_diffent_color(client, test_db, create_game, create_board_version_1, create_figure_card):
+    game = create_game
+
+    game.board = create_board_version_1
+
+    figure_card = create_figure_card
+
+    figure_card[0].type = "fige06"
+    test_db.commit()
+
+    response = client.post(
+        "/games/1/figure",
+        json={
+            "cardID": {"cardID": 1},
+            "playerID": {"playerID": 1},
+            "figure": [{"posX": 0, "posY": 0}, {"posX": 1, "posY": 0}, {"posX": 2, "posY": 0}, {"posX": 3, "posY": 0}],
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "La figura debe tener fichas del mismo color."}
+
+
+def test_figure_card_is_empty(client, test_db, create_game, create_board_version_1, create_figure_card):
+    game = create_game
+
+    game.board = create_board_version_1
+
+    figure_card = create_figure_card
+
+    figure_card[0].type = "fige06"
+    test_db.commit()
+
+    response = client.post(
+        "/games/1/figure",
+        json={
+            "cardID": {"cardID": 1},
+            "playerID": {"playerID": 1},
+            "figure": [],
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "La figura no puede estar vacía."}
+
+
+def test_figure_card_border_invalid(client, test_db, create_game, create_board_version_1, create_figure_card):
+    game = create_game
+
+    game.board = create_board_version_1
+
+    figure_card = create_figure_card
+
+    figure_card[0].type = "fige06"
+    test_db.commit()
+
+    response = client.post(
+        "/games/1/figure",
+        json={
+            "cardID": {"cardID": 1},
+            "playerID": {"playerID": 1},
+            "figure": [{"posX": 5, "posY": 0}, {"posX": 5, "posY": 1}, {"posX": 5, "posY": 2}, {"posX": 5, "posY": 3}],
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "La figura tiene una ficha adyacente del mismo color."}
+
+def test_figure_card_separated_by_space(client, test_db, create_game, create_board_version_1, create_figure_card):
+    game = create_game
+
+    game.board = create_board_version_1
+
+    figure_card = create_figure_card
+
+    figure_card[0].type = "fige06"
+    test_db.commit()
+
+    response = client.post(
+        "/games/1/figure",
+        json={
+            "cardID": {"cardID": 1},
+            "playerID": {"playerID": 1},
+            "figure": [{"posX": 2, "posY": 0}, {"posX": 2, "posY": 1}, {"posX": 2, "posY": 3}, {"posX": 2, "posY": 4}],
+        },
+    )
+
     assert response.status_code == 403
     assert response.json() == {"detail": "La figura no coincide con la carta."}
