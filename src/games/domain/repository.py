@@ -46,7 +46,7 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def switch_board_positions(self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
+    def play_movement(self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
         pass
 
     @abstractmethod
@@ -93,11 +93,7 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def remove_movement_card(self, cardID: int) -> None:
-        pass
-
-    @abstractmethod
-    def has_movement_card(self, gameID: int, playerID: int, cardID: int) -> bool:
+    def has_movement_card(self, playerID: int, cardID: int) -> bool:
         pass
 
     @abstractmethod
@@ -105,11 +101,19 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def delete_partial_movement(self, gameID: int, playerID: int) -> None:
+    def delete_partial_movement(self, gameID: int) -> None:
         pass
 
     @abstractmethod
     def partial_movement_exists(self, gameID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def clean_partial_movements(self, gameID: int) -> None:
+        pass 
+
+    @abstractmethod
+    def was_card_used_in_partial_movement(self, gameID: int, cardID: int) -> bool:
         pass
 
 class GameRepositoryWS(GameRepository):

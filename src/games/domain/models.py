@@ -14,6 +14,11 @@ class BoardPiece(BaseModel):
     isPartial: bool
 
 
+class BoardPiecePosition(BaseModel):
+    posX: int
+    posY: int
+
+
 class FigureCard(BaseModel):
     type: str
     cardID: int
@@ -30,7 +35,7 @@ class Position(BaseModel):
     posY: int
 
 class MovementCardRequest(BaseModel):
-    card_movementID: int
+    cardID: int
     playerID: int
     origin: Position
     destination: Position
@@ -67,7 +72,7 @@ class Game(BaseModel):
 
 
 class GamePublicInfo(Game):
-    figuresToUse: List[List[BoardPiece]]
+    figuresToUse: List[List[BoardPiecePosition]]
     cardsMovement: List[MovementCard]
 
     @field_validator("cardsMovement")
