@@ -83,6 +83,7 @@ class GameService:
         self.game_domain_service.card_exists(request.cardID)
         self.game_domain_service.has_movement_card(request.playerID, request.cardID)
         self.game_domain_service.validate_movement_card(request)
+        self.game_domain_service.validate_card_is_partial_movement(gameID, request.cardID)
         self.game_repository.play_movement(gameID,
                                                     card_id=request.cardID, 
                                                     originX=request.origin.posX, 

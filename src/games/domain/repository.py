@@ -112,6 +112,10 @@ class GameRepository(ABC):
     def clean_partial_movements(self, gameID: int) -> None:
         pass 
 
+    @abstractmethod
+    def was_card_used_in_partial_movement(self, gameID: int, cardID: int) -> bool:
+        pass
+
 class GameRepositoryWS(GameRepository):
     @abstractmethod
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
