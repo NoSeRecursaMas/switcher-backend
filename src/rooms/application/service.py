@@ -34,13 +34,22 @@ class RoomService:
         await self.player_domain_service.validate_player_exists(playerID)
         await self.room_domain_service.validate_room_exists(roomID)
         await self.room_domain_service.validate_player_in_room(playerID, roomID)
-        self.room_domain_service.validate_player_is_not_owner(playerID, roomID)
         await self.room_domain_service.validate_game_not_started(roomID)
 
-        self.room_repository.remove_player_from_room(playerID=playerID, roomID=roomID)
+        isHost = self.room_repository.is_owner(playerID, roomID)
+
+        if isHost:
+            self.room_repository.remove_player_from_room(playerID=playerID, roomID=roomID)
+            await self.room_repository.broadcast_room_cancellation(roomID)
+            await self.room_repository.disconnect_player(roomID, playerID)
+            self.room_repository.delete_and_clean(roomID)
+        else:
+            self.room_domain_service.validate_player_is_not_owner(playerID, roomID)
+            self.room_repository.remove_player_from_room(playerID=playerID, roomID=roomID)
+            await self.room_repository.disconnect_player(roomID, playerID)
+            await self.room_repository.broadcast_status_room(roomID)
 
         await self.room_repository.broadcast_status_room_list()
-        await self.room_repository.broadcast_status_room(roomID)
 
     async def join_room(self, roomID: int, playerID: int) -> None:
         await self.player_domain_service.validate_player_exists(playerID)
