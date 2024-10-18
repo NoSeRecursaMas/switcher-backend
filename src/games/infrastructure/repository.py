@@ -27,6 +27,7 @@ from src.games.domain.models import (
     GameID,
     GamePublicInfo,
     MovementCard,
+    MovementCard as MovementCardDomain,
     PlayerPublicInfo,
     Winner,
 )
@@ -39,6 +40,7 @@ from src.players.infrastructure.models import Player as PlayerDB
 from src.rooms.infrastructure.models import PlayerRoom as PlayerRoomDB
 from src.rooms.infrastructure.models import Room as RoomDB
 from src.rooms.infrastructure.repository import SQLAlchemyRepository as RoomRepository
+from src.games.domain.models import Position
 
 
 class SQLAlchemyRepository(GameRepository):
@@ -235,6 +237,55 @@ class SQLAlchemyRepository(GameRepository):
             board.append(piece)
         return board
 
+    def board_piece_to_dict(self, piece):
+        return {
+            "posX": piece.posX,
+            "posY": piece.posY,
+            "color": piece.color
+        }
+
+    def play_movement(self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        board = self.get_board(gameID)
+        origin_piece = next(piece for piece in board if piece.posX == originX and piece.posY == originY)
+        destination_piece = next(piece for piece in board if piece.posX == destinationX and piece.posY == destinationY)
+        aux = origin_piece.color
+        origin_piece.color = destination_piece.color
+        destination_piece.color = aux
+        
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+    
+        
+        last_movements.append({
+            "CardID": card_id,
+            "origin": self.board_piece_to_dict(origin_piece),
+            "destination": self.board_piece_to_dict(destination_piece),
+            "Order" : len(last_movements) + 1
+        })
+    
+        game.lastMovements = json.dumps(last_movements)
+
+        game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
+        self.db_session.commit()
+        
+    def has_movement_card(self, playerID: int, cardID: int) -> bool:
+        card = self.db_session.get(MovementCardDB, cardID)
+        if card is None:
+            raise ValueError(f"Card with ID {cardID} not found")
+        return card.playerID == playerID
+    
+    def card_exists(self, cardID: int) -> bool:
+        card = self.db_session.get(MovementCardDB, cardID)
+        return card is not None
+
+    def is_player_turn(self, playerID: int, gameID: int) -> bool:
+        game = self.db_session.get(GameDB, gameID)
+        players = self.get_players(gameID)
+        player = next(player for player in players if player.playerID == playerID)
+        return player.position == game.posEnabledToPlay
+
     def is_piece_partial(self, gameID: int, posX: int, posY: int) -> bool:
         # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
         # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
@@ -358,11 +409,19 @@ class SQLAlchemyRepository(GameRepository):
             figure_type: [np.rot90(shape, k) for k in range(4)] for figure_type, shape in FIGURE_CARDS_FORM.items()
         }
 
+        seen_figures = set()
+
         for color, layer in color_layers.items():
             for figure_type, rotations in rotated_figures.items():
                 for rotated_figure in rotations:
                     figures_found = self.match_figure_in_layer(rotated_figure, layer)
-                    all_figures.extend(figures_found)
+
+                    for figure in figures_found:
+                        figure_tuple = tuple((pos.posX, pos.posY) for pos in figure)
+
+                        if figure_tuple not in seen_figures:
+                            seen_figures.add(figure_tuple)
+                            all_figures.append(figure)
 
         print(all_figures)
         return all_figures
@@ -448,6 +507,7 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.delete(room)
         self.db_session.commit()
 
+<<<<<<< HEAD
     def play_figure(self, figureID: int) -> None:
         figure_card = self.db_session.query(FigureCardDB).filter_by(cardID=figureID).first()
         if figure_card:
@@ -462,6 +522,14 @@ class SQLAlchemyRepository(GameRepository):
             type=card.type, cardID=card.cardID, isBlocked=card.isBlocked, gameID=card.gameID, playerID=card.playerID
         )
 
+=======
+    def get_movement_card(self, cardID: int) -> MovementCardDomain:
+        card = self.db_session.get(MovementCardDB, cardID)
+        if card is None:
+            raise ValueError(f"Card with ID {cardID} not found")
+        return MovementCardDomain(type=card.type, cardID=card.cardID, isUsed=card.isDiscarded)
+        
+>>>>>>> f2c43b96e77cbe616ea437704def47da9973da28
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
