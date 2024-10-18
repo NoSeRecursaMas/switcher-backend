@@ -80,11 +80,11 @@ class GameService:
         await self.game_domain_service.validate_player_turn(request.playerID, gameID)
         await self.game_domain_service.is_player_in_game(request.playerID, gameID)
         await self.game_domain_service.validate_game_exists(gameID)
-        self.game_domain_service.card_exists(request.card_movementID)
-        self.game_domain_service.has_movement_card(request.playerID, request.card_movementID)
+        self.game_domain_service.card_exists(request.cardID)
+        self.game_domain_service.has_movement_card(request.playerID, request.cardID)
         self.game_domain_service.validate_movement_card(request)
         self.game_repository.play_movement(gameID,
-                                                    card_id=request.card_movementID, 
+                                                    card_id=request.cardID, 
                                                     originX=request.origin.posX, 
                                                     originY=request.origin.posY, 
                                                     destinationX=request.destination.posX, 
