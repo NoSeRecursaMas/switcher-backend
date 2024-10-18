@@ -7,6 +7,7 @@ from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 class MessageType(str, Enum):
     STATUS = "status"
     START_GAME = "start"
+    END_ROOM = "end"
 
 
 class ConnectionManagerRoomList:
@@ -148,7 +149,7 @@ class ConnectionManagerRoom:
                 self.active_connections[roomID].pop(playerID)
                 if not self.active_connections[roomID]:
                     self.active_connections.pop(roomID)
-   
+
     async def send_personal_message(self, type: MessageType, payload: str, websocket: WebSocket):
         """Envía un mensaje personalizado al cliente
 
