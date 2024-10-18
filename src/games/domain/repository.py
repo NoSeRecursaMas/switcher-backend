@@ -100,6 +100,7 @@ class GameRepository(ABC):
     def card_exists(self, cardID: int) -> bool:
         pass
 
+
 class GameRepositoryWS(GameRepository):
     @abstractmethod
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
