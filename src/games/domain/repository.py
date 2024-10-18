@@ -12,8 +12,8 @@ from src.games.domain.models import (
     GameID,
     GamePublicInfo,
 )
-from src.players.domain.models import Player as PlayerDomain
 from src.games.domain.models import MovementCard as MovementCardDomain
+from src.players.domain.models import Player as PlayerDomain
 
 
 class GameRepository(ABC):
@@ -50,7 +50,9 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def play_movement(self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
+    def play_movement(
+        self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int
+    ) -> None:
         pass
 
     @abstractmethod
