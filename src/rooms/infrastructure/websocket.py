@@ -133,6 +133,22 @@ class ConnectionManagerRoom:
                 if not self.active_connections[roomID]:
                     self.active_connections.pop(roomID)
 
+    async def disconnect_by_id_room(self, playerID: int, roomID: int):
+        """Remueve al cliente de la lista de conexiones activas y cierra la conexión en caso de que no esté cerrada
+
+        Args:
+            playerID (int): ID del jugador
+            roomID (int): ID de la sala
+        """
+        if roomID in self.active_connections:
+            if playerID in self.active_connections[roomID]:
+                websocket = self.active_connections[roomID][playerID]
+                if websocket.client_state != WebSocketState.DISCONNECTED:
+                    await websocket.close()
+                self.active_connections[roomID].pop(playerID)
+                if not self.active_connections[roomID]:
+                    self.active_connections.pop(roomID)
+   
     async def send_personal_message(self, type: MessageType, payload: str, websocket: WebSocket):
         """Envía un mensaje personalizado al cliente
 
