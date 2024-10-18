@@ -379,15 +379,16 @@ class SQLAlchemyRepository(GameRepository):
 
     def clean_partial_movements(self, gameID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
-        last_movement = json.loads(game.lastMovements) if game.lastMovements else []
-        for movement in last_movement:
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+        board = self.get_board(gameID)
+
+        last_movements.sort(key=lambda x: x["Order"], reverse=True)
+
+        for movement in last_movements:
             origin = movement["origin"]
             destination = movement["destination"]
-            board = self.get_board(gameID)
             origin_piece = next(piece for piece in board if piece.posX == origin["posX"] and piece.posY == origin["posY"])
-            destination_piece = next(
-                piece for piece in board if piece.posX == destination["posX"] and piece.posY == destination["posY"]
-            )
+            destination_piece = next(piece for piece in board if piece.posX == destination["posX"] and piece.posY == destination["posY"])
             aux = origin_piece.color
             origin_piece.color = destination_piece.color
             destination_piece.color = aux
