@@ -64,24 +64,17 @@ class RepositoryValidators:
 
     def validate_figure_card_exists(self, gameID: int, figureCardID: int):
         card = self.game_repository.get_figure_card(figureCardID)
-        if card.gameID != gameID:
-            raise HTTPException(status_code=403, detail="La carta no existe.")
+
+        if card is None or card.gameID != gameID:
+            raise HTTPException(status_code=403, detail="La carta no existe en la partida.")
 
     def validate_figure_card_belongs_to_player(self, playerID: int, figureCardID: int):
         card = self.game_repository.get_figure_card(figureCardID)
+        if card is None:
+            raise HTTPException(status_code=403, detail="La carta no existe.")
+
         if card.playerID != playerID:
             raise HTTPException(status_code=403, detail="La carta no pertenece al jugador.")
-
-    def validate_figure_color(self, gameID: int, figure: List[BoardPiecePosition]):
-        board = self.game_repository.get_board(gameID)
-
-        first_position = figure[0].posX * 6 + figure[0].posY
-
-        color = board[first_position].color
-        for piece in figure:
-            position = piece.posX * 6 + piece.posY
-            if board[position].color != color:
-                raise HTTPException(status_code=403, detail="La figura debe tener fichas del mismo color.")
 
     def validate_figure_is_empty(self, figure: List[BoardPiecePosition]):
         if len(figure) == 0:
@@ -92,12 +85,16 @@ class RepositoryValidators:
 
         color_figure = [board[piece.posX * 6 + piece.posY].color for piece in figure]
         if len(set(color_figure)) != 1:
-            raise HTTPException(status_code=403, detail="La figura no está en el tablero.")
+            raise HTTPException(status_code=403, detail="La figura debe ser del mismo color.")
 
     def validate_figure_matches_card(self, figureID: int, figure: List[BoardPiecePosition]):
         card = self.game_repository.get_figure_card(figureID)
 
-        figure_card_form = FIGURE_CARDS_FORM[card.type]
+        if card is not None:
+            figure_card_form = FIGURE_CARDS_FORM[card.type]
+        else:
+            raise HTTPException(status_code=403, detail="La carta no existe.")
+
         rotated_figures = [np.rot90(figure_card_form, k) for k in range(4)]
 
         min_x = min(figure, key=lambda x: x.posX).posX
@@ -169,7 +166,7 @@ class RepositoryValidators:
         if not self.movement_validators[movement_card.type](request):
             raise HTTPException(status_code=403, detail="Movimiento inválido.")
 
-        return
+        return True
 
     def card_exists(self, cardID: int):
         if self.game_repository.card_exists(cardID):

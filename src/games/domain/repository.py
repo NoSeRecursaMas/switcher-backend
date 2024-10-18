@@ -110,6 +110,7 @@ class GameRepository(ABC):
     def check_border_validity(self, positions: List[BoardPiecePosition], layer: np.ndarray) -> bool:
         pass
 
+    @abstractmethod
     def get_movement_card(self, cardID: int) -> MovementCardDomain:
         pass
 

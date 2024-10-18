@@ -114,7 +114,6 @@ class GameService:
         self.game_domain_service.validate_figure_card_exists(gameID, figureID)
         self.game_domain_service.validate_figure_card_belongs_to_player(playerID, figureID)
         self.game_domain_service.validate_figure_is_empty(figure)
-        self.game_domain_service.validate_figure_color(gameID, figure)
         self.game_domain_service.validate_figure_matches_board(gameID, figure)
         self.game_domain_service.validate_figure_matches_card(figureID, figure)
         self.game_domain_service.validate_figure_border_validity(gameID, figure)
