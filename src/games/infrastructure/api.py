@@ -65,3 +65,12 @@ async def leave_game(gameID: int, playerID: PlayerID, db_session: Session = Depe
     game_service = GameService(game_repository, player_repository, room_repository)
 
     await game_service.leave_game(gameID, playerID.playerID)
+
+@router.delete(path="/{gameID}/movement", status_code=200)
+async def delete_partial_movement(gameID: int, playerID: int, db_session: Session = Depends(get_db)) -> None:
+    game_repository = GameRepository(db_session)
+    player_repository = PlayerRepository(db_session)
+
+    game_service = GameService(game_repository, player_repository)
+
+    await game_service.delete_partial_movement(gameID, playerID)

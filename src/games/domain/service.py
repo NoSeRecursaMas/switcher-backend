@@ -25,6 +25,16 @@ class RepositoryValidators:
             "mov07": self.validate_mov7,
         }
 
+    def partial_movement_exists(self, gameID: int):
+        if self.game_repository.partial_movement_exists(gameID):
+            return
+        raise HTTPException(status_code=403, detail="El jugador no ha realizado ningún movimiento.")
+
+    def validate_card_is_partial_movement(self, gameID:int, cardID: int):
+        if not self.game_repository.was_card_used_in_partial_movement(gameID, cardID):
+            return
+        raise HTTPException(status_code=403, detail="La carta ya fue usada en un movimiento parcial.")
+
     def validate_min_players_to_start(self, roomID: int):
         if self.room_repository is None:
             raise ValueError("RoomRepository is required to start a game")
@@ -90,7 +100,7 @@ class RepositoryValidators:
         if request.destination.posY < 0 or request.destination.posY > 5:
             raise ValueError("Posicion de destino fuera del tablero")
         
-        movement_card = self.game_repository.get_movement_card(request.card_movementID)
+        movement_card = self.game_repository.get_movement_card(request.cardID)
         if movement_card is None:
             raise ValueError("No existe carta de movimiento")
         
@@ -102,13 +112,13 @@ class RepositoryValidators:
         
         return
 
-    def card_exists(self, card_movementID: int):
-        if self.game_repository.card_exists(card_movementID):
+    def card_exists(self, cardID: int):
+        if self.game_repository.card_exists(cardID):
             return
         raise HTTPException(status_code=403, detail="La carta de movimiento no existe.")
 
-    def has_movement_card(self, playerID: int, card_movementID: int):
-        if self.game_repository.has_movement_card(playerID, card_movementID):
+    def has_movement_card(self, playerID: int, cardID: int):
+        if self.game_repository.has_movement_card(playerID, cardID):
             return
         raise HTTPException(status_code=403, detail="El jugador no tiene la carta de movimiento.")
 
@@ -123,17 +133,17 @@ class RepositoryValidators:
 
     def validate_mov2(self, request:MovementCardRequest) -> bool:
         deltaX, deltaY = self.mov_calc(request)
-        return deltaX == 0 and deltaY == 2
+        return (deltaX == 0 and deltaY == 2) or (deltaX == 2 and deltaY == 0)
 
     def validate_mov3(self, request:MovementCardRequest) -> bool:
         deltaX, deltaY = self.mov_calc(request)
-        return deltaX == 0 and deltaY == 1
+        return (deltaX == 0 and deltaY == 1) or (deltaX == 1 and deltaY == 0)
 
     def validate_mov4(self, request:MovementCardRequest) -> bool:
         deltaX, deltaY = self.mov_calc(request)
         return deltaX == 1 and deltaY == 1
 
-    def validate_mov5(self, request:MovementCardRequest) -> bool:
+    def validate_mov5(self, request: MovementCardRequest) -> bool:
         up_posX_correct = (request.origin.posX - 2) == request.destination.posX
         up_posY_correct = (request.origin.posY + 1) == request.destination.posY
         up_correct = up_posX_correct and up_posY_correct
@@ -141,7 +151,16 @@ class RepositoryValidators:
         down_posX_correct = (request.origin.posX + 2) == request.destination.posX
         down_posY_correct = (request.origin.posY - 1) == request.destination.posY
         down_correct = down_posX_correct and down_posY_correct
-        return up_correct or down_correct
+
+        posX_correct_right = (request.origin.posX + 1) == request.destination.posX
+        posY_correct_rigth = (request.origin.posY + 2) == request.destination.posY
+        correct_right = posX_correct_right and posY_correct_rigth
+
+        posX_correct_left = (request.origin.posX - 1) == request.destination.posX
+        posY_correct_left = (request.origin.posY - 2) == request.destination.posY
+        correct_left = posX_correct_left and posY_correct_left
+
+        return up_correct or down_correct or correct_right or correct_left
 
     def validate_mov6(self,  request:MovementCardRequest) -> bool:
         up_posX_correct = (request.origin.posX - 2) == request.destination.posX
@@ -151,7 +170,16 @@ class RepositoryValidators:
         down_posX_correct = (request.origin.posX + 2) == request.destination.posX 
         down_posY_correct = (request.origin.posY + 1) == request.destination.posY
         down_correct = down_posX_correct and down_posY_correct
-        return up_correct or down_correct
+
+        posX_correct_right = (request.origin.posX - 1) == request.destination.posX
+        posY_correct_rigth = (request.origin.posY + 2) == request.destination.posY
+        correct_right = posX_correct_right and posY_correct_rigth
+
+        posX_correct_left = (request.origin.posX + 1) == request.destination.posX
+        posY_correct_left = (request.origin.posY - 2) == request.destination.posY
+        correct_left = posX_correct_left and posY_correct_left
+
+        return up_correct or down_correct or correct_right or correct_left
 
     def validate_mov7(self, request:MovementCardRequest) -> bool:
         deltaX, deltaY = self.mov_calc(request)
@@ -163,7 +191,6 @@ class RepositoryValidators:
         bottom_side = request.destination.posX == 0 and posY_non_affected
 
         return right_side or left_side or top_side or bottom_side
-
 
 
 
