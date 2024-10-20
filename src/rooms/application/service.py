@@ -44,7 +44,6 @@ class RoomService:
             await self.room_repository.disconnect_player(roomID, playerID)
             self.room_repository.delete_and_clean(roomID)
         else:
-            self.room_domain_service.validate_player_is_not_owner(playerID, roomID)
             self.room_repository.remove_player_from_room(playerID=playerID, roomID=roomID)
             await self.room_repository.disconnect_player(roomID, playerID)
             await self.room_repository.broadcast_status_room(roomID)
