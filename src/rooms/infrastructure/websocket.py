@@ -7,6 +7,7 @@ from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 class MessageType(str, Enum):
     STATUS = "status"
     START_GAME = "start"
+    END_ROOM = "end"
 
 
 class ConnectionManagerRoomList:
@@ -133,6 +134,22 @@ class ConnectionManagerRoom:
                 if not self.active_connections[roomID]:
                     self.active_connections.pop(roomID)
 
+    async def disconnect_by_id_room(self, playerID: int, roomID: int):
+        """Remueve al cliente de la lista de conexiones activas y cierra la conexión en caso de que no esté cerrada
+
+        Args:
+            playerID (int): ID del jugador
+            roomID (int): ID de la sala
+        """
+        if roomID in self.active_connections:
+            if playerID in self.active_connections[roomID]:
+                websocket = self.active_connections[roomID][playerID]
+                if websocket.client_state != WebSocketState.DISCONNECTED:
+                    await websocket.close()
+                self.active_connections[roomID].pop(playerID)
+                if not self.active_connections[roomID]:
+                    self.active_connections.pop(roomID)
+
     async def send_personal_message(self, type: MessageType, payload: str, websocket: WebSocket):
         """Envía un mensaje personalizado al cliente
 
@@ -143,6 +160,20 @@ class ConnectionManagerRoom:
         """
         message = {"type": type, "payload": payload}
         await websocket.send_json(message)
+
+    async def send_personal_message_by_id(self, type: MessageType, payload: str, playerID: int, roomID: int):
+        """Envía un mensaje personalizado al cliente
+
+        Args:
+            type (str): Tipo de mensaje
+            payload (str): Cuerpo del mensaje
+            playerID (int): ID del jugador
+            roomID (int): ID de la sala
+        """
+        message = {"type": type, "payload": payload}
+        if roomID in self.active_connections:
+            if playerID in self.active_connections[roomID]:
+                await self.active_connections[roomID][playerID].send_json(message)
 
     async def broadcast(self, type: MessageType, payload: str, roomID: int):
         """Envía un mensaje a todos los clientes conectados a la sala
