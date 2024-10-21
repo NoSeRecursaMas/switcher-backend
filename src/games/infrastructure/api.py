@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from src.database import get_db
 from src.games.application.service import GameService
-from src.games.domain.models import BoardPiecePosition, GameID, MovementCardRequest, figureCardID
+from src.games.domain.models import FigureCardRequest, GameID, MovementCardRequest
 from src.games.infrastructure.repository import (
     WebSocketRepository as GameRepository,
 )
@@ -73,9 +73,7 @@ async def leave_game(gameID: int, playerID: PlayerID, db_session: Session = Depe
 @router.post(path="/{gameID}/figure", status_code=201)
 async def play_figure(
     gameID: int,
-    cardID: figureCardID,
-    playerID: PlayerID,
-    figure: List[BoardPiecePosition],
+    request: FigureCardRequest,
     db_session: Session = Depends(get_db),
 ) -> None:
     game_repository = GameRepository(db_session)
@@ -84,4 +82,4 @@ async def play_figure(
 
     game_service = GameService(game_repository, player_repository, room_repository)
 
-    await game_service.play_figure(gameID, playerID.playerID, cardID.cardID, figure)
+    await game_service.play_figure(gameID, request.playerID, request.cardID, request.figure)

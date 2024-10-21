@@ -95,3 +95,9 @@ class GamePublicInfo(Game):
 class Winner(BaseModel):
     winnerID: int
     username: str
+
+
+class FigureCardRequest(BaseModel):
+    cardID: int
+    playerID: int
+    figure: List[BoardPiecePosition]
