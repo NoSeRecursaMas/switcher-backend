@@ -144,6 +144,20 @@ class ConnectionManagerRoom:
         message = {"type": type, "payload": payload}
         await websocket.send_json(message)
 
+    async def send_personal_message_by_id(self, type: MessageType, payload: str, playerID: int, roomID: int):
+        """Envía un mensaje personalizado al cliente
+
+        Args:
+            type (str): Tipo de mensaje
+            payload (str): Cuerpo del mensaje
+            playerID (int): ID del jugador
+            roomID (int): ID de la sala
+        """
+        message = {"type": type, "payload": payload}
+        if roomID in self.active_connections:
+            if playerID in self.active_connections[roomID]:
+                await self.active_connections[roomID][playerID].send_json(message)
+
     async def broadcast(self, type: MessageType, payload: str, roomID: int):
         """Envía un mensaje a todos los clientes conectados a la sala
 

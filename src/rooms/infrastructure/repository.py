@@ -47,7 +47,8 @@ class SQLAlchemyRepository(RoomRepository):
         if room is None:
             return None
 
-        players_list = [Player(playerID=player.playerID, username=player.username) for player in room.players]
+        players_list = [Player(
+            playerID=player.playerID, username=player.username) for player in room.players]
 
         return RoomDomain(
             roomID=room.roomID,
@@ -114,9 +115,11 @@ class SQLAlchemyRepository(RoomRepository):
         self.db_session.commit()
         self.db_session.refresh(room)
 
-    def delete(self, roomID: int) -> None:
-        self.db_session.query(Room).filter(Room.roomID == roomID).delete()
-        self.db_session.commit()
+    def delete_and_clean(self, roomID: int) -> None:
+        if self.db_session.query(Room).filter(Room.roomID == roomID).one_or_none() is None:
+            raise ValueError(f"Room with ID {roomID} not found")
+        self.db_session.query(PlayerRoom).filter(
+            PlayerRoom.roomID == roomID).delete()
 
     def add_player_to_room(self, playerID: int, roomID: int) -> None:
         player_join_room = PlayerRoom(roomID=roomID, playerID=playerID)
@@ -131,19 +134,23 @@ class SQLAlchemyRepository(RoomRepository):
         self.db_session.commit()
 
     def is_owner(self, playerID: int, roomID: int) -> bool:
-        room = self.db_session.query(Room).filter_by(hostID=playerID, roomID=roomID).one_or_none()
+        room = self.db_session.query(Room).filter_by(
+            hostID=playerID, roomID=roomID).one_or_none()
         return room is not None
 
     def is_player_in_room(self, playerID: int, roomID: int) -> bool:
-        player_in_room = self.db_session.query(PlayerRoom).filter_by(playerID=playerID, roomID=roomID).one_or_none()
+        player_in_room = self.db_session.query(PlayerRoom).filter_by(
+            playerID=playerID, roomID=roomID).one_or_none()
         return player_in_room is not None
 
     def is_game_started(self, roomID: int) -> bool:
-        room = self.db_session.query(Room).filter_by(roomID=roomID).one_or_none()
+        room = self.db_session.query(Room).filter_by(
+            roomID=roomID).one_or_none()
         return room.game is not None
 
     def set_position(self, playerID: int, position: int) -> None:
-        self.db_session.query(PlayerRoom).filter(PlayerRoom.playerID == playerID).update({"position": position})
+        self.db_session.query(PlayerRoom).filter(
+            PlayerRoom.playerID == playerID).update({"position": position})
         self.db_session.commit()
 
 
@@ -206,3 +213,26 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         game_info = GameID(gameID=gameID)
         game_info_json = game_info.model_dump()
         await ws_manager_room.broadcast(MessageType.START_GAME, game_info_json, roomID)
+
+    async def broadcast_room_cancellation(self, roomID: int) -> None:
+        """Envía la señal de cancelación de sala a todos los clientes conectados a la sala
+
+        Args:
+            roomID (int): ID de la sala
+        """
+        room_json = "{}"
+        players = self.get_players(roomID)
+        for player in players:
+            await ws_manager_room.send_personal_message_by_id(
+                MessageType.END_ROOM, room_json, player.playerID, roomID
+            )
+
+    async def disconnect_player(self, playerID: int, roomID: int) -> None:
+        """Remueve al jugador de la lista de conexiones activas
+
+        Args:
+            playerID (int): ID del jugador
+            gameID (int): ID del juego
+        """
+        await ws_manager_room.disconnect_by_id_room(playerID, roomID)
+
