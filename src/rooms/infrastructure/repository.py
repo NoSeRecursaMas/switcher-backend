@@ -114,7 +114,10 @@ class SQLAlchemyRepository(RoomRepository):
         self.db_session.commit()
         self.db_session.refresh(room)
 
-    def delete(self, roomID: int) -> None:
+    def delete_and_clean(self, roomID: int) -> None:
+        if self.db_session.query(Room).filter(Room.roomID == roomID).one_or_none() is None:
+            raise ValueError(f"Room with ID {roomID} not found")
+        self.db_session.query(PlayerRoom).filter(PlayerRoom.roomID == roomID).delete()
         self.db_session.query(Room).filter(Room.roomID == roomID).delete()
         self.db_session.commit()
 
@@ -206,3 +209,23 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
         game_info = GameID(gameID=gameID)
         game_info_json = game_info.model_dump()
         await ws_manager_room.broadcast(MessageType.START_GAME, game_info_json, roomID)
+
+    async def broadcast_room_cancellation(self, roomID: int) -> None:
+        """Envía la señal de cancelación de sala a todos los clientes conectados a la sala
+
+        Args:
+            roomID (int): ID de la sala
+        """
+        room_json = "{}"
+        players = self.get_players(roomID)
+        for player in players:
+            await ws_manager_room.send_personal_message_by_id(MessageType.END_ROOM, room_json, player.playerID, roomID)
+
+    async def disconnect_player(self, playerID: int, roomID: int) -> None:
+        """Remueve al jugador de la lista de conexiones activas
+
+        Args:
+            playerID (int): ID del jugador
+            gameID (int): ID del juego
+        """
+        await ws_manager_room.disconnect_by_id_room(playerID, roomID)

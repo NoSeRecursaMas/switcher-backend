@@ -33,13 +33,16 @@ class RepositoryValidators:
         if room is None:
             raise HTTPException(status_code=404, detail="La sala no existe.")
         if len(room.players) < room.minPlayers:
-            raise HTTPException(status_code=403, detail="No hay suficientes jugadores para iniciar la partida.")
+            raise HTTPException(
+                status_code=403, detail="No hay suficientes jugadores para iniciar la partida.")
 
     def validate_is_player_turn(self, playerID: int, gameID: int):
-        postion_player = self.game_repository.get_position_player(gameID, playerID)
+        postion_player = self.game_repository.get_position_player(
+            gameID, playerID)
         if self.game_repository.get_current_turn(gameID) == postion_player:
             return
-        raise HTTPException(status_code=403, detail="No es el turno del jugador.")
+        raise HTTPException(
+            status_code=403, detail="No es el turno del jugador.")
 
     async def validate_game_exists(self, gameID: int, websocket: Optional[WebSocket] = None):
         if self.game_repository.get(gameID) is not None:
@@ -51,22 +54,26 @@ class RepositoryValidators:
             raise WebSocketDisconnect(4004, "El juego no existe.")
 
     async def is_player_in_game(self, playerID: int, gameID: int, websocket: Optional[WebSocket] = None):
-        player_in_game = self.game_repository.is_player_in_game(playerID, gameID)
+        player_in_game = self.game_repository.is_player_in_game(
+            playerID, gameID)
         player_active = self.game_repository.is_player_active(playerID, gameID)
 
         if player_in_game and player_active:
             return
         if websocket is None:
-            raise HTTPException(status_code=403, detail="El jugador no se encuentra en el juego.")
+            raise HTTPException(
+                status_code=403, detail="El jugador no se encuentra en el juego.")
         else:
             await websocket.accept()
-            raise WebSocketDisconnect(4003, "El jugador no se encuentra en el juego.")
+            raise WebSocketDisconnect(
+                4003, "El jugador no se encuentra en el juego.")
 
     def validate_figure_card_exists(self, gameID: int, figureCardID: int):
         card = self.game_repository.get_figure_card(figureCardID)
 
         if card is None or card.gameID != gameID:
-            raise HTTPException(status_code=403, detail="La carta no existe en la partida.")
+            raise HTTPException(
+                status_code=403, detail="La carta no existe en la partida.")
 
     def validate_figure_card_belongs_to_player(self, playerID: int, figureCardID: int):
         card = self.game_repository.get_figure_card(figureCardID)
@@ -74,18 +81,22 @@ class RepositoryValidators:
             raise HTTPException(status_code=403, detail="La carta no existe.")
 
         if card.playerID != playerID:
-            raise HTTPException(status_code=403, detail="La carta no pertenece al jugador.")
+            raise HTTPException(
+                status_code=403, detail="La carta no pertenece al jugador.")
 
     def validate_figure_is_empty(self, figure: List[BoardPiecePosition]):
         if len(figure) == 0:
-            raise HTTPException(status_code=403, detail="La figura no puede estar vacía.")
+            raise HTTPException(
+                status_code=403, detail="La figura no puede estar vacía.")
 
     def validate_figure_matches_board(self, gameID: int, figure: List[BoardPiecePosition]):
         board = self.game_repository.get_board(gameID)
 
-        color_figure = [board[piece.posX * 6 + piece.posY].color for piece in figure]
+        color_figure = [board[piece.posX * 6 +
+                              piece.posY].color for piece in figure]
         if len(set(color_figure)) != 1:
-            raise HTTPException(status_code=403, detail="La figura debe ser del mismo color.")
+            raise HTTPException(
+                status_code=403, detail="La figura debe ser del mismo color.")
 
     def validate_figure_matches_card(self, figureID: int, figure: List[BoardPiecePosition]):
         card = self.game_repository.get_figure_card(figureID)
@@ -113,7 +124,8 @@ class RepositoryValidators:
             if figure_form.shape == rotated_figure.shape and (rotated_figure == figure_form).all():
                 return
 
-        raise HTTPException(status_code=403, detail="La figura no coincide con la carta.")
+        raise HTTPException(
+            status_code=403, detail="La figura no coincide con la carta.")
 
     def validate_figure_border_validity(self, gameID: int, figure: List[BoardPiecePosition]):
         board = self.game_repository.get_board(gameID)
@@ -124,13 +136,15 @@ class RepositoryValidators:
             board_matrix[piece.posY][piece.posX] = piece.color
 
         if not self.game_repository.check_border_validity(figure, board_matrix):
-            raise HTTPException(status_code=403, detail="La figura tiene una ficha adyacente del mismo color.")
+            raise HTTPException(
+                status_code=403, detail="La figura tiene una ficha adyacente del mismo color.")
 
     async def validate_player_turn(self, playerID: int, gameID: int, websocket: Optional[WebSocket] = None):
         if self.game_repository.is_player_turn(playerID, gameID):
             return
         if websocket is None:
-            raise HTTPException(status_code=403, detail="No es el turno del jugador.")
+            raise HTTPException(
+                status_code=403, detail="No es el turno del jugador.")
         else:
             await websocket.accept()
             raise WebSocketDisconnect(4005, "No es el turno del jugador.")
@@ -160,12 +174,14 @@ class RepositoryValidators:
     def card_exists(self, cardID: int):
         if self.game_repository.card_exists(cardID):
             return
-        raise HTTPException(status_code=403, detail="La carta de movimiento no existe.")
+        raise HTTPException(
+            status_code=403, detail="La carta de movimiento no existe.")
 
     def has_movement_card(self, playerID: int, cardID: int):
         if self.game_repository.has_movement_card(playerID, cardID):
             return
-        raise HTTPException(status_code=403, detail="El jugador no tiene la carta de movimiento.")
+        raise HTTPException(
+            status_code=403, detail="El jugador no tiene la carta de movimiento.")
 
     def mov_calc(self, request: MovementCardRequest):
         deltaX = abs(request.origin.posX - request.destination.posX)
@@ -193,16 +209,22 @@ class RepositoryValidators:
         up_posY_correct = (request.origin.posY + 1) == request.destination.posY
         up_correct = up_posX_correct and up_posY_correct
 
-        down_posX_correct = (request.origin.posX + 2) == request.destination.posX
-        down_posY_correct = (request.origin.posY - 1) == request.destination.posY
+        down_posX_correct = (request.origin.posX +
+                             2) == request.destination.posX
+        down_posY_correct = (request.origin.posY -
+                             1) == request.destination.posY
         down_correct = down_posX_correct and down_posY_correct
 
-        posX_correct_right = (request.origin.posX + 1) == request.destination.posX
-        posY_correct_rigth = (request.origin.posY + 2) == request.destination.posY
+        posX_correct_right = (request.origin.posX +
+                              1) == request.destination.posX
+        posY_correct_rigth = (request.origin.posY +
+                              2) == request.destination.posY
         correct_right = posX_correct_right and posY_correct_rigth
 
-        posX_correct_left = (request.origin.posX - 1) == request.destination.posX
-        posY_correct_left = (request.origin.posY - 2) == request.destination.posY
+        posX_correct_left = (request.origin.posX -
+                             1) == request.destination.posX
+        posY_correct_left = (request.origin.posY -
+                             2) == request.destination.posY
         correct_left = posX_correct_left and posY_correct_left
 
         return up_correct or down_correct or correct_right or correct_left
@@ -212,16 +234,22 @@ class RepositoryValidators:
         up_posY_correct = (request.origin.posY - 1) == request.destination.posY
         up_correct = up_posX_correct and up_posY_correct
 
-        down_posX_correct = (request.origin.posX + 2) == request.destination.posX
-        down_posY_correct = (request.origin.posY + 1) == request.destination.posY
+        down_posX_correct = (request.origin.posX +
+                             2) == request.destination.posX
+        down_posY_correct = (request.origin.posY +
+                             1) == request.destination.posY
         down_correct = down_posX_correct and down_posY_correct
 
-        posX_correct_right = (request.origin.posX - 1) == request.destination.posX
-        posY_correct_rigth = (request.origin.posY + 2) == request.destination.posY
+        posX_correct_right = (request.origin.posX -
+                              1) == request.destination.posX
+        posY_correct_rigth = (request.origin.posY +
+                              2) == request.destination.posY
         correct_right = posX_correct_right and posY_correct_rigth
 
-        posX_correct_left = (request.origin.posX + 1) == request.destination.posX
-        posY_correct_left = (request.origin.posY - 2) == request.destination.posY
+        posX_correct_left = (request.origin.posX +
+                             1) == request.destination.posX
+        posY_correct_left = (request.origin.posY -
+                             2) == request.destination.posY
         correct_left = posX_correct_left and posY_correct_left
 
         return up_correct or down_correct or correct_right or correct_left

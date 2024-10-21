@@ -37,7 +37,7 @@ class RoomRepository(ABC):
         pass
 
     @abstractmethod
-    def delete(self, playerID: int) -> None:
+    def delete_and_clean(self, roomID: int) -> None:
         pass
 
     @abstractmethod
@@ -84,4 +84,12 @@ class RoomRepositoryWS(RoomRepository):
 
     @abstractmethod
     async def broadcast_start_game(self, roomID: int, gameID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def broadcast_room_cancellation(self, roomID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def disconnect_player(self, playerID: int, roomID: int) -> None:
         pass

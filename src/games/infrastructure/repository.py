@@ -28,6 +28,7 @@ from src.games.domain.models import (
     GamePublicInfo,
     MovementCard,
     PlayerPublicInfo,
+    Position,
     Winner,
 )
 from src.games.domain.models import (
