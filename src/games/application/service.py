@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import WebSocket
 
-from src.games.domain.models import GameID
+from src.games.domain.models import GameID, MovementCardRequest
 from src.games.domain.repository import GameRepositoryWS
 from src.games.domain.service import GameServiceDomain
 from src.games.domain.service import RepositoryValidators as GameRepositoryValidators
@@ -11,7 +11,6 @@ from src.players.domain.repository import PlayerRepository
 from src.players.domain.service import RepositoryValidators as PlayerRepositoryValidators
 from src.rooms.domain.repository import RoomRepositoryWS
 from src.rooms.domain.service import RepositoryValidators as RoomRepositoryValidators
-from src.games.domain.models import MovementCardRequest
 
 
 class GameService:
@@ -83,12 +82,14 @@ class GameService:
         self.game_domain_service.card_exists(request.cardID)
         self.game_domain_service.has_movement_card(request.playerID, request.cardID)
         self.game_domain_service.validate_movement_card(request)
-        self.game_repository.play_movement(gameID,
-                                                    card_id=request.cardID, 
-                                                    originX=request.origin.posX, 
-                                                    originY=request.origin.posY, 
-                                                    destinationX=request.destination.posX, 
-                                                    destinationY=request.destination.posY)
+        self.game_repository.play_movement(
+            gameID,
+            card_id=request.cardID,
+            originX=request.origin.posX,
+            originY=request.origin.posY,
+            destinationX=request.destination.posX,
+            destinationY=request.destination.posY,
+        )
         await self.game_repository.broadcast_status_game(gameID)
 
     async def leave_game(self, gameID: int, playerID: int) -> None:
