@@ -1,8 +1,8 @@
 COLORS = ["R", "G", "B", "Y"]
 
-WHITE_CARDS_AMOUNT = [18 * 2, 12 * 2, 9 * 2]
+WHITE_CARDS_AMOUNT = [18 * 2, 12 * 3, 9 * 4]
 
-BLUE_CARDS_AMOUNT = [7 * 2, 4 * 2, 3 * 2]
+BLUE_CARDS_AMOUNT = [7 * 2, 4 * 3, 3 * 4]
 
 MOVEMENT_CARDS_AMOUNT = [24, 16, 12]
 

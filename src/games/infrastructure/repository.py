@@ -399,6 +399,11 @@ class SQLAlchemyRepository(GameRepository):
         game.lastMovements = json.dumps([])
         self.db_session.commit()
 
+    def set_partial_movements_to_empty(self, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        game.lastMovements = json.dumps([])
+        self.db_session.commit()
+
     def was_card_used_in_partial_movement(self, gameID: int, cardID: int) -> bool:
         game = self.db_session.get(GameDB, gameID)
         last_movements = json.loads(game.lastMovements) if game.lastMovements else []
@@ -571,6 +576,15 @@ class SQLAlchemyRepository(GameRepository):
         return FigureCard(
             type=card.type, cardID=card.cardID, isBlocked=card.isBlocked, gameID=card.gameID, playerID=card.playerID
         )
+
+    def desvinculate_partial_movement_cards(self, gameID):
+        game = self.db_session.get(GameDB, gameID)
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+        for movement in last_movements:
+            card = self.db_session.get(MovementCardDB, movement["CardID"])
+            card.playerID = None
+            card.isDiscarded = True
+        self.db_session.commit()
 
     def get_movement_card(self, cardID: int) -> MovementCardDomain:
         card = self.db_session.get(MovementCardDB, cardID)
