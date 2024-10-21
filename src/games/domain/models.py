@@ -23,12 +23,6 @@ class FigureCard(BaseModel):
     type: str
     cardID: int
     isBlocked: bool
-    gameID: int
-    playerID: int
-
-
-class figureCardID(BaseModel):
-    cardID: int
 
 
 class MovementCard(BaseModel):
@@ -36,18 +30,15 @@ class MovementCard(BaseModel):
     cardID: int
     isUsed: bool
 
-
 class Position(BaseModel):
     posX: int
     posY: int
-
 
 class MovementCardRequest(BaseModel):
     cardID: int
     playerID: int
     origin: Position
     destination: Position
-
 
 class PlayerPublicInfo(BaseModel):
     playerID: int
@@ -61,7 +52,7 @@ class PlayerPublicInfo(BaseModel):
     @classmethod
     def check_size_deck(cls, value):
         if len(value) > 3:
-            raise ValueError("La baraja de figuras debe tener un máximo de 3 cartas.")
+            raise ValueError("The deck of figure cards must have a maximum of 3 cards")
         return value
 
 
@@ -76,7 +67,7 @@ class Game(BaseModel):
     @classmethod
     def check_board(cls, value):
         if len(value) != 36:
-            raise ValueError("El tablero debe tener 36 piezas.")
+            raise ValueError("The board must have 36 pieces")
         return value
 
 
@@ -95,9 +86,3 @@ class GamePublicInfo(Game):
 class Winner(BaseModel):
     winnerID: int
     username: str
-
-
-class FigureCardRequest(BaseModel):
-    cardID: int
-    playerID: int
-    figure: List[BoardPiecePosition]
