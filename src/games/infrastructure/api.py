@@ -23,8 +23,7 @@ async def start_game(roomID: int, playerID: PlayerID, db_session: Session = Depe
     player_repository = PlayerRepository(db_session)
     room_repository = RoomRepository(db_session)
 
-    game_service = GameService(
-        game_repository, player_repository, room_repository)
+    game_service = GameService(game_repository, player_repository, room_repository)
 
     gameID = await game_service.start_game(roomID, playerID)
     return gameID
@@ -36,15 +35,13 @@ async def skip_turn(gameID: int, playerID: PlayerID, db_session: Session = Depen
     player_repository = PlayerRepository(db_session)
     room_repository = RoomRepository(db_session)
 
-    game_service = GameService(
-        game_repository, player_repository, room_repository)
+    game_service = GameService(game_repository, player_repository, room_repository)
     await game_service.skip_turn(playerID.playerID, gameID)
 
 
 @router.websocket("/{playerID}/{gameID}")
 async def room_websocket(playerID: int, gameID: int, websocket: WebSocket, db_session: Session = Depends(get_db)):
-    service = GameService(GameRepository(db_session),
-                          PlayerRepository(db_session))
+    service = GameService(GameRepository(db_session), PlayerRepository(db_session))
 
     try:
         await service.connect_to_game_websocket(playerID, gameID, websocket)
@@ -68,8 +65,7 @@ async def leave_game(gameID: int, playerID: PlayerID, db_session: Session = Depe
     player_repository = PlayerRepository(db_session)
     room_repository = RoomRepository(db_session)
 
-    game_service = GameService(
-        game_repository, player_repository, room_repository)
+    game_service = GameService(game_repository, player_repository, room_repository)
 
     await game_service.leave_game(gameID, playerID.playerID)
 
@@ -84,7 +80,6 @@ async def play_figure(
     player_repository = PlayerRepository(db_session)
     room_repository = RoomRepository(db_session)
 
-    game_service = GameService(
-        game_repository, player_repository, room_repository)
+    game_service = GameService(game_repository, player_repository, room_repository)
 
     await game_service.play_figure(gameID, request.playerID, request.cardID, request.figure)

@@ -333,8 +333,7 @@ def test_get_available_figures_2_glued_same_color(game_logic: SQLAlchemyReposito
 
 
 def test_no_available_figures(game_logic: SQLAlchemyRepository):
-    board = [{"posX": i, "posY": j, "color": "G", "isPartial": False}
-             for i in range(6) for j in range(6)]
+    board = [{"posX": i, "posY": j, "color": "G", "isPartial": False} for i in range(6) for j in range(6)]
 
     board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
 
