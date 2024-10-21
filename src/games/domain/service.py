@@ -102,12 +102,12 @@ class RepositoryValidators:
         max_x = max(figure, key=lambda x: x.posX).posX - min_x
         max_y = max(figure, key=lambda x: x.posY).posY - min_y
 
-        figure_form = np.zeros((max_y + 1, max_x + 1), dtype=bool)
+        figure_form = np.zeros((max_x + 1, max_y + 1), dtype=int)
 
         for piece in figure:
             adjusted_x = piece.posX - min_x
             adjusted_y = piece.posY - min_y
-            figure_form[adjusted_y][adjusted_x] = 1
+            figure_form[adjusted_x][adjusted_y] = 1
 
         for rotated_figure in rotated_figures:
             if figure_form.shape == rotated_figure.shape and (rotated_figure == figure_form).all():
@@ -125,17 +125,6 @@ class RepositoryValidators:
 
         if not self.game_repository.check_border_validity(figure, board_matrix):
             raise HTTPException(status_code=403, detail="La figura tiene una ficha adyacente del mismo color.")
-
-    async def validate_player_exists(self, playerID: int, websocket: Optional[WebSocket] = None):
-        if self.room_repository is None:
-            raise ValueError("RoomRepository is required to validate player exists")
-        if self.room_repository.get_player(playerID) is not None:
-            return
-        if websocket is None:
-            raise HTTPException(status_code=404, detail="El jugador no existe.")
-        else:
-            await websocket.accept()
-            raise WebSocketDisconnect(4001, "El jugador no existe.")
 
     async def validate_player_turn(self, playerID: int, gameID: int, websocket: Optional[WebSocket] = None):
         if self.game_repository.is_player_turn(playerID, gameID):
