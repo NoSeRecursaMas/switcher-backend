@@ -1,15 +1,19 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
 
+import numpy as np
 from fastapi.websockets import WebSocket
 
 from src.games.domain.models import (
+    BoardPiece,
+    BoardPiecePosition,
+    FigureCard,
     Game,
     GameID,
     GamePublicInfo,
 )
-from src.players.domain.models import Player as PlayerDomain
 from src.games.domain.models import MovementCard as MovementCardDomain
+from src.players.domain.models import Player as PlayerDomain
 
 
 class GameRepository(ABC):
@@ -46,7 +50,9 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def play_movement(self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int) -> None:
+    def play_movement(
+        self, gameID: int, card_id: int, originX: int, originY: int, destinationX: int, destinationY: int
+    ) -> None:
         pass
 
     @abstractmethod
@@ -89,6 +95,22 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
+    def get_figure_card(self, figureCardID: int) -> Optional[FigureCard]:
+        pass
+
+    @abstractmethod
+    def play_figure(self, figureID: int) -> None:
+        pass
+
+    @abstractmethod
+    def get_board(self, gameID: int) -> List[BoardPiece]:
+        pass
+
+    @abstractmethod
+    def check_border_validity(self, positions: List[BoardPiecePosition], layer: np.ndarray) -> bool:
+        pass
+
+    @abstractmethod
     def get_movement_card(self, cardID: int) -> MovementCardDomain:
         pass
 
@@ -100,21 +122,6 @@ class GameRepository(ABC):
     def card_exists(self, cardID: int) -> bool:
         pass
 
-    @abstractmethod
-    def delete_partial_movement(self, gameID: int) -> None:
-        pass
-
-    @abstractmethod
-    def partial_movement_exists(self, gameID: int) -> bool:
-        pass
-
-    @abstractmethod
-    def clean_partial_movements(self, gameID: int) -> None:
-        pass 
-
-    @abstractmethod
-    def was_card_used_in_partial_movement(self, gameID: int, cardID: int) -> bool:
-        pass
 
 class GameRepositoryWS(GameRepository):
     @abstractmethod
