@@ -779,7 +779,6 @@ def test_create_game_player_cards(client, test_db):
         assert playable_figure_cards_by_player[playerID] == 3
         assert movements_cards_by_player[playerID] == 3
 
-
 def test_play__correct_mov1_card(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -789,20 +788,10 @@ def test_play__correct_mov1_card(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 0) else "B" if (x == 2 and y == 2) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 0 and y == 0) else "B" if (x == 2 and y == 2) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov01", isDiscarded=False, playerID=1),
         ]
     )
@@ -816,10 +805,7 @@ def test_play__correct_mov1_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 2, "posY": 2}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 2, "posY": 2}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -839,20 +825,10 @@ def test_play__incorrect_mov1_card(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 0) else "B" if (x == 2 and y == 2) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 0 and y == 0) else "B" if (x == 2 and y == 2) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov01", isDiscarded=False, playerID=1),
         ]
     )
@@ -866,10 +842,7 @@ def test_play__incorrect_mov1_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 3, "posY": 3}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 3, "posY": 3}})
     assert response.status_code == 403
     assert response.json() == {"detail": "Movimiento inválido."}
 
@@ -880,7 +853,6 @@ def test_play__incorrect_mov1_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-
 def test_play_correct_mov2_card(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -890,20 +862,10 @@ def test_play_correct_mov2_card(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 0) else "B" if (x == 0 and y == 2) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 0 and y == 0) else "B" if (x == 0 and y == 2) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov02", isDiscarded=False, playerID=1),
         ]
     )
@@ -917,10 +879,7 @@ def test_play_correct_mov2_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 2}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 2}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -929,7 +888,6 @@ def test_play_correct_mov2_card(client, test_db):
     destination = next(item for item in board if item["posX"] == 0 and item["posY"] == 2)
     assert origin["color"] == "B"
     assert destination["color"] == "R"
-
 
 def test_play_incorrect_mov2_card(client, test_db):
     db = next(override_get_db())
@@ -940,20 +898,10 @@ def test_play_incorrect_mov2_card(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 0) else "B" if (x == 0 and y == 2) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 0 and y == 0) else "B" if (x == 0 and y == 2) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov02", isDiscarded=False, playerID=1),
         ]
     )
@@ -967,10 +915,7 @@ def test_play_incorrect_mov2_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}})
     assert response.status_code == 403
     assert response.json() == {"detail": "Movimiento inválido."}
 
@@ -980,7 +925,6 @@ def test_play_incorrect_mov2_card(client, test_db):
     destination = next(item for item in board if item["posX"] == 0 and item["posY"] == 2)
     assert origin["color"] == "R"
     assert destination["color"] == "B"
-
 
 def test_play_correct_mov3_card(client, test_db):
     db = next(override_get_db())
@@ -991,20 +935,10 @@ def test_play_correct_mov3_card(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 0) else "B" if (x == 0 and y == 1) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 0 and y == 0) else "B" if (x == 0 and y == 1) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov03", isDiscarded=False, playerID=1),
         ]
     )
@@ -1017,10 +951,7 @@ def test_play_correct_mov3_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 1}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 1}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1029,7 +960,6 @@ def test_play_correct_mov3_card(client, test_db):
     destination = next(item for item in board if item["posX"] == 0 and item["posY"] == 1)
     assert origin["color"] == "B"
     assert destination["color"] == "R"
-
 
 def test_play_incorrect_mov3_card(client, test_db):
     db = next(override_get_db())
@@ -1040,20 +970,10 @@ def test_play_incorrect_mov3_card(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 0) else "B" if (x == 0 and y == 1) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 0 and y == 0) else "B" if (x == 0 and y == 1) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov03", isDiscarded=False, playerID=1),
         ]
     )
@@ -1066,10 +986,7 @@ def test_play_incorrect_mov3_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}})
     assert response.status_code == 403
     assert response.json() == {"detail": "Movimiento inválido."}
 
@@ -1080,7 +997,6 @@ def test_play_incorrect_mov3_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-
 def test_play_correct_mov4_card(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -1090,20 +1006,10 @@ def test_play_correct_mov4_card(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 0) else "B" if (x == 1 and y == 1) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 0 and y == 0) else "B" if (x == 1 and y == 1) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov04", isDiscarded=False, playerID=1),
         ]
     )
@@ -1116,10 +1022,7 @@ def test_play_correct_mov4_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 1, "posY": 1}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1128,7 +1031,6 @@ def test_play_correct_mov4_card(client, test_db):
     destination = next(item for item in board if item["posX"] == 1 and item["posY"] == 1)
     assert origin["color"] == "B"
     assert destination["color"] == "R"
-
 
 def test_play_incorrect_mov4_card(client, test_db):
     db = next(override_get_db())
@@ -1139,20 +1041,10 @@ def test_play_incorrect_mov4_card(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 0) else "B" if (x == 1 and y == 1) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 0 and y == 0) else "B" if (x == 1 and y == 1) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov04", isDiscarded=False, playerID=1),
         ]
     )
@@ -1165,10 +1057,7 @@ def test_play_incorrect_mov4_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 1}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 0, "posY": 1}})
     assert response.status_code == 403
     assert response.json() == {"detail": "Movimiento inválido."}
 
@@ -1179,7 +1068,6 @@ def test_play_incorrect_mov4_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-
 def test_play_correct_mov5_card_down(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -1189,20 +1077,10 @@ def test_play_correct_mov5_card_down(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 2) else "B" if (x == 2 and y == 1) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 0 and y == 2) else "B" if (x == 2 and y == 1) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov05", isDiscarded=False, playerID=1),
         ]
     )
@@ -1215,10 +1093,7 @@ def test_play_correct_mov5_card_down(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 2}, "destination": {"posX": 2, "posY": 1}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 2}, "destination": {"posX": 2, "posY": 1}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1228,8 +1103,7 @@ def test_play_correct_mov5_card_down(client, test_db):
     assert origin["color"] == "B"
     assert destination["color"] == "R"
 
-
-def test_play_correct_mov5_card_up(client, test_db):
+def test_play_correct_mov5_card_up(client,test_db):
     db = next(override_get_db())
     db.add_all(
         [
@@ -1238,20 +1112,10 @@ def test_play_correct_mov5_card_up(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 2 and y == 1) else "B" if (x == 0 and y == 2) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 2 and y == 1) else "B" if (x == 0 and y == 2) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov05", isDiscarded=False, playerID=1),
         ]
     )
@@ -1264,10 +1128,7 @@ def test_play_correct_mov5_card_up(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 2, "posY": 1}, "destination": {"posX": 0, "posY": 2}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 2, "posY": 1}, "destination": {"posX": 0, "posY": 2}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1277,8 +1138,7 @@ def test_play_correct_mov5_card_up(client, test_db):
     assert origin["color"] == "B"
     assert destination["color"] == "R"
 
-
-def test_play_correct_mov6_card_up(client, test_db):
+def test_play_correct_mov6_card_up(client,test_db):
     db = next(override_get_db())
     db.add_all(
         [
@@ -1287,20 +1147,10 @@ def test_play_correct_mov6_card_up(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 2 and y == 1) else "B" if (x == 0 and y == 0) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 2 and y == 1) else "B" if (x == 0 and y == 0) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov06", isDiscarded=False, playerID=1),
         ]
     )
@@ -1313,10 +1163,7 @@ def test_play_correct_mov6_card_up(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 2, "posY": 1}, "destination": {"posX": 0, "posY": 0}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 2, "posY": 1}, "destination": {"posX": 0, "posY": 0}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1326,8 +1173,7 @@ def test_play_correct_mov6_card_up(client, test_db):
     assert origin["color"] == "B"
     assert destination["color"] == "R"
 
-
-def test_play_correct_mov6_card_down(client, test_db):
+def test_play_correct_mov6_card_down(client,test_db):
     db = next(override_get_db())
     db.add_all(
         [
@@ -1336,20 +1182,10 @@ def test_play_correct_mov6_card_down(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 0) else "B" if (x == 2 and y == 1) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 0 and y == 0) else "B" if (x == 2 and y == 1) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov06", isDiscarded=False, playerID=1),
         ]
     )
@@ -1362,10 +1198,7 @@ def test_play_correct_mov6_card_down(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 2, "posY": 1}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 0}, "destination": {"posX": 2, "posY": 1}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1375,8 +1208,7 @@ def test_play_correct_mov6_card_down(client, test_db):
     assert origin["color"] == "B"
     assert destination["color"] == "R"
 
-
-def test_play_correct_mov7_card(client, test_db):
+def test_play_correct_mov7_card(client,test_db):
     db = next(override_get_db())
     db.add_all(
         [
@@ -1385,20 +1217,10 @@ def test_play_correct_mov7_card(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 3 and y == 1) else "B" if (x == 0 and y == 1) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 3 and y == 1) else "B" if (x == 0 and y == 1) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov07", isDiscarded=False, playerID=1),
         ]
     )
@@ -1411,10 +1233,7 @@ def test_play_correct_mov7_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 3, "posY": 1}, "destination": {"posX": 0, "posY": 1}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 3, "posY": 1}, "destination": {"posX": 0, "posY": 1}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1423,7 +1242,6 @@ def test_play_correct_mov7_card(client, test_db):
     destination = next(item for item in board if item["posX"] == 0 and item["posY"] == 1)
     assert origin["color"] == "B"
     assert destination["color"] == "R"
-
 
 def test_player_did_not_has_movement_card(client, test_db):
     db = next(override_get_db())
@@ -1434,33 +1252,20 @@ def test_player_did_not_has_movement_card(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 3 and y == 1) else "B" if (x == 0 and y == 1) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x == 3 and y == 1) else "B" if (x == 0 and y == 1) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(cardID=1, gameID=1, type="mov07", isDiscarded=True, playerID=2),
             MovementCardDB(cardID=2, gameID=1, type="mov07", isDiscarded=True, playerID=1),
         ]
+
     )
     db.commit()
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 5, "posY": 1}, "destination": {"posX": 0, "posY": 1}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 5, "posY": 1}, "destination": {"posX": 0, "posY": 1}})
     assert response.status_code == 403
     assert response.json() == {"detail": "El jugador no tiene la carta de movimiento."}
-
 
 def test_play_horizontal_mov06(client, test_db):
     db = next(override_get_db())
@@ -1471,20 +1276,10 @@ def test_play_horizontal_mov06(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 1) else "B" if (x == 2 and y == 2) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x==0 and y == 1) else "B" if (x==2 and y == 2) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov06", isDiscarded=False, playerID=1),
         ]
     )
@@ -1497,10 +1292,7 @@ def test_play_horizontal_mov06(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 1}, "destination": {"posX": 2, "posY": 2}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 1}, "destination": {"posX": 2, "posY": 2}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
@@ -1509,7 +1301,6 @@ def test_play_horizontal_mov06(client, test_db):
     destination = next(item for item in board if item["posY"] == 2 and item["posX"] == 2)
     assert origin["color"] == "B"
     assert destination["color"] == "R"
-
 
 def test_play_horizontal_mov05(client, test_db):
     db = next(override_get_db())
@@ -1520,20 +1311,10 @@ def test_play_horizontal_mov05(client, test_db):
             RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
             PlayerRoomDB(playerID=1, roomID=1, position=1),
             PlayerRoomDB(playerID=2, roomID=1, position=2),
-            GameDB(
-                roomID=1,
-                board=json.dumps(
-                    [
-                        {
-                            "posX": x,
-                            "posY": y,
-                            "color": "R" if (x == 0 and y == 1) else "B" if (x == 2 and y == 0) else "G",
-                        }
-                        for x in range(6)
-                        for y in range(6)
-                    ]
-                ),
-            ),
+            GameDB(roomID=1, board=json.dumps([
+                {"posX": x, "posY": y, "color": "R" if (x==0 and y == 1) else "B" if (x==2 and y == 0) else "G"}
+                for x in range(6) for y in range(6)
+            ])),
             MovementCardDB(gameID=1, type="mov05", isDiscarded=False, playerID=1),
         ]
     )
@@ -1546,10 +1327,7 @@ def test_play_horizontal_mov05(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-    response = client.post(
-        "/games/1/movement",
-        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 1}, "destination": {"posX": 2, "posY": 0}},
-    )
+    response = client.post("/games/1/movement", json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 1}, "destination": {"posX": 2, "posY": 0}})
     assert response.status_code == 201
 
     board = db.get(GameDB, 1).board
