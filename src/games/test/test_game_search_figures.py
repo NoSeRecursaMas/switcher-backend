@@ -74,7 +74,7 @@ def test_get_available_figures_2_glued_diferent_color(game_logic):
         {"posX": 0, "posY": 0, "color": "G", "isPartial": False},
         {"posX": 0, "posY": 1, "color": "G", "isPartial": False},
         {"posX": 0, "posY": 2, "color": "G", "isPartial": False},
-        {"posX": 0, "posY": 3, "color": "B", "isPartial": False},
+        {"posX": 0, "posY": 3, "color": "G", "isPartial": False},
         {"posX": 0, "posY": 4, "color": "G", "isPartial": False},
         {"posX": 0, "posY": 5, "color": "G", "isPartial": False},
         {"posX": 1, "posY": 0, "color": "G", "isPartial": False},
@@ -123,7 +123,6 @@ def test_get_available_figures_2_glued_diferent_color(game_logic):
         [
             BoardPiecePosition(posX=2, posY=2),
             BoardPiecePosition(posX=3, posY=2),
-            BoardPiecePosition(posX=0, posY=3),
             BoardPiecePosition(posX=1, posY=3),
             BoardPiecePosition(posX=2, posY=3),
             BoardPiecePosition(posX=3, posY=3),
@@ -334,7 +333,8 @@ def test_get_available_figures_2_glued_same_color(game_logic):
 
 
 def test_no_available_figures(game_logic):
-    board = [{"posX": i, "posY": j, "color": "G", "isPartial": False} for i in range(6) for j in range(6)]
+    board = [{"posX": i, "posY": j, "color": "G", "isPartial": False}
+             for i in range(6) for j in range(6)]
 
     board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
 
