@@ -1,9 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
 
+import numpy as np
 from fastapi.websockets import WebSocket
 
 from src.games.domain.models import (
+    BoardPiece,
+    BoardPiecePosition,
+    FigureCard,
     Game,
     GameID,
     GamePublicInfo,
@@ -88,6 +92,22 @@ class GameRepository(ABC):
 
     @abstractmethod
     def delete_and_clean(self, gameID: int) -> None:
+        pass
+
+    @abstractmethod
+    def get_figure_card(self, figureCardID: int) -> Optional[FigureCard]:
+        pass
+
+    @abstractmethod
+    def play_figure(self, figureID: int) -> None:
+        pass
+
+    @abstractmethod
+    def get_board(self, gameID: int) -> List[BoardPiece]:
+        pass
+
+    @abstractmethod
+    def check_border_validity(self, positions: List[BoardPiecePosition], layer: np.ndarray) -> bool:
         pass
 
     @abstractmethod

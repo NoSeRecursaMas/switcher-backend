@@ -1,10 +1,12 @@
+from typing import List
+
 from fastapi import APIRouter, Depends
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 
 from src.database import get_db
 from src.games.application.service import GameService
-from src.games.domain.models import GameID, MovementCardRequest
+from src.games.domain.models import FigureCardRequest, GameID, MovementCardRequest
 from src.games.infrastructure.repository import (
     WebSocketRepository as GameRepository,
 )
@@ -66,3 +68,18 @@ async def leave_game(gameID: int, playerID: PlayerID, db_session: Session = Depe
     game_service = GameService(game_repository, player_repository, room_repository)
 
     await game_service.leave_game(gameID, playerID.playerID)
+
+
+@router.post(path="/{gameID}/figure", status_code=201)
+async def play_figure(
+    gameID: int,
+    request: FigureCardRequest,
+    db_session: Session = Depends(get_db),
+) -> None:
+    game_repository = GameRepository(db_session)
+    player_repository = PlayerRepository(db_session)
+    room_repository = RoomRepository(db_session)
+
+    game_service = GameService(game_repository, player_repository, room_repository)
+
+    await game_service.play_figure(gameID, request.playerID, request.cardID, request.figure)

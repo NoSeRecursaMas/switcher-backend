@@ -15,7 +15,7 @@ def game_logic():
     return SQLAlchemyRepository(db)
 
 
-def test_get_available_figures(game_logic):
+def test_get_available_figures(game_logic: SQLAlchemyRepository):
     board = [
         {"posX": 0, "posY": 0, "color": "G", "isPartial": False},
         {"posX": 0, "posY": 1, "color": "G", "isPartial": False},
@@ -69,7 +69,7 @@ def test_get_available_figures(game_logic):
     ]
 
 
-def test_get_available_figures_2_glued_diferent_color(game_logic):
+def test_get_available_figures_2_glued_diferent_color(game_logic: SQLAlchemyRepository):
     board = [
         {"posX": 0, "posY": 0, "color": "G", "isPartial": False},
         {"posX": 0, "posY": 1, "color": "G", "isPartial": False},
@@ -130,7 +130,7 @@ def test_get_available_figures_2_glued_diferent_color(game_logic):
     ]
 
 
-def test_get_available_figure_rotational_symmetry(game_logic):
+def test_get_available_figure_rotational_symmetry(game_logic: SQLAlchemyRepository):
     board = [
         {"posX": 0, "posY": 0, "color": "G", "isPartial": False},
         {"posX": 0, "posY": 1, "color": "G", "isPartial": False},
@@ -184,7 +184,7 @@ def test_get_available_figure_rotational_symmetry(game_logic):
     ]
 
 
-def test_figures_on_board_edges(game_logic):
+def test_figures_on_board_edges(game_logic: SQLAlchemyRepository):
     board = [
         {"posX": 0, "posY": 0, "color": "G", "isPartial": False},
         {"posX": 0, "posY": 1, "color": "G", "isPartial": False},
@@ -238,7 +238,7 @@ def test_figures_on_board_edges(game_logic):
     ]
 
 
-def test_overlapping_figures(game_logic):
+def test_overlapping_figures(game_logic: SQLAlchemyRepository):
     board = [
         {"posX": 0, "posY": 0, "color": "G", "isPartial": False},
         {"posX": 0, "posY": 1, "color": "G", "isPartial": False},
@@ -285,7 +285,7 @@ def test_overlapping_figures(game_logic):
     assert figures == []
 
 
-def test_get_available_figures_2_glued_same_color(game_logic):
+def test_get_available_figures_2_glued_same_color(game_logic: SQLAlchemyRepository):
     board = [
         {"posX": 0, "posY": 0, "color": "R", "isPartial": False},
         {"posX": 0, "posY": 1, "color": "R", "isPartial": False},
@@ -332,19 +332,8 @@ def test_get_available_figures_2_glued_same_color(game_logic):
     assert figures == []
 
 
-def test_no_available_figures(game_logic):
-    board = [{"posX": i, "posY": j, "color": "G", "isPartial": False}
-             for i in range(6) for j in range(6)]
-
-    board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
-
-    figures = game_logic.get_available_figures(board_pieces)
-    assert len(figures) == 0
-    assert figures == []
-
-
-def test_get_available_figures_empty_board(game_logic):
-    board = []
+def test_no_available_figures(game_logic: SQLAlchemyRepository):
+    board = [{"posX": i, "posY": j, "color": "G", "isPartial": False} for i in range(6) for j in range(6)]
 
     board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
 

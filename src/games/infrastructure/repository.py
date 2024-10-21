@@ -327,7 +327,15 @@ class SQLAlchemyRepository(GameRepository):
         playable_cards: List[FigureCard] = []
         for card in figure_cards:
             if card.isPlayable:
-                playable_cards.append(FigureCard(type=card.type, cardID=card.cardID, isBlocked=card.isBlocked))
+                playable_cards.append(
+                    FigureCard(
+                        type=card.type,
+                        cardID=card.cardID,
+                        isBlocked=card.isBlocked,
+                        gameID=card.gameID,
+                        playerID=card.playerID,
+                    )
+                )
 
         return amount_non_playable, playable_cards
 
@@ -498,6 +506,20 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.delete(game)
         self.db_session.delete(room)
         self.db_session.commit()
+
+    def play_figure(self, figureID: int) -> None:
+        figure_card = self.db_session.query(FigureCardDB).filter_by(cardID=figureID).first()
+        if figure_card:
+            self.db_session.delete(figure_card)
+            self.db_session.commit()
+
+    def get_figure_card(self, figureCardID: int) -> Optional[FigureCard]:
+        card = self.db_session.get(FigureCardDB, figureCardID)
+        if card is None:
+            return None
+        return FigureCard(
+            type=card.type, cardID=card.cardID, isBlocked=card.isBlocked, gameID=card.gameID, playerID=card.playerID
+        )
 
     def get_movement_card(self, cardID: int) -> MovementCardDomain:
         card = self.db_session.get(MovementCardDB, cardID)
