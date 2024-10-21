@@ -120,8 +120,6 @@ class SQLAlchemyRepository(RoomRepository):
             raise ValueError(f"Room with ID {roomID} not found")
         self.db_session.query(PlayerRoom).filter(
             PlayerRoom.roomID == roomID).delete()
-        self.db_session.query(Room).filter(Room.roomID == roomID).delete()
-        self.db_session.commit()
 
     def add_player_to_room(self, playerID: int, roomID: int) -> None:
         player_join_room = PlayerRoom(roomID=roomID, playerID=playerID)
@@ -237,3 +235,4 @@ class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
             gameID (int): ID del juego
         """
         await ws_manager_room.disconnect_by_id_room(playerID, roomID)
+

@@ -65,7 +65,7 @@ class GameService:
         self.game_repository.skip(gameID)
         self.game_repository.replacement_movement_card(gameID, playerID)
         self.game_repository.replacement_figure_card(gameID, playerID)
-
+        self.game_repository.clean_partial_movements(gameID)
         await self.game_repository.broadcast_status_game(gameID)
 
     async def connect_to_game_websocket(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
@@ -83,12 +83,22 @@ class GameService:
         self.game_domain_service.card_exists(request.cardID)
         self.game_domain_service.has_movement_card(request.playerID, request.cardID)
         self.game_domain_service.validate_movement_card(request)
+        self.game_domain_service.validate_card_is_partial_movement(gameID, request.cardID)
         self.game_repository.play_movement(gameID,
                                                     card_id=request.cardID, 
                                                     originX=request.origin.posX, 
                                                     originY=request.origin.posY, 
                                                     destinationX=request.destination.posX, 
                                                     destinationY=request.destination.posY)
+        await self.game_repository.broadcast_status_game(gameID)
+
+    async def delete_partial_movement(self, gameID: int, playerID: int) -> None:
+        await self.game_domain_service.validate_game_exists(gameID)
+        await self.game_domain_service.validate_player_turn(playerID, gameID)
+        await self.game_domain_service.validate_game_exists(gameID)
+        await self.game_domain_service.is_player_in_game(playerID, gameID)
+        self.game_domain_service.partial_movement_exists(gameID)
+        self.game_repository.delete_partial_movement(gameID)
         await self.game_repository.broadcast_status_game(gameID)
 
     async def leave_game(self, gameID: int, playerID: int) -> None:

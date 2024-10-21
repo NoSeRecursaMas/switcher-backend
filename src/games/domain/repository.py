@@ -100,6 +100,21 @@ class GameRepository(ABC):
     def card_exists(self, cardID: int) -> bool:
         pass
 
+    @abstractmethod
+    def delete_partial_movement(self, gameID: int) -> None:
+        pass
+
+    @abstractmethod
+    def partial_movement_exists(self, gameID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def clean_partial_movements(self, gameID: int) -> None:
+        pass 
+
+    @abstractmethod
+    def was_card_used_in_partial_movement(self, gameID: int, cardID: int) -> bool:
+        pass
 
 class GameRepositoryWS(GameRepository):
     @abstractmethod
