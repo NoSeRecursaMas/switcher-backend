@@ -34,6 +34,10 @@ class RepositoryValidators:
             await websocket.accept()
             raise WebSocketDisconnect(4003, "El jugador no se encuentra en la sala.")
 
+    def validate_player_is_not_owner(self, playerID: int, roomID: int):
+        if self.room_repository.is_owner(playerID, roomID):
+            raise HTTPException(status_code=403, detail="El propietario no puede abandonar la sala.")
+
     def validate_player_is_owner(self, playerID: int, roomID: int):
         if not self.room_repository.is_owner(playerID, roomID):
             raise HTTPException(status_code=403, detail="Solo el propietario puede iniciar la partida.")
