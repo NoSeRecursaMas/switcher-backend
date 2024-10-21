@@ -26,6 +26,15 @@ class RepositoryValidators:
             "mov07": self.validate_mov7,
         }
 
+    def partial_movement_exists(self, gameID: int):
+        if self.game_repository.partial_movement_exists(gameID):
+            return
+        raise HTTPException(status_code=403, detail="El jugador no ha realizado ningún movimiento.")
+    def validate_card_is_partial_movement(self, gameID:int, cardID: int):
+        if not self.game_repository.was_card_used_in_partial_movement(gameID, cardID):
+            return
+        raise HTTPException(status_code=403, detail="La carta ya fue usada en un movimiento parcial.")
+
     def validate_min_players_to_start(self, roomID: int):
         if self.room_repository is None:
             raise ValueError("RoomRepository is required to start a game")

@@ -271,6 +271,34 @@ class SQLAlchemyRepository(GameRepository):
         game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
         self.db_session.commit()
 
+    def partial_movement_exists(self, gameID: int) -> bool:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        return len(json.loads(game.lastMovements)) > 0
+    
+    def delete_partial_movement(self, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+        if len(last_movements) == 0:
+            return
+        
+        last_movement = last_movements[-1]
+        last_movement_origin = last_movement["origin"]
+        last_movement_destination = last_movement["destination"]
+        board = self.get_board(gameID)
+        origin_piece = next(piece for piece in board if piece.posX == last_movement_origin["posX"] and piece.posY == last_movement_origin["posY"])
+        destination_piece = next(piece for piece in board if piece.posX == last_movement_destination["posX"] and piece.posY == last_movement_destination["posY"])
+        aux = origin_piece.color
+        origin_piece.color = destination_piece.color
+        destination_piece.color = aux
+        game.lastMovements = json.dumps(last_movements[:-1])
+        game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
+        self.db_session.commit()
+
     def has_movement_card(self, playerID: int, cardID: int) -> bool:
         card = self.db_session.get(MovementCardDB, cardID)
         if card is None:
@@ -288,9 +316,13 @@ class SQLAlchemyRepository(GameRepository):
         return player.position == game.posEnabledToPlay
 
     def is_piece_partial(self, gameID: int, posX: int, posY: int) -> bool:
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
+        game = self.db_session.get(GameDB, gameID)
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+        for movement in last_movements:
+            if movement["origin"]["posX"] == posX and movement["origin"]["posY"] == posY:
+                return True
+            if movement["destination"]["posX"] == posX and movement["destination"]["posY"] == posY:
+                return True
         return False
 
     def get_players(self, gameID: int) -> List[PlayerPublicInfo]:
@@ -345,15 +377,34 @@ class SQLAlchemyRepository(GameRepository):
         )
         cards: List[MovementCard] = []
         for card in cards_db:
-            isUsed = self.was_card_used_in_partial_movement(gameID, playerID, card.cardID)
+            isUsed = self.was_card_used_in_partial_movement(gameID, card.cardID)
             cards.append(MovementCard(type=card.type, cardID=card.cardID, isUsed=isUsed))
 
         return cards
+    
+    def clean_partial_movements(self, gameID: int) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+        board = self.get_board(gameID)
+        last_movements.sort(key=lambda x: x["Order"], reverse=True)
+        for movement in last_movements:
+            origin = movement["origin"]
+            destination = movement["destination"]
+            origin_piece = next(piece for piece in board if piece.posX == origin["posX"] and piece.posY == origin["posY"])
+            destination_piece = next(piece for piece in board if piece.posX == destination["posX"] and piece.posY == destination["posY"])
+            aux = origin_piece.color
+            origin_piece.color = destination_piece.color
+            destination_piece.color = aux
+        game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
+        game.lastMovements = json.dumps([])
+        self.db_session.commit()
 
-    def was_card_used_in_partial_movement(self, gameID: int, playerID: int, cardID: int) -> bool:
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
-        # IMPLEMENTAR ESTO EN EL TICKET DE MOVIMIENTOS PARCIALES
+    def was_card_used_in_partial_movement(self, gameID: int, cardID: int) -> bool:
+        game = self.db_session.get(GameDB, gameID)
+        last_movements = json.loads(game.lastMovements) if game.lastMovements else []
+        for movement in last_movements:
+            if movement["CardID"] == cardID:
+                return True
         return False
 
     def is_player_in_game(self, playerID, gameID):
