@@ -1,21 +1,26 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationInfo, field_validator
+
+from src.shared.validators import CommonValidators
 
 
-class PlayerResponse(BaseModel):
+class Player(BaseModel):
     playerID: int
     username: str
 
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str, info: ValidationInfo):
+        return CommonValidators.validate_string(value, info)
 
-class PlayerUsername(BaseModel):
+
+class PlayerCreationRequest(BaseModel):
     username: str
 
-class PlayerID(BaseModel):
-    playerID: int
+    @field_validator("username", mode="before")
+    @classmethod
+    def validate_username(cls, value: str, info: ValidationInfo):
+        return CommonValidators.validate_string(value, info)
+
 
 class PlayerID(BaseModel):
     playerID: int
-
-
-class PlayerLobby(BaseModel):
-    playerID: int
-    roomID: int

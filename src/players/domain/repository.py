@@ -1,13 +1,22 @@
 from abc import ABC, abstractmethod
-from typing import Union
-from src.players.domain.models import PlayerResponse
+from typing import Optional
+
+from src.players.domain.models import Player, PlayerCreationRequest
 
 
 class PlayerRepository(ABC):
     @abstractmethod
-    def save(self, player: PlayerResponse) -> None:
+    def create(self, player: PlayerCreationRequest) -> Player:
         pass
 
     @abstractmethod
-    def find(self, playerID: int) -> Union[PlayerResponse, None]:
+    def get(self, playerID: int) -> Optional[Player]:
+        pass
+
+    @abstractmethod
+    def update(self, player: Player) -> None:
+        pass
+
+    @abstractmethod
+    def delete(self, playerID: int) -> None:
         pass
