@@ -50,6 +50,11 @@ class RepositoryValidators:
             return
         raise HTTPException(status_code=403, detail="No es el turno del jugador.")
 
+    def validate_card_is_not_blocked(self, cardID: int):
+        if self.game_repository.is_not_blocked(cardID):
+            return
+        raise HTTPException(status_code=403, detail="La carta esta bloqueada.")
+
     async def validate_game_exists(self, gameID: int, websocket: Optional[WebSocket] = None):
         if self.game_repository.get(gameID) is not None:
             return

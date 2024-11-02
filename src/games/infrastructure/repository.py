@@ -621,6 +621,9 @@ class SQLAlchemyRepository(GameRepository):
         else:
             self.block_managment(gameID, figureID)
         
+    def is_not_blocked(self, cardID: int) -> bool:
+        card = self.db_session.get(FigureCardDB, cardID)
+        return not card.isBlocked
             
 
 
