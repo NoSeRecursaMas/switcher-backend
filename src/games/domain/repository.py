@@ -143,6 +143,10 @@ class GameRepository(ABC):
     def desvinculate_partial_movement_cards(self, gameID: int) -> None:
         pass
 
+    @abstractmethod
+    def is_blocked_and_not_last_card(self,gameID: int, figureID: int) -> bool:
+        pass
+
 class GameRepositoryWS(GameRepository):
     @abstractmethod
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:

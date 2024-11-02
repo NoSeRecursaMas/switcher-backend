@@ -592,6 +592,13 @@ class SQLAlchemyRepository(GameRepository):
             raise ValueError(f"Card with ID {cardID} not found")
         return MovementCardDomain(type=card.type, cardID=card.cardID, isUsed=card.isDiscarded)
 
+    def is_blocked_and_not_last_card(self, gameID: int, cardID:int):
+        game = self.db_session.get(GameDB, gameID)
+        card = self.db_session.get(FigureCardDB, cardID)
+        cards_with_playerID = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID).all()
+        if len(cards_with_playerID) == 1:
+            is_last_card = True
+        return (card.isBlocked and is_last_card) or not card.isBlocked
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
