@@ -90,7 +90,7 @@ async def play_figure(
 
     await game_service.play_figure(gameID, request.playerID, request.cardID, request.figure)
 
-@router.post(path="/game/{gameID}/block", status_code=201)
+@router.post(path="/{gameID}/block", status_code=201)
 async def block_figure(
     gameID: int,
     request: BlockCardRequest,
