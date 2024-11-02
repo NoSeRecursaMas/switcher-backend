@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from src.database import get_db
 from src.games.application.service import GameService
-from src.games.domain.models import FigureCardRequest, GameID, MovementCardRequest
+from src.games.domain.models import FigureCardRequest, GameID, MovementCardRequest, BlockCardRequest
 from src.games.infrastructure.repository import (
     WebSocketRepository as GameRepository,
 )
@@ -89,3 +89,17 @@ async def play_figure(
     game_service = GameService(game_repository, player_repository, room_repository)
 
     await game_service.play_figure(gameID, request.playerID, request.cardID, request.figure)
+
+@router.post(path="/game/{gameID}/block", status_code=201)
+async def block_figure(
+    gameID: int,
+    request: BlockCardRequest,
+    db_session: Session = Depends(get_db),
+) -> None:
+    game_repository = GameRepository(db_session)
+    player_repository = PlayerRepository(db_session)
+    room_repository = RoomRepository(db_session)
+
+    game_service = GameService(game_repository, player_repository, room_repository)
+
+    await game_service.block_figure(gameID, request.playerID, request.targetID, request.cardID, request.figure)
