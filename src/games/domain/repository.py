@@ -147,6 +147,10 @@ class GameRepository(ABC):
     def is_blocked_and_not_last_card(self,gameID: int, figureID: int) -> bool:
         pass
 
+    @abstractmethod
+    def block_card_managment(gameID, figureID) -> None:
+        pass
+
 class GameRepositoryWS(GameRepository):
     @abstractmethod
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:

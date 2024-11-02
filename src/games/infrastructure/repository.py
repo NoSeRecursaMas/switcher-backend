@@ -185,7 +185,7 @@ class SQLAlchemyRepository(GameRepository):
             FigureCardDB.playerID == playerID,
             FigureCardDB.isPlayable,
         )
-
+        
         blocked = any([card.isBlocked for card in figure_cards])
 
         if blocked:
@@ -599,6 +599,34 @@ class SQLAlchemyRepository(GameRepository):
         if len(cards_with_playerID) == 1:
             is_last_card = True
         return (card.isBlocked and is_last_card) or not card.isBlocked
+
+    def unblock_managment(self, gameID: int, figureID:int) -> None:
+        #IMPLEMENTAR EN TICKET DE DESBLOQUEO DE FIGURA
+        pass
+
+    def block_card_managment(self, gameID:int, figureID:int) -> None:
+        cards_with_cardtype_at_game_and_playable = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, 
+                                                                                              FigureCardDB.type == self.db_session.get(FigureCardDB, figureID).type, 
+                                                                                              FigureCardDB.isPlayable == True).all()
+        for card in cards_with_cardtype_at_game_and_playable:
+            cards_with_same_playerID = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID).all()
+            for card in cards_with_same_playerID:
+                cards_blocked = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID, FigureCardDB.isBlocked == True).all()
+                if len(cards_blocked) == 1:
+                    pass
+                else:
+                    card.isBlocked = True
+
+    def block_card_managment(self, gameID: int, figureID:int) -> None:
+        card = self.db_session.get(FigureCardDB, figureID)
+        cards_with_playerID_and_blocked = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID, FigureCardDB.isBlocked == True).all()
+        if len(cards_with_playerID_and_blocked) == 1:
+            self.unblock_managment(self, gameID, figureID) 
+        else:
+            self.block_card_managment(self, gameID, figureID)
+        
+            
+
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:

@@ -132,6 +132,7 @@ class GameService:
         self.game_repository.play_figure(figureID)
         self.game_repository.desvinculate_partial_movement_cards(gameID)
         self.game_repository.set_partial_movements_to_empty(gameID)
-        
+        self.game_repository.block_card_managment(gameID, figureID)
+
 
         await self.game_repository.broadcast_status_game(gameID)
