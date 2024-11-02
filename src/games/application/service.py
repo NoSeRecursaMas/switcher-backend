@@ -129,10 +129,11 @@ class GameService:
         self.game_domain_service.validate_figure_border_validity(gameID, figure)
         self.game_domain_service.validate_is_blocked_and_the_last_card(gameID, figureID)
 
+        self.game_repository.block_card_managment(gameID, figureID)
         self.game_repository.play_figure(figureID)
         self.game_repository.desvinculate_partial_movement_cards(gameID)
         self.game_repository.set_partial_movements_to_empty(gameID)
-        self.game_repository.block_card_managment(gameID, figureID)
+        
 
 
         await self.game_repository.broadcast_status_game(gameID)
