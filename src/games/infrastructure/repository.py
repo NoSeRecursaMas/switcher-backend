@@ -592,6 +592,11 @@ class SQLAlchemyRepository(GameRepository):
             raise ValueError(f"Card with ID {cardID} not found")
         return MovementCardDomain(type=card.type, cardID=card.cardID, isUsed=card.isDiscarded)
 
+    def figure_card_count(self, gameID: int, playerID: int) -> int:
+        cards = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID,
+                                                            FigureCardDB.playerID == playerID,
+                                                            FigureCardDB.isPlayable == True).all()
+        return len(cards)
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
