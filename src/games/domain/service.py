@@ -30,7 +30,8 @@ class RepositoryValidators:
         if self.game_repository.partial_movement_exists(gameID):
             return
         raise HTTPException(status_code=403, detail="El jugador no ha realizado ningún movimiento.")
-    def validate_card_is_partial_movement(self, gameID:int, cardID: int):
+
+    def validate_card_is_partial_movement(self, gameID: int, cardID: int):
         if not self.game_repository.was_card_used_in_partial_movement(gameID, cardID):
             return
         raise HTTPException(status_code=403, detail="La carta ya fue usada en un movimiento parcial.")
@@ -245,6 +246,13 @@ class RepositoryValidators:
         bottom_side = request.destination.posX == 0 and posY_non_affected
 
         return right_side or left_side or top_side or bottom_side
+
+    def validate_prohibited_color(self, gameID: int, figure: List[BoardPiecePosition]):
+        prohibited_color = self.game_repository.get_prohibited_color(gameID)
+        board = self.game_repository.get_board(gameID)
+
+        if board[figure[0].posX * 6 + figure[0].posY].color == prohibited_color:
+            raise HTTPException(status_code=403, detail="La figura no puede ser del color prohibido.")
 
 
 class GameServiceDomain:

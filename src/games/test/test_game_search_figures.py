@@ -57,7 +57,8 @@ def test_get_available_figures(game_logic: SQLAlchemyRepository):
 
     board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
 
-    figures = game_logic.get_available_figures(board_pieces)
+    prohibited_color = "G"
+    figures = game_logic.get_available_figures(prohibited_color, board_pieces)
     assert len(figures) == 1
     assert figures == [
         [
@@ -111,7 +112,8 @@ def test_get_available_figures_2_glued_diferent_color(game_logic: SQLAlchemyRepo
 
     board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
 
-    figures = game_logic.get_available_figures(board_pieces)
+    prohibited_color = "G"
+    figures = game_logic.get_available_figures(prohibited_color, board_pieces)
     assert len(figures) == 2
     assert figures == [
         [
@@ -172,7 +174,8 @@ def test_get_available_figure_rotational_symmetry(game_logic: SQLAlchemyReposito
 
     board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
 
-    figures = game_logic.get_available_figures(board_pieces)
+    prohibited_color = "G"
+    figures = game_logic.get_available_figures(prohibited_color, board_pieces)
     assert len(figures) == 1
     assert figures == [
         [
@@ -226,7 +229,8 @@ def test_figures_on_board_edges(game_logic: SQLAlchemyRepository):
 
     board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
 
-    figures = game_logic.get_available_figures(board_pieces)
+    prohibited_color = "G"
+    figures = game_logic.get_available_figures(prohibited_color, board_pieces)
     assert len(figures) == 1
     assert figures == [
         [
@@ -280,7 +284,8 @@ def test_overlapping_figures(game_logic: SQLAlchemyRepository):
 
     board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
 
-    figures = game_logic.get_available_figures(board_pieces)
+    prohibited_color = "G"
+    figures = game_logic.get_available_figures(prohibited_color, board_pieces)
     assert len(figures) == 0
     assert figures == []
 
@@ -327,7 +332,8 @@ def test_get_available_figures_2_glued_same_color(game_logic: SQLAlchemyReposito
 
     board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
 
-    figures = game_logic.get_available_figures(board_pieces)
+    prohibited_color = "G"
+    figures = game_logic.get_available_figures(prohibited_color, board_pieces)
     assert len(figures) == 0
     assert figures == []
 
@@ -337,6 +343,7 @@ def test_no_available_figures(game_logic: SQLAlchemyRepository):
 
     board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
 
-    figures = game_logic.get_available_figures(board_pieces)
+    prohibited_color = "G"
+    figures = game_logic.get_available_figures(prohibited_color, board_pieces)
     assert len(figures) == 0
     assert figures == []

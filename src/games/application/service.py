@@ -125,10 +125,11 @@ class GameService:
         self.game_domain_service.validate_figure_card_belongs_to_player(playerID, figureID)
         self.game_domain_service.validate_figure_is_empty(figure)
         self.game_domain_service.validate_figure_matches_board(gameID, figure)
+        self.game_domain_service.validate_prohibited_color(gameID, figure)
         self.game_domain_service.validate_figure_matches_card(figureID, figure)
         self.game_domain_service.validate_figure_border_validity(gameID, figure)
 
-        self.game_repository.play_figure(figureID)
+        self.game_repository.play_figure(gameID, figureID, figure)
         self.game_repository.desvinculate_partial_movement_cards(gameID)
         self.game_repository.set_partial_movements_to_empty(gameID)
         await self.game_repository.broadcast_status_game(gameID)
