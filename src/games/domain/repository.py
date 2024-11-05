@@ -144,15 +144,23 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def is_blocked_and_not_last_card(self,gameID: int, figureID: int) -> bool:
+    def is_blocked_and_last_card(self,gameID: int, figureID: int) -> bool:
         pass
 
     @abstractmethod
-    def block_card_managment(gameID, figureID) -> None:
+    def block_managment(gameID, figureID) -> None:
+        pass
+    
+    @abstractmethod
+    def unblock_managment(gameID, figureID) -> None:
         pass
 
     @abstractmethod
     def is_not_blocked(cardID) -> bool:
+        pass
+
+    @abstractmethod
+    def get_blocked_card(gameID: int, playerID: int) -> int:
         pass
 
 class GameRepositoryWS(GameRepository):

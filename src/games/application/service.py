@@ -1,5 +1,5 @@
 from typing import List, Optional
-
+import logging
 from fastapi import WebSocket
 
 from src.games.domain.models import BoardPiecePosition, GameID, MovementCardRequest
@@ -119,6 +119,7 @@ class GameService:
         await self.player_domain_service.validate_player_exists(playerID)
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.is_player_in_game(playerID, gameID)
+        self.game_domain_service.validate_is_player_turn(playerID, gameID)
 
         self.game_domain_service.validate_figure_card_exists(gameID, cardID)
         self.game_domain_service.validate_figure_card_belongs_to_player(targetID, cardID)
@@ -129,13 +130,15 @@ class GameService:
 
         self.game_domain_service.validate_card_is_not_blocked(cardID)
 
-        self.game_repository.block_card_managment(gameID, cardID)
+        self.game_repository.block_managment(gameID, cardID)
         self.game_repository.desvinculate_partial_movement_cards(gameID)
         self.game_repository.set_partial_movements_to_empty(gameID)
 
         await self.game_repository.broadcast_status_game(gameID)
 
     async def play_figure(self, gameID: int, playerID: int, figureID: int, figure: List[BoardPiecePosition]) -> None:
+        logging.debug(f"Validating player {playerID}, game {gameID}, and figure {figureID}.")
+
         await self.player_domain_service.validate_player_exists(playerID)
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.is_player_in_game(playerID, gameID)
@@ -147,10 +150,14 @@ class GameService:
         self.game_domain_service.validate_figure_matches_board(gameID, figure)
         self.game_domain_service.validate_figure_matches_card(figureID, figure)
         self.game_domain_service.validate_figure_border_validity(gameID, figure)
-        self.game_domain_service.validate_is_blocked_and_the_last_card(gameID, figureID)
 
         self.game_repository.play_figure(figureID)
         self.game_repository.desvinculate_partial_movement_cards(gameID)
         self.game_repository.set_partial_movements_to_empty(gameID)
+
+        blockedcardID = self.game_repository.get_blocked_card(gameID, playerID)
+        
+        if blockedcardID is not None and self.game_repository.is_blocked_and_last_card(gameID, blockedcardID):
+            self.game_repository.unblock_managment(gameID, blockedcardID)
 
         await self.game_repository.broadcast_status_game(gameID)
