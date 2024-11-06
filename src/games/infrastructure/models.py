@@ -29,6 +29,7 @@ class FigureCard(Base):
     type = Column(String, nullable=True)
     isBlocked = Column(Boolean, default=False)
     isPlayable = Column(Boolean, default=False)
+    wasBlocked = Column(Boolean, default=False)
 
     playerID = Column(ForeignKey("players.playerID"), nullable=False)
     gameID = Column(ForeignKey("games.gameID"), nullable=False)
