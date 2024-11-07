@@ -1,9 +1,13 @@
 import random
 from typing import Dict, List, Optional, Union
 
+
+
+
 import numpy as np
 from fastapi import HTTPException
 from fastapi.websockets import WebSocket, WebSocketDisconnect
+from fastapi import BackgroundTasks, FastAPI
 
 from src.games.config import COLORS, FIGURE_CARDS_FORM
 from src.games.domain.models import MovementCardRequest
@@ -286,10 +290,12 @@ class GameServiceDomain:
     def set_game_turn_order(self, gameID: int) -> None:
         players = self.game_repository.get_players(gameID)
         player_count = len(players)
-
         positions = list(range(1, player_count + 1))
 
         random.shuffle(positions)
 
         for player, position in zip(players, positions):
             self.room_repository.set_position(player.playerID, position)
+
+        return self.room_repository.get_first_turn(gameID)
+

@@ -149,6 +149,11 @@ class SQLAlchemyRepository(RoomRepository):
         self.db_session.query(PlayerRoom).filter(PlayerRoom.playerID == playerID).update({"position": position})
         self.db_session.commit()
 
+    def get_first_turn(self, roomID: int) -> int:
+        return self.db_session.query(PlayerRoom).filter(PlayerRoom.roomID == roomID, PlayerRoom.position == 1).first().playerID
+
+    def get_turn(self, roomID: int, posEnabled) -> int:
+        return self.db_session.query(PlayerRoom).filter(PlayerRoom.roomID == roomID, PlayerRoom.position == posEnabled).first().playerID
 
 class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_room_list(self, websocket: WebSocket) -> None:
