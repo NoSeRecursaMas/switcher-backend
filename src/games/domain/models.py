@@ -101,3 +101,9 @@ class FigureCardRequest(BaseModel):
     cardID: int
     playerID: int
     figure: List[BoardPiecePosition]
+
+class BlockCardRequest(BaseModel):
+    cardID: int
+    playerID: int
+    targetID: int
+    figure: List[BoardPiecePosition]

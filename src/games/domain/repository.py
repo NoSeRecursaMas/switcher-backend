@@ -146,6 +146,17 @@ class GameRepository(ABC):
     @abstractmethod
     def figure_card_count(gameID: int, playerID: int) -> int:
         pass
+    @abstractmethod
+    def is_blocked_and_not_last_card(self,gameID: int, figureID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def block_card_managment(gameID, figureID) -> None:
+        pass
+
+    @abstractmethod
+    def is_not_blocked(cardID) -> bool:
+        pass
 
 class GameRepositoryWS(GameRepository):
     @abstractmethod
