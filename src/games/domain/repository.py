@@ -171,6 +171,11 @@ class GameRepository(ABC):
     def set_was_blocked_false(cardID: int) -> None:
         pass
 
+    @abstractmethod
+    def has_three_cards(playerID: int) -> bool:
+        pass
+    
+
 class GameRepositoryWS(GameRepository):
     @abstractmethod
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:

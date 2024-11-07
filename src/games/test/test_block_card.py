@@ -59,7 +59,9 @@ def create_game(test_db, create_room):
 
 @pytest.fixture
 def create_figure_card(test_db):
-    figure_cards = [FigureCardDB(type="fige06", isBlocked=False, isPlayable=True, playerID=1, gameID=1)]
+    figure_cards = [FigureCardDB(type="fige06", isBlocked=False, isPlayable=True, playerID=1, gameID=1),
+                    FigureCardDB(type="fige01", isBlocked=False, isPlayable=True, playerID=1, gameID=1),
+                    FigureCardDB(type="fige02", isBlocked=False, isPlayable=True, playerID=1, gameID=1),]
     test_db.add_all(figure_cards)
     test_db.commit()
     return figure_cards
@@ -152,11 +154,13 @@ def create_board_version_2():
         ]
     )
 
+
 def test_figure_block(client, test_db, create_game, create_board_version_2, create_figure_card):
     game = create_game
 
     game.board = create_board_version_2
 
+    
     figure_card = create_figure_card
 
     figure_card[0].type = "fige06"
@@ -176,23 +180,29 @@ def test_figure_block(client, test_db, create_game, create_board_version_2, crea
     assert figure_card[0].isBlocked == True
     assert response.json() is None
 
-def test_block_blocked_card(client, test_db, create_game, create_board_version_2, create_figure_card):
+def test_block_blocked_card(client, test_db, create_game, create_board_version_2):
     game = create_game
 
     game.board = create_board_version_2
 
-    figure_card = create_figure_card
-
-    figure_card[0].type = "fige06"
-    figure_card[0].isBlocked = True
+    figure_cards = [
+        FigureCardDB(type="fige06", isBlocked=False, isPlayable=True, wasBlocked = False, playerID=1, gameID=1),
+        FigureCardDB(type="fige01", isBlocked=False, isPlayable=False, wasBlocked = False, playerID=1, gameID=1),
+        FigureCardDB(type="fige02", isBlocked=False, isPlayable=False, wasBlocked = False, playerID=1, gameID=1),
+        FigureCardDB(type="fige06", isBlocked=True, isPlayable=False, wasBlocked = False, playerID=2, gameID=1),
+        FigureCardDB(type="fige03", isBlocked=False, isPlayable=False, wasBlocked = False, playerID=2, gameID=1),
+        FigureCardDB(type="fige03", isBlocked=False, isPlayable=False, wasBlocked = False, playerID=2, gameID=1)
+        ]
+    
+    test_db.add_all(figure_cards)
     test_db.commit()
 
     response = client.put(
         "/games/1/block",
         json={
-            "cardID": 1,
-            "playerID": 2,
-            "targetID": 1,
+            "cardID": 4,
+            "playerID": 1,
+            "targetID": 2,
             "figure": [{"posX": 0, "posY": 0}, {"posX": 0, "posY": 1}, {"posX": 0, "posY": 2}, {"posX": 0, "posY": 3}],
         },
     )
@@ -252,3 +262,32 @@ def test_last_card_unblocked_and_skip_turn(client, test_db, create_game, create_
     
     assert len(cards) == 1
     assert cards[0].cardID == figure_cards[0].cardID
+
+def test_block_with_less_than_3_cards(client, test_db, create_game, create_board_version_2, create_player_room):
+    game = create_game
+
+    game.board = create_board_version_2
+
+    
+    figure_cards = [FigureCardDB(type="fige06", isBlocked=False, isPlayable=True, playerID=1, gameID=1),
+                    FigureCardDB(type="fige01", isBlocked=False, isPlayable=True, playerID=1, gameID=1),
+                    ]
+    test_db.add_all(figure_cards)
+    test_db.commit()
+
+    figure_cards[0].type = "fige06"
+    test_db.commit()
+
+    response = client.put(
+        "/games/1/block",
+        json={
+            "cardID": 1,
+            "targetID": 1,
+            "playerID": 2,
+            "figure": [{"posX": 0, "posY": 0}, {"posX": 0, "posY": 1}, {"posX": 0, "posY": 2}, {"posX": 0, "posY": 3}],
+        },
+    )
+
+    assert response.status_code == 403
+    assert figure_cards[0].isBlocked == False
+    assert response.json() == {"detail": 'El jugador tiene menos de tres cartas de figura.'}

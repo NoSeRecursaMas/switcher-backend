@@ -272,6 +272,10 @@ class SQLAlchemyRepository(GameRepository):
         game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
         self.db_session.commit()
 
+    def has_three_cards(self, playerID: int) -> bool:
+        cards = self.db_session.query(FigureCardDB).filter(FigureCardDB.playerID == playerID, FigureCardDB.isPlayable == True).all()
+        return len(cards) == 3
+
     def partial_movement_exists(self, gameID: int) -> bool:
         game = self.db_session.get(GameDB, gameID)
         if game is None:

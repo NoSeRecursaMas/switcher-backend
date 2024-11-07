@@ -128,6 +128,7 @@ class GameService:
         self.game_domain_service.validate_figure_border_validity(gameID, figure)
 
         self.game_domain_service.validate_card_is_not_blocked(cardID)
+        self.game_domain_service.validate_target_has_three_cards(targetID)
 
         self.game_repository.block_managment(gameID, cardID)
         self.game_repository.desvinculate_partial_movement_cards(gameID)
