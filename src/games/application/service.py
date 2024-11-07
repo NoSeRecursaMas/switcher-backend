@@ -115,6 +115,26 @@ class GameService:
         else:
             await self.game_repository.broadcast_status_game(gameID)
 
+    async def block_figure(self, gameID: int, playerID: int, targetID: int, cardID: int, figure: List[BoardPiecePosition]):
+        await self.player_domain_service.validate_player_exists(playerID)
+        await self.game_domain_service.validate_game_exists(gameID)
+        await self.game_domain_service.is_player_in_game(playerID, gameID)
+
+        self.game_domain_service.validate_figure_card_exists(gameID, cardID)
+        self.game_domain_service.validate_figure_card_belongs_to_player(targetID, cardID)
+        self.game_domain_service.validate_figure_is_empty(figure)
+        self.game_domain_service.validate_figure_matches_board(gameID, figure)
+        self.game_domain_service.validate_figure_matches_card(cardID, figure)
+        self.game_domain_service.validate_figure_border_validity(gameID, figure)
+
+        self.game_domain_service.validate_card_is_not_blocked(cardID)
+
+        self.game_repository.block_card_managment(gameID, cardID)
+        self.game_repository.desvinculate_partial_movement_cards(gameID)
+        self.game_repository.set_partial_movements_to_empty(gameID)
+
+        await self.game_repository.broadcast_status_game(gameID)
+
     async def play_figure(self, gameID: int, playerID: int, figureID: int, figure: List[BoardPiecePosition]) -> None:
         await self.player_domain_service.validate_player_exists(playerID)
         await self.game_domain_service.validate_game_exists(gameID)
@@ -127,8 +147,10 @@ class GameService:
         self.game_domain_service.validate_figure_matches_board(gameID, figure)
         self.game_domain_service.validate_figure_matches_card(figureID, figure)
         self.game_domain_service.validate_figure_border_validity(gameID, figure)
+        self.game_domain_service.validate_is_blocked_and_the_last_card(gameID, figureID)
 
         self.game_repository.play_figure(figureID)
         self.game_repository.desvinculate_partial_movement_cards(gameID)
         self.game_repository.set_partial_movements_to_empty(gameID)
+
         await self.game_repository.broadcast_status_game(gameID)

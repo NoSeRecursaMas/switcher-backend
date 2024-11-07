@@ -50,6 +50,11 @@ class RepositoryValidators:
             return
         raise HTTPException(status_code=403, detail="No es el turno del jugador.")
 
+    def validate_card_is_not_blocked(self, cardID: int):
+        if self.game_repository.is_not_blocked(cardID):
+            return
+        raise HTTPException(status_code=403, detail="La carta esta bloqueada.")
+
     async def validate_game_exists(self, gameID: int, websocket: Optional[WebSocket] = None):
         if self.game_repository.get(gameID) is not None:
             return
@@ -134,6 +139,11 @@ class RepositoryValidators:
 
         if not self.game_repository.check_border_validity(figure, board_matrix):
             raise HTTPException(status_code=403, detail="La figura tiene una ficha adyacente del mismo color.")
+
+    def validate_is_blocked_and_the_last_card(self, gameID:int, cardID: int):
+        if self.game_repository.is_blocked_and_not_last_card(gameID, cardID):
+            return
+        raise HTTPException(status_code=403, detail="No se puede jugar la carta dado que no es la ultima carta y esta bloqueada.")
 
     async def validate_player_turn(self, playerID: int, gameID: int, websocket: Optional[WebSocket] = None):
         if self.game_repository.is_player_turn(playerID, gameID):
