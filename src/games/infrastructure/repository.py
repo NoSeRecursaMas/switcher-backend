@@ -625,9 +625,14 @@ class SQLAlchemyRepository(GameRepository):
 
     def block_managment(self, gameID:int, figureID:int) -> None:
         card = self.db_session.get(FigureCardDB, figureID)
-        cards_from_player = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID).all()
+        cards_from_player = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, 
+                                                                       FigureCardDB.playerID == card.playerID,
+                                                                       FigureCardDB.isPlayable == True).all()
         for cards in cards_from_player:
-            blocked_player_cards = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID, FigureCardDB.isBlocked == True).all()
+            blocked_player_cards = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, 
+                                                                              FigureCardDB.playerID == card.playerID, 
+                                                                              FigureCardDB.isBlocked == True,
+                                                                              FigureCardDB.isPlayable == True).all()
             if len(blocked_player_cards) == 0:
                 card.isBlocked = True
             self.db_session.commit()
