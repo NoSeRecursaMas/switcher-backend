@@ -119,7 +119,6 @@ class GameService:
         await self.player_domain_service.validate_player_exists(playerID)
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.is_player_in_game(playerID, gameID)
-        self.game_domain_service.validate_is_player_turn(playerID, gameID)
 
         self.game_domain_service.validate_figure_card_exists(gameID, cardID)
         self.game_domain_service.validate_figure_card_belongs_to_player(targetID, cardID)
