@@ -161,4 +161,9 @@ class GameService:
         if blockedcardID is not None and self.game_repository.is_blocked_and_last_card(gameID, blockedcardID):
             self.game_repository.unblock_managment(gameID, blockedcardID)
         
-        await self.game_repository.broadcast_status_game(gameID)
+        if self.game_repository.figure_card_count(gameID, playerID) == 0:
+            await self.game_repository.broadcast_end_game(gameID, playerID)
+            self.game_repository.delete_and_clean(gameID)
+        else:
+            await self.game_repository.broadcast_status_game(gameID)
+
