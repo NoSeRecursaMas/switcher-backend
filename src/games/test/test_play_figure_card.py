@@ -239,7 +239,6 @@ def test_figure_not_match_card(client, test_db, create_game, create_board_versio
         },
     )
 
-    print(response.json())
     assert response.status_code == 403
     assert response.json() == {"detail": "La figura no coincide con la carta."}
 

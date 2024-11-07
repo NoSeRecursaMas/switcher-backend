@@ -52,7 +52,7 @@ class SQLAlchemyRepository(GameRepository):
     def create(self, roomID: int, new_board: list) -> GameID:
         board_json = json.dumps(new_board)
 
-        new_game = GameDB(board=board_json, lastMovements={}, prohibitedColor="X", roomID=roomID)
+        new_game = GameDB(board=board_json, lastMovements={}, prohibitedColor=None, roomID=roomID)
 
         self.db_session.add(new_game)
         self.db_session.commit()
@@ -580,7 +580,19 @@ class SQLAlchemyRepository(GameRepository):
 
         figure_card = self.db_session.query(FigureCardDB).filter_by(cardID=figureID).first()
 
-        figure_color = self.db_session.get(GameDB, gameID).board[figure[0].posX * 6 + figure[0].posY]
+        board_json = self.db_session.get(GameDB, gameID).board
+
+        board = json.loads(board_json)
+        first_position = figure[0]
+        print(first_position.posX)
+        figure_color = next(
+            (
+                item["color"]
+                for item in board
+                if item["posX"] == first_position.posX and item["posY"] == first_position.posY
+            ),
+            None,
+        )
 
         game.prohibitedColor = figure_color
 
