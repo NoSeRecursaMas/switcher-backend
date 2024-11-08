@@ -185,10 +185,11 @@ class SQLAlchemyRepository(GameRepository):
             FigureCardDB.playerID == playerID,
             FigureCardDB.isPlayable,
         )
-        
-        blocked = any([card.isBlocked for card in figure_cards])
 
-        if blocked:
+        blocked = any([card.isBlocked for card in figure_cards])
+        wasBlocked = any([card.wasBlocked for card in figure_cards])
+
+        if blocked or wasBlocked:
             return
 
         available_cards = (
@@ -271,27 +272,43 @@ class SQLAlchemyRepository(GameRepository):
         game.board = json.dumps([self.board_piece_to_dict(piece) for piece in board])
         self.db_session.commit()
 
+    def has_three_cards(self, playerID: int) -> bool:
+        cards = (
+            self.db_session.query(FigureCardDB)
+            .filter(FigureCardDB.playerID == playerID, FigureCardDB.isPlayable.is_(True))
+            .all()
+        )
+        return len(cards) == 3
+
     def partial_movement_exists(self, gameID: int) -> bool:
         game = self.db_session.get(GameDB, gameID)
         if game is None:
             raise ValueError(f"Game with ID {gameID} not found")
         return len(json.loads(game.lastMovements)) > 0
-    
+
     def delete_partial_movement(self, gameID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
         if game is None:
             raise ValueError(f"Game with ID {gameID} not found")
-        
+
         last_movements = json.loads(game.lastMovements) if game.lastMovements else []
         if len(last_movements) == 0:
             return
-        
+
         last_movement = last_movements[-1]
         last_movement_origin = last_movement["origin"]
         last_movement_destination = last_movement["destination"]
         board = self.get_board(gameID)
-        origin_piece = next(piece for piece in board if piece.posX == last_movement_origin["posX"] and piece.posY == last_movement_origin["posY"])
-        destination_piece = next(piece for piece in board if piece.posX == last_movement_destination["posX"] and piece.posY == last_movement_destination["posY"])
+        origin_piece = next(
+            piece
+            for piece in board
+            if piece.posX == last_movement_origin["posX"] and piece.posY == last_movement_origin["posY"]
+        )
+        destination_piece = next(
+            piece
+            for piece in board
+            if piece.posX == last_movement_destination["posX"] and piece.posY == last_movement_destination["posY"]
+        )
         aux = origin_piece.color
         origin_piece.color = destination_piece.color
         destination_piece.color = aux
@@ -381,7 +398,7 @@ class SQLAlchemyRepository(GameRepository):
             cards.append(MovementCard(type=card.type, cardID=card.cardID, isUsed=isUsed))
 
         return cards
-    
+
     def clean_partial_movements(self, gameID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
         last_movements = json.loads(game.lastMovements) if game.lastMovements else []
@@ -390,8 +407,12 @@ class SQLAlchemyRepository(GameRepository):
         for movement in last_movements:
             origin = movement["origin"]
             destination = movement["destination"]
-            origin_piece = next(piece for piece in board if piece.posX == origin["posX"] and piece.posY == origin["posY"])
-            destination_piece = next(piece for piece in board if piece.posX == destination["posX"] and piece.posY == destination["posY"])
+            origin_piece = next(
+                piece for piece in board if piece.posX == origin["posX"] and piece.posY == origin["posY"]
+            )
+            destination_piece = next(
+                piece for piece in board if piece.posX == destination["posX"] and piece.posY == destination["posY"]
+            )
             aux = origin_piece.color
             origin_piece.color = destination_piece.color
             destination_piece.color = aux
@@ -592,47 +613,95 @@ class SQLAlchemyRepository(GameRepository):
             raise ValueError(f"Card with ID {cardID} not found")
         return MovementCardDomain(type=card.type, cardID=card.cardID, isUsed=card.isDiscarded)
 
-
     def figure_card_count(self, gameID: int, playerID: int) -> int:
-        cards = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID,
-                                                            FigureCardDB.playerID == playerID,
-                                                            FigureCardDB.isPlayable == True).all()
-        return len(cards)
+        return (
+            self.db_session.query(FigureCardDB)
+            .filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID)
+            .count()
+        )
 
-    def is_blocked_and_not_last_card(self, gameID: int, cardID:int):
+    def is_blocked_and_last_card(self, gameID: int, cardID: int):
+        is_last_card = False
         game = self.db_session.get(GameDB, gameID)
         card = self.db_session.get(FigureCardDB, cardID)
-        cards_with_playerID = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID).all()
+        cards_with_playerID = (
+            self.db_session.query(FigureCardDB)
+            .filter(
+                FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID, FigureCardDB.isPlayable.is_(True)
+            )
+            .all()
+        )
         if len(cards_with_playerID) == 1:
             is_last_card = True
-        return (card.isBlocked and is_last_card) or not card.isBlocked
+        return card.isBlocked and is_last_card
 
-    def unblock_managment(self, gameID: int, figureID:int) -> None:
-        #IMPLEMENTAR EN TICKET DE DESBLOQUEO DE FIGURA
-        pass
+    def unblock_managment(self, gameID: int, blockedcardID: int) -> None:
+        card = self.db_session.get(FigureCardDB, blockedcardID)
+        if card is None:
+            raise ValueError(f"Card with ID {blockedcardID} not found")
 
-    def block_managment(self, gameID:int, figureID:int) -> None:
+        blocked_player_cards = (
+            self.db_session.query(FigureCardDB)
+            .filter(
+                FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID, FigureCardDB.isBlocked.is_(True)
+            )
+            .all()
+        )
+
+        if len(blocked_player_cards) == 1:
+            card.isBlocked = False
+            card.wasBlocked = True
+
+        self.db_session.commit()
+
+    def block_managment(self, gameID: int, figureID: int) -> None:
         card = self.db_session.get(FigureCardDB, figureID)
-        cards_from_player = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID).all()
+        cards_from_player = (
+            self.db_session.query(FigureCardDB)
+            .filter(
+                FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID, FigureCardDB.isPlayable.is_(True)
+            )
+            .all()
+        )
         for cards in cards_from_player:
-            blocked_player_cards = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID, FigureCardDB.isBlocked == True).all()
+            blocked_player_cards = (
+                self.db_session.query(FigureCardDB)
+                .filter(
+                    FigureCardDB.gameID == gameID,
+                    FigureCardDB.playerID == card.playerID,
+                    FigureCardDB.isBlocked.is_(True),
+                    FigureCardDB.isPlayable.is_(True),
+                )
+                .all()
+            )
             if len(blocked_player_cards) == 0:
                 card.isBlocked = True
             self.db_session.commit()
 
-    def block_card_managment(self, gameID: int, figureID:int) -> None:
-        card = self.db_session.get(FigureCardDB, figureID)
-        cards_with_playerID_and_blocked = self.db_session.query(FigureCardDB).filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == card.playerID, FigureCardDB.isBlocked == True).all()
-        if len(cards_with_playerID_and_blocked) == 1:
-            self.unblock_managment(gameID, figureID) 
-        else:
-            self.block_managment(gameID, figureID)
-        
     def is_not_blocked(self, cardID: int) -> bool:
         card = self.db_session.get(FigureCardDB, cardID)
         return not card.isBlocked
-            
 
+    def get_blocked_card(self, gameID: int, playerID: int) -> Optional[int]:
+        card = (
+            self.db_session.query(FigureCardDB)
+            .filter(FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID, FigureCardDB.isBlocked.is_(True))
+            .first()
+        )
+
+        if card is None:
+            return None
+
+        return card.cardID
+
+    def card_was_blocked(self, cardID: int) -> bool:
+        card = self.db_session.get(FigureCardDB, cardID)
+        return card.wasBlocked
+
+    def set_was_blocked_false(self, cardID: int) -> None:
+        card = self.db_session.get(FigureCardDB, cardID)
+        card.wasBlocked = False
+        self.db_session.commit()
 
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):

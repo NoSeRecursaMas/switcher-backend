@@ -125,12 +125,15 @@ class GameRepository(ABC):
     @abstractmethod
     def delete_partial_movement(self, gameID: int) -> None:
         pass
+
     @abstractmethod
     def partial_movement_exists(self, gameID: int) -> bool:
         pass
+
     @abstractmethod
     def clean_partial_movements(self, gameID: int) -> None:
-        pass 
+        pass
+
     @abstractmethod
     def was_card_used_in_partial_movement(self, gameID: int, cardID: int) -> bool:
         pass
@@ -144,19 +147,41 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def figure_card_count(gameID: int, playerID: int) -> int:
-        pass
-    @abstractmethod
-    def is_blocked_and_not_last_card(self,gameID: int, figureID: int) -> bool:
+    def is_blocked_and_last_card(self, gameID: int, figureID: int) -> bool:
         pass
 
     @abstractmethod
-    def block_card_managment(gameID, figureID) -> None:
+    def figure_card_count(self, gameID: int, playerID: int) -> int:
         pass
 
     @abstractmethod
-    def is_not_blocked(cardID) -> bool:
+    def block_managment(self, gameID, figureID) -> None:
         pass
+
+    @abstractmethod
+    def unblock_managment(self, gameID, blockedcardID) -> None:
+        pass
+
+    @abstractmethod
+    def is_not_blocked(self, cardID) -> bool:
+        pass
+
+    @abstractmethod
+    def get_blocked_card(self, gameID: int, playerID: int) -> Optional[int]:
+        pass
+
+    @abstractmethod
+    def card_was_blocked(self, cardID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def set_was_blocked_false(self, cardID: int) -> None:
+        pass
+
+    @abstractmethod
+    def has_three_cards(self, playerID: int) -> bool:
+        pass
+
 
 class GameRepositoryWS(GameRepository):
     @abstractmethod

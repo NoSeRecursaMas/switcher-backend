@@ -63,6 +63,11 @@ class RepositoryValidators:
         else:
             await websocket.accept()
             raise WebSocketDisconnect(4004, "El juego no existe.")
+        
+    def validate_target_has_three_cards(self, targetID: int):
+        if self.game_repository.has_three_cards(targetID):
+            return
+        raise HTTPException(status_code=403, detail="El jugador tiene menos de tres cartas de figura.")
 
     async def is_player_in_game(self, playerID: int, gameID: int, websocket: Optional[WebSocket] = None):
         player_in_game = self.game_repository.is_player_in_game(playerID, gameID)
