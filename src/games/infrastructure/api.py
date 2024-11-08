@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 
@@ -18,26 +18,25 @@ router = APIRouter()
 
 
 @router.post(path="/{roomID}", status_code=201)
-async def start_game(roomID: int, playerID: PlayerID, db_session: Session = Depends(get_db)) -> GameID:
+async def start_game(roomID: int, playerID: PlayerID, background_tasks: BackgroundTasks, db_session: Session = Depends(get_db)) -> GameID:
     game_repository = GameRepository(db_session)
     player_repository = PlayerRepository(db_session)
     room_repository = RoomRepository(db_session)
 
     game_service = GameService(game_repository, player_repository, room_repository)
 
-    gameID = await game_service.start_game(roomID, playerID)
+    gameID = await game_service.start_game(roomID, playerID, background_tasks)
     return gameID
 
 
 @router.put(path="/{gameID}/turn", status_code=200)
-async def skip_turn(gameID: int, playerID: PlayerID, db_session: Session = Depends(get_db)) -> None:
+async def skip_turn(gameID: int, playerID: PlayerID, background_tasks: BackgroundTasks, db_session: Session = Depends(get_db)) -> None:
     game_repository = GameRepository(db_session)
     player_repository = PlayerRepository(db_session)
     room_repository = RoomRepository(db_session)
 
     game_service = GameService(game_repository, player_repository, room_repository)
-    await game_service.skip_turn(playerID.playerID, gameID)
-
+    await game_service.skip_turn(playerID.playerID, gameID, background_tasks)
 
 @router.websocket("/{playerID}/{gameID}")
 async def room_websocket(playerID: int, gameID: int, websocket: WebSocket, db_session: Session = Depends(get_db)):
