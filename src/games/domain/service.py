@@ -65,8 +65,8 @@ class RepositoryValidators:
             await websocket.accept()
             raise WebSocketDisconnect(4004, "El juego no existe.")
 
-    def validate_target_has_three_cards(self, targetID: int):
-        if self.game_repository.has_three_cards(targetID):
+    def validate_target_has_three_cards(self, gameID: int, targetID: int):
+        if self.game_repository.has_three_cards(gameID, targetID):
             return
         raise HTTPException(status_code=403, detail="El jugador tiene menos de tres cartas de figura.")
 
@@ -295,4 +295,4 @@ class GameServiceDomain:
         random.shuffle(positions)
 
         for player, position in zip(players, positions):
-            self.room_repository.set_position(player.playerID, position)
+            self.room_repository.set_position(player.playerID, position, gameID)

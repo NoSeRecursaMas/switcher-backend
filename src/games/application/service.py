@@ -64,6 +64,8 @@ class GameService:
         self.game_repository.replacement_movement_card(gameID, playerID)
         self.game_repository.replacement_figure_card(gameID, playerID)
 
+        await self.game_repository.send_log_turn_skip(gameID, playerID)
+
         await self.game_repository.broadcast_status_game(gameID)
 
     async def connect_to_game_websocket(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
@@ -82,6 +84,7 @@ class GameService:
         self.game_domain_service.has_movement_card(request.playerID, request.cardID)
         self.game_domain_service.validate_movement_card(request)
         self.game_domain_service.validate_card_is_partial_movement(gameID, request.cardID)
+        await self.game_repository.send_log_play_movement_card(gameID, request.playerID, request.cardID)
         self.game_repository.play_movement(
             gameID,
             card_id=request.cardID,
@@ -98,6 +101,7 @@ class GameService:
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.is_player_in_game(playerID, gameID)
         self.game_domain_service.partial_movement_exists(gameID)
+        await self.game_repository.send_log_cancel_movement_card(gameID, playerID)
         self.game_repository.delete_partial_movement(gameID)
         await self.game_repository.broadcast_status_game(gameID)
 
@@ -114,6 +118,7 @@ class GameService:
             await self.game_repository.broadcast_end_game(gameID, active_players[0].playerID)
             self.game_repository.delete_and_clean(gameID)
         else:
+            await self.game_repository.send_log_player_leave_game(gameID, playerID)
             await self.game_repository.broadcast_status_game(gameID)
 
     async def block_figure(
@@ -131,8 +136,9 @@ class GameService:
         self.game_domain_service.validate_figure_border_validity(gameID, figure)
 
         self.game_domain_service.validate_card_is_not_blocked(cardID)
-        self.game_domain_service.validate_target_has_three_cards(targetID)
+        self.game_domain_service.validate_target_has_three_cards(gameID, targetID)
 
+        await self.game_repository.send_log_block_figure(gameID, playerID, targetID, cardID)
         self.game_repository.block_managment(gameID, cardID)
         self.game_repository.desvinculate_partial_movement_cards(gameID)
         self.game_repository.set_partial_movements_to_empty(gameID)
@@ -151,6 +157,7 @@ class GameService:
         self.game_domain_service.validate_figure_matches_card(figureID, figure)
         self.game_domain_service.validate_figure_border_validity(gameID, figure)
 
+        await self.game_repository.send_log_play_figure(gameID, playerID, figureID)
         self.game_repository.play_figure(figureID)
         self.game_repository.desvinculate_partial_movement_cards(gameID)
         self.game_repository.set_partial_movements_to_empty(gameID)
@@ -168,4 +175,3 @@ class GameService:
             self.game_repository.delete_and_clean(gameID)
         else:
             await self.game_repository.broadcast_status_game(gameID)
-            await self.game_repository.broadcast_chat_log_message(gameID, f"El jugador {playerID} jugó una figura")

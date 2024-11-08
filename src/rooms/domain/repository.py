@@ -61,7 +61,7 @@ class RoomRepository(ABC):
         pass
 
     @abstractmethod
-    def set_position(self, playerID: int, position: int) -> None:
+    def set_position(self, playerID: int, position: int, roomID: int) -> None:
         pass
 
 
