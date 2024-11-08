@@ -182,6 +182,10 @@ class GameRepository(ABC):
     def has_three_cards(self, playerID: int) -> bool:
         pass
 
+    @abstractmethod
+    async def broadcast_chat_log_message(self, gameID: int, message: str) -> None:
+        pass
+
 
 class GameRepositoryWS(GameRepository):
     @abstractmethod

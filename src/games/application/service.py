@@ -1,4 +1,5 @@
 from typing import List, Optional
+
 from fastapi import WebSocket
 
 from src.games.domain.models import BoardPiecePosition, GameID, MovementCardRequest
@@ -27,7 +28,7 @@ class GameService:
             self.room_domain_service = RoomRepositoryValidators(room_repository, player_repository)
         self.game_domain_service = GameRepositoryValidators(game_repository, room_repository)
 
-        self.recently_unblocked_cards = {}
+        self.recently_unblocked_cards: List[int] = []
 
     async def start_game(self, roomID: int, playerID: PlayerID) -> GameID:
         await self.player_domain_service.validate_player_exists(playerID.playerID)
@@ -115,7 +116,9 @@ class GameService:
         else:
             await self.game_repository.broadcast_status_game(gameID)
 
-    async def block_figure(self, gameID: int, playerID: int, targetID: int, cardID: int, figure: List[BoardPiecePosition]):
+    async def block_figure(
+        self, gameID: int, playerID: int, targetID: int, cardID: int, figure: List[BoardPiecePosition]
+    ):
         await self.player_domain_service.validate_player_exists(playerID)
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.is_player_in_game(playerID, gameID)
@@ -137,7 +140,6 @@ class GameService:
         await self.game_repository.broadcast_status_game(gameID)
 
     async def play_figure(self, gameID: int, playerID: int, figureID: int, figure: List[BoardPiecePosition]) -> None:
-
         await self.player_domain_service.validate_player_exists(playerID)
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.is_player_in_game(playerID, gameID)
@@ -160,10 +162,10 @@ class GameService:
 
         if blockedcardID is not None and self.game_repository.is_blocked_and_last_card(gameID, blockedcardID):
             self.game_repository.unblock_managment(gameID, blockedcardID)
-        
+
         if self.game_repository.figure_card_count(gameID, playerID) == 0:
             await self.game_repository.broadcast_end_game(gameID, playerID)
             self.game_repository.delete_and_clean(gameID)
         else:
             await self.game_repository.broadcast_status_game(gameID)
-
+            await self.game_repository.broadcast_chat_log_message(gameID, f"El jugador {playerID} jugó una figura")

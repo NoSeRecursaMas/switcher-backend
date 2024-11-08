@@ -718,7 +718,7 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
         game = self.get_public_info(gameID, playerID)
         game_json = game.model_dump()
         await ws_manager_game.send_personal_message(MessageType.STATUS, game_json, websocket)
-        await ws_manager_game.keep_listening(websocket)
+        await ws_manager_game.keep_listening(websocket, gameID)
 
     async def broadcast_status_game(self, gameID: int) -> None:
         """Envia el estado actual de la sala a todos los jugadores
@@ -744,6 +744,18 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
         winner_json = winner.model_dump()
         for player in players:
             await ws_manager_game.send_personal_message_by_id(MessageType.END, winner_json, player.playerID, gameID)
+
+    async def broadcast_chat_log_message(self, gameID: int, message: str) -> None:
+        """Envia un mensaje de chat a todos los jugadores
+
+        Args:
+            gameID (int): ID del juego
+            message (str): Mensaje de chat
+        """
+
+        data = {"username": "⚙️ Sistema ⚙️", "text": message}
+
+        await ws_manager_game.broadcast(MessageType.MSG, data, gameID)
 
     async def remove_player(self, playerID: int, gameID: int) -> None:
         """Remueve al jugador de la lista de conexiones activas

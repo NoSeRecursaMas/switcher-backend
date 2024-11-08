@@ -30,7 +30,8 @@ class RepositoryValidators:
         if self.game_repository.partial_movement_exists(gameID):
             return
         raise HTTPException(status_code=403, detail="El jugador no ha realizado ningún movimiento.")
-    def validate_card_is_partial_movement(self, gameID:int, cardID: int):
+
+    def validate_card_is_partial_movement(self, gameID: int, cardID: int):
         if not self.game_repository.was_card_used_in_partial_movement(gameID, cardID):
             return
         raise HTTPException(status_code=403, detail="La carta ya fue usada en un movimiento parcial.")
@@ -63,7 +64,7 @@ class RepositoryValidators:
         else:
             await websocket.accept()
             raise WebSocketDisconnect(4004, "El juego no existe.")
-        
+
     def validate_target_has_three_cards(self, targetID: int):
         if self.game_repository.has_three_cards(targetID):
             return
@@ -145,10 +146,12 @@ class RepositoryValidators:
         if not self.game_repository.check_border_validity(figure, board_matrix):
             raise HTTPException(status_code=403, detail="La figura tiene una ficha adyacente del mismo color.")
 
-    def validate_is_blocked_and_the_last_card(self, gameID:int, cardID: int):
-        if self.game_repository.is_blocked_and_not_last_card(gameID, cardID):
+    def validate_is_blocked_and_the_last_card(self, gameID: int, cardID: int):
+        if not self.game_repository.is_blocked_and_last_card(gameID, cardID):
             return
-        raise HTTPException(status_code=403, detail="No se puede jugar la carta dado que no es la ultima carta y esta bloqueada.")
+        raise HTTPException(
+            status_code=403, detail="No se puede jugar la carta dado que no es la ultima carta y esta bloqueada."
+        )
 
     async def validate_player_turn(self, playerID: int, gameID: int, websocket: Optional[WebSocket] = None):
         if self.game_repository.is_player_turn(playerID, gameID):
