@@ -110,7 +110,7 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.add_all(new_cards)
         self.db_session.commit()
 
-    def skip(self, gameID: int) -> int:
+    def skip(self, gameID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
         game_players = self.get_players(gameID)
         if game is None:
@@ -128,11 +128,9 @@ class SQLAlchemyRepository(GameRepository):
         for player in game_players:
             if player.position == game.posEnabledToPlay and not player.isActive:
                 self.skip(gameID)
-                return 
+                return
 
         self.db_session.commit()
-
-        return game.posEnabledToPlay
 
     def rebuild_movement_deck(self, gameID: int) -> None:
         movement_cards = (

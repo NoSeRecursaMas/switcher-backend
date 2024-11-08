@@ -1,8 +1,5 @@
-import time
-import datetime
-import asyncio
 from typing import List, Optional
-from fastapi import WebSocket, BackgroundTasks
+from fastapi import WebSocket
 
 from src.games.domain.models import BoardPiecePosition, GameID, MovementCardRequest
 from src.games.domain.repository import GameRepositoryWS
@@ -31,26 +28,8 @@ class GameService:
         self.game_domain_service = GameRepositoryValidators(game_repository, room_repository)
 
         self.recently_unblocked_cards = {}
-        self.turn_timer = 0 
 
-    async def _set_turn_timer(self, gameID: int, playerID: int, total_seconds: int, background_tasks: BackgroundTasks) -> None:
-        self.turn_timer = total_seconds
-        background_tasks.add_task(self._run_timer, playerID, gameID, total_seconds, background_tasks)
-
-    async def _run_timer(self, playerID: int, gameID: int, total_seconds: int, background_tasks: BackgroundTasks) -> None:
-        try:
-            while total_seconds > 0:
-                await asyncio.sleep(1)
-                total_seconds -= 1
-                self.turn_timer = total_seconds
-            await self.skip_turn(playerID, gameID, background_tasks)
-        except Exception as e:
-            print(f"Error in _run_timer: {e}")
-
-    def _get_turn_time_remaining(self) -> int:
-        return self.turn_timer
-
-    async def start_game(self, roomID: int, playerID: PlayerID, background_tasks: BackgroundTasks) -> GameID:
+    async def start_game(self, roomID: int, playerID: PlayerID) -> GameID:
         await self.player_domain_service.validate_player_exists(playerID.playerID)
         await self.room_domain_service.validate_room_exists(roomID)
         self.room_domain_service.validate_player_is_owner(playerID.playerID, roomID)
@@ -68,26 +47,22 @@ class GameService:
             raise ValueError("RoomRepository is required to start a game")
         game_service_domain = GameServiceDomain(self.game_repository, self.room_repository)
 
-        first_turnID = game_service_domain.set_game_turn_order(gameID)
-        await self._set_turn_timer(gameID, first_turnID, 120, background_tasks)
+        game_service_domain.set_game_turn_order(gameID)
         await self.room_repository.broadcast_status_room_list()
         await self.room_repository.broadcast_start_game(roomID, gameID)
 
         return response
 
-
-    async def skip_turn(self, playerID: int, gameID: int, background_tasks: BackgroundTasks) -> None:
+    async def skip_turn(self, playerID: int, gameID: int) -> None:
         await self.player_domain_service.validate_player_exists(playerID)
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.is_player_in_game(playerID, gameID)
         self.game_domain_service.validate_is_player_turn(playerID, gameID)
-        posEnabledToPlay = self.game_repository.skip(gameID)
+        self.game_repository.skip(gameID)
         self.game_repository.clean_partial_movements(gameID)
         self.game_repository.replacement_movement_card(gameID, playerID)
         self.game_repository.replacement_figure_card(gameID, playerID)
 
-        next_turn = self.room_domain_service.room_repository.get_turn(gameID, posEnabledToPlay)
-        await self._set_turn_timer(gameID, next_turn, 120, background_tasks)
         await self.game_repository.broadcast_status_game(gameID)
 
     async def connect_to_game_websocket(self, playerID: int, gameID: int, websocket: WebSocket) -> None:
