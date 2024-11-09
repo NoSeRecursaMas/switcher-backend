@@ -1,6 +1,6 @@
 import json
 import random
-import time
+from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 
 import numpy as np
@@ -472,7 +472,7 @@ class SQLAlchemyRepository(GameRepository):
             figuresToUse=self.get_available_figures(game.board),
             prohibitedColor=game.prohibitedColor,
             posEnabledToPlay=game.posEnabledToPlay,
-            timer=0,  ### ACÁ VA EL TIMER QUE VOS BENJA QUERES PONER
+            timer=timedelta.total_seconds(self.db_session.get(GameDB, gameID).timestamp_next_turn - datetime.now()),
             players=game.players,
         )
 
@@ -729,6 +729,15 @@ class SQLAlchemyRepository(GameRepository):
     def set_was_blocked_false(self, cardID: int) -> None:
         card = self.db_session.get(FigureCardDB, cardID)
         card.wasBlocked = False
+        self.db_session.commit()
+
+    def get_current_timestamp_next_turn(self, gameID: int) -> datetime:
+        game = self.db_session.get(GameDB, gameID)
+        return game.timestamp_next_turn
+
+    def set_timestamp_next_turn(self, gameID: int, timestamp: datetime) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        game.timestamp_next_turn = timestamp
         self.db_session.commit()
 
 

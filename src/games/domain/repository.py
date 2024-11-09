@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Dict, List, Optional, Union
 
 import numpy as np
@@ -125,12 +126,15 @@ class GameRepository(ABC):
     @abstractmethod
     def delete_partial_movement(self, gameID: int) -> None:
         pass
+
     @abstractmethod
     def partial_movement_exists(self, gameID: int) -> bool:
         pass
+
     @abstractmethod
     def clean_partial_movements(self, gameID: int) -> None:
-        pass 
+        pass
+
     @abstractmethod
     def was_card_used_in_partial_movement(self, gameID: int, cardID: int) -> bool:
         pass
@@ -144,7 +148,7 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def is_blocked_and_last_card(self,gameID: int, figureID: int) -> bool:
+    def is_blocked_and_last_card(self, gameID: int, figureID: int) -> bool:
         pass
 
     @abstractmethod
@@ -152,13 +156,13 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def is_blocked_and_last_card(self,gameID: int, figureID: int) -> bool:
+    def is_blocked_and_last_card(self, gameID: int, figureID: int) -> bool:
         pass
 
     @abstractmethod
     def block_managment(gameID, figureID) -> None:
         pass
-    
+
     @abstractmethod
     def unblock_managment(gameID, blockedcardID) -> None:
         pass
@@ -170,7 +174,7 @@ class GameRepository(ABC):
     @abstractmethod
     def get_blocked_card(gameID: int, playerID: int) -> int:
         pass
-    
+
     @abstractmethod
     def card_was_blocked(cardID: int) -> bool:
         pass
@@ -181,6 +185,14 @@ class GameRepository(ABC):
 
     @abstractmethod
     def has_three_cards(playerID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def get_current_timestamp_next_turn(self, gameID: int) -> datetime:
+        pass
+
+    @abstractmethod
+    def set_timestamp_next_turn(self, gameID: int, timestamp: datetime) -> None:
         pass
 
 

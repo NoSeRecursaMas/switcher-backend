@@ -1,8 +1,9 @@
-import time
-import datetime
 import asyncio
+import datetime
+import time
 from typing import List, Optional
-from fastapi import WebSocket, BackgroundTasks
+
+from fastapi import BackgroundTasks, WebSocket
 
 from src.games.domain.models import BoardPiecePosition, GameID, MovementCardRequest
 from src.games.domain.repository import GameRepositoryWS
@@ -31,29 +32,24 @@ class GameService:
         self.game_domain_service = GameRepositoryValidators(game_repository, room_repository)
 
         self.recently_unblocked_cards = {}
-        self.turn_timer = 0 
 
-    async def _set_turn_timer(self, gameID: int, playerID: int, total_seconds: int, background_tasks: BackgroundTasks) -> None:
-        self.turn_timer = total_seconds
-        background_tasks.add_task(self._run_timer, playerID, gameID, total_seconds, background_tasks)
+    async def _set_turn_timer(
+        self, gameID: int, playerID: int, total_seconds: int, background_tasks: BackgroundTasks
+    ) -> None:
+        timestamp = datetime.datetime.now() + datetime.timedelta(seconds=total_seconds)
+        self.game_repository.set_timestamp_next_turn(gameID, timestamp)
+        background_tasks.add_task(self._run_timer, playerID, gameID, timestamp, background_tasks)
 
-    async def _run_timer(self, playerID: int, gameID: int, total_seconds: int, background_tasks: BackgroundTasks) -> None:
-        try:
-            postion_player = self.game_repository.get_position_player(gameID, playerID)
-            while total_seconds > 0:
-                if self.game_repository.get_current_turn(gameID) == postion_player:
-                    await asyncio.sleep(1)
-                    total_seconds -= 1
-                    self.turn_timer = total_seconds
-                else:
-                    break
-            if self.game_repository.get_current_turn(gameID) == postion_player:
-                await self.skip_turn(playerID, gameID, background_tasks)
-        except Exception as e:
-            print(f"Error in _run_timer: {e}")
-
-    def _get_turn_time_remaining(self) -> int:
-        return self.turn_timer
+    async def _run_timer(
+        self, playerID: int, gameID: int, timestamp: datetime.datetime, background_tasks: BackgroundTasks
+    ) -> None:
+        while datetime.datetime.now() < timestamp:
+            if self.game_repository.get_current_timestamp_next_turn(gameID) == timestamp:
+                await asyncio.sleep(0.5)
+            else:
+                break
+        if self.game_repository.get_current_timestamp_next_turn(gameID) == timestamp:
+            await self.skip_turn(playerID, gameID, background_tasks)
 
     async def start_game(self, roomID: int, playerID: PlayerID, background_tasks: BackgroundTasks) -> GameID:
         await self.player_domain_service.validate_player_exists(playerID.playerID)
@@ -144,7 +140,9 @@ class GameService:
         else:
             await self.game_repository.broadcast_status_game(gameID)
 
-    async def block_figure(self, gameID: int, playerID: int, targetID: int, cardID: int, figure: List[BoardPiecePosition]):
+    async def block_figure(
+        self, gameID: int, playerID: int, targetID: int, cardID: int, figure: List[BoardPiecePosition]
+    ):
         await self.player_domain_service.validate_player_exists(playerID)
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.is_player_in_game(playerID, gameID)
@@ -166,7 +164,6 @@ class GameService:
         await self.game_repository.broadcast_status_game(gameID)
 
     async def play_figure(self, gameID: int, playerID: int, figureID: int, figure: List[BoardPiecePosition]) -> None:
-
         await self.player_domain_service.validate_player_exists(playerID)
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.is_player_in_game(playerID, gameID)
@@ -189,10 +186,9 @@ class GameService:
 
         if blockedcardID is not None and self.game_repository.is_blocked_and_last_card(gameID, blockedcardID):
             self.game_repository.unblock_managment(gameID, blockedcardID)
-        
+
         if self.game_repository.figure_card_count(gameID, playerID) == 0:
             await self.game_repository.broadcast_end_game(gameID, playerID)
             self.game_repository.delete_and_clean(gameID)
         else:
             await self.game_repository.broadcast_status_game(gameID)
-

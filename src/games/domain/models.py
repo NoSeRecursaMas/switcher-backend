@@ -82,6 +82,7 @@ class Game(BaseModel):
 
 class GamePublicInfo(Game):
     figuresToUse: List[List[BoardPiecePosition]]
+    timer: float
 
 
 class Winner(BaseModel):
