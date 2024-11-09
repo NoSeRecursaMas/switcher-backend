@@ -148,7 +148,8 @@ class GameRepository(ABC):
 
     @abstractmethod
     def get_prohibited_color(self, gameID: int) -> str:
-
+        pass
+        
     def is_blocked_and_last_card(self, gameID: int, figureID: int) -> bool:
         pass
 
