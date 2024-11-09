@@ -182,7 +182,7 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def has_three_cards(self, playerID: int) -> bool:
+    def has_three_cards(self, gameID: int, playerID: int) -> bool:
         pass
 
 
@@ -201,4 +201,28 @@ class GameRepositoryWS(GameRepository):
 
     @abstractmethod
     async def remove_player(self, playerID: int, gameID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_play_movement_card(self, gameID: int, playerID: int, cardID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_cancel_movement_card(self, gameID: int, playerID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_player_leave_game(self, gameID: int, playerID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_play_figure(self, gameID: int, playerID: int, figureID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_block_figure(self, gameID: int, playerID: int, targetID: int, figureID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_turn_skip(self, gameID: int, playerID: int) -> None:
         pass
