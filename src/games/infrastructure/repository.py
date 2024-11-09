@@ -373,7 +373,7 @@ class SQLAlchemyRepository(GameRepository):
         figure_cards = self.db_session.query(FigureCardDB).filter(
             FigureCardDB.gameID == gameID, FigureCardDB.playerID == playerID
         )
-        amount_non_playable = figure_cards.filter(not FigureCardDB.isPlayable).count()
+        amount_non_playable = figure_cards.filter(FigureCardDB.isPlayable.is_(False)).count()
 
         playable_cards: List[FigureCard] = []
         for card in figure_cards:
@@ -466,8 +466,6 @@ class SQLAlchemyRepository(GameRepository):
         if player is None:
             raise ValueError(f"Player with ID {playerID} not found")
 
-        players = game.players
-
         return GamePublicInfo(
             gameID=game.gameID,
             board=game.board,
@@ -475,24 +473,27 @@ class SQLAlchemyRepository(GameRepository):
             prohibitedColor=game.prohibitedColor,
             posEnabledToPlay=game.posEnabledToPlay,
             timer=0,  ### ACÁ VA EL TIMER QUE VOS BENJA QUERES PONER
-            players=players,
+            players=game.players,
         )
 
     def add_movement_cards_to_public_info(self, gameID: int, playerID: int, game: GamePublicInfo):
         game_json = game.model_dump()
 
         for player in game_json["players"]:
+            player["sizeDeckFigure"], _ = self.get_player_figure_cards(gameID, player["playerID"])
             if player["playerID"] == playerID:
-                player["cardsMovement"] = self.get_player_movement_cards(gameID, playerID)
+                player["cardsMovement"] = []
+                for card in self.get_player_movement_cards(gameID, playerID):
+                    player["cardsMovement"].append(card.model_dump())
             else:
                 cards_db = self.db_session.query(MovementCardDB).filter(
-                    MovementCardDB.gameID == gameID, MovementCardDB.playerID == playerID
+                    MovementCardDB.gameID == gameID, MovementCardDB.playerID == player["playerID"]
                 )
-                cards: List[Optional[MovementCard]] = []
+                cards = []
                 for card in cards_db:
                     isUsed = self.was_card_used_in_partial_movement(gameID, card.cardID)
                     if isUsed:
-                        cards.append(MovementCard(type=card.type, cardID=card.cardID, isUsed=isUsed))
+                        cards.append(MovementCard(type=card.type, cardID=card.cardID, isUsed=isUsed).model_dump())
                     else:
                         cards.append(None)
 
