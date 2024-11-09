@@ -39,11 +39,16 @@ class GameService:
 
     async def _run_timer(self, playerID: int, gameID: int, total_seconds: int, background_tasks: BackgroundTasks) -> None:
         try:
+            postion_player = self.game_repository.get_position_player(gameID, playerID)
             while total_seconds > 0:
-                await asyncio.sleep(1)
-                total_seconds -= 1
-                self.turn_timer = total_seconds
-            await self.skip_turn(playerID, gameID, background_tasks)
+                if self.game_repository.get_current_turn(gameID) == postion_player:
+                    await asyncio.sleep(1)
+                    total_seconds -= 1
+                    self.turn_timer = total_seconds
+                else:
+                    break
+            if self.game_repository.get_current_turn(gameID) == postion_player:
+                await self.skip_turn(playerID, gameID, background_tasks)
         except Exception as e:
             print(f"Error in _run_timer: {e}")
 
@@ -74,7 +79,6 @@ class GameService:
         await self.room_repository.broadcast_start_game(roomID, gameID)
 
         return response
-
 
     async def skip_turn(self, playerID: int, gameID: int, background_tasks: BackgroundTasks) -> None:
         await self.player_domain_service.validate_player_exists(playerID)
