@@ -82,7 +82,6 @@ class Game(BaseModel):
 
 class GamePublicInfo(Game):
     figuresToUse: List[List[BoardPiecePosition]]
-    cardsMovement: List[MovementCard]
 
     @field_validator("cardsMovement")
     @classmethod
@@ -101,6 +100,7 @@ class FigureCardRequest(BaseModel):
     cardID: int
     playerID: int
     figure: List[BoardPiecePosition]
+
 
 class BlockCardRequest(BaseModel):
     cardID: int
