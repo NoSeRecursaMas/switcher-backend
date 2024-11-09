@@ -36,7 +36,18 @@ def test_create_game(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
 
     response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+
     assert response.status_code == 201
+    assert response.json() == {"gameID": 1}
+
+
+def test_create_game_prohibited_color(client, test_db):
+    db, players, room = create_game_generalization_two_players(client, test_db)
+
+    response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+
+    assert response.status_code == 201
+    assert db.get(GameDB, 1).prohibitedColor == None
     assert response.json() == {"gameID": 1}
 
 

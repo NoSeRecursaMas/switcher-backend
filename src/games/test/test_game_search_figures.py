@@ -347,3 +347,58 @@ def test_no_available_figures(game_logic: SQLAlchemyRepository):
     figures = game_logic.get_available_figures(prohibited_color, board_pieces)
     assert len(figures) == 0
     assert figures == []
+
+
+def test_get_one_figure_prohibited_color(game_logic: SQLAlchemyRepository):
+    board = [
+        {"posX": 0, "posY": 0, "color": "G", "isPartial": False},
+        {"posX": 0, "posY": 1, "color": "G", "isPartial": False},
+        {"posX": 0, "posY": 2, "color": "G", "isPartial": False},
+        {"posX": 0, "posY": 3, "color": "G", "isPartial": False},
+        {"posX": 0, "posY": 4, "color": "G", "isPartial": False},
+        {"posX": 0, "posY": 5, "color": "G", "isPartial": False},
+        {"posX": 1, "posY": 0, "color": "G", "isPartial": False},
+        {"posX": 1, "posY": 1, "color": "G", "isPartial": False},
+        {"posX": 1, "posY": 2, "color": "G", "isPartial": False},
+        {"posX": 1, "posY": 3, "color": "B", "isPartial": False},
+        {"posX": 1, "posY": 4, "color": "G", "isPartial": False},
+        {"posX": 1, "posY": 5, "color": "G", "isPartial": False},
+        {"posX": 2, "posY": 0, "color": "G", "isPartial": False},
+        {"posX": 2, "posY": 1, "color": "G", "isPartial": False},
+        {"posX": 2, "posY": 2, "color": "B", "isPartial": False},
+        {"posX": 2, "posY": 3, "color": "B", "isPartial": False},
+        {"posX": 2, "posY": 4, "color": "G", "isPartial": False},
+        {"posX": 2, "posY": 5, "color": "G", "isPartial": False},
+        {"posX": 3, "posY": 0, "color": "G", "isPartial": False},
+        {"posX": 3, "posY": 1, "color": "G", "isPartial": False},
+        {"posX": 3, "posY": 2, "color": "B", "isPartial": False},
+        {"posX": 3, "posY": 3, "color": "B", "isPartial": False},
+        {"posX": 3, "posY": 4, "color": "R", "isPartial": False},
+        {"posX": 3, "posY": 5, "color": "G", "isPartial": False},
+        {"posX": 4, "posY": 0, "color": "G", "isPartial": False},
+        {"posX": 4, "posY": 1, "color": "G", "isPartial": False},
+        {"posX": 4, "posY": 2, "color": "G", "isPartial": False},
+        {"posX": 4, "posY": 3, "color": "R", "isPartial": False},
+        {"posX": 4, "posY": 4, "color": "R", "isPartial": False},
+        {"posX": 4, "posY": 5, "color": "G", "isPartial": False},
+        {"posX": 5, "posY": 0, "color": "G", "isPartial": False},
+        {"posX": 5, "posY": 1, "color": "G", "isPartial": False},
+        {"posX": 5, "posY": 2, "color": "G", "isPartial": False},
+        {"posX": 5, "posY": 3, "color": "G", "isPartial": False},
+        {"posX": 5, "posY": 4, "color": "R", "isPartial": False},
+        {"posX": 5, "posY": 5, "color": "G", "isPartial": False},
+    ]
+
+    board_pieces: List[BoardPiece] = [BoardPiece(**piece) for piece in board]
+
+    prohibited_color = "B"
+    figures = game_logic.get_available_figures(prohibited_color, board_pieces)
+    assert len(figures) == 1
+    assert figures == [
+        [
+            BoardPiecePosition(posX=4, posY=3),
+            BoardPiecePosition(posX=3, posY=4),
+            BoardPiecePosition(posX=4, posY=4),
+            BoardPiecePosition(posX=5, posY=4),
+        ],
+    ]

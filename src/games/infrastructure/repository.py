@@ -465,11 +465,15 @@ class SQLAlchemyRepository(GameRepository):
             cardsMovement=self.get_player_movement_cards(gameID, playerID),
         )
 
-    def get_available_figures(self, prohibitedColor: str, board: List[BoardPiece]) -> List[List[BoardPiecePosition]]:
+    def get_available_figures(
+        self, prohibitedColor: Optional[str], board: List[BoardPiece]
+    ) -> List[List[BoardPiecePosition]]:
         board_matrix = np.empty((6, 6), dtype=object)
 
         for piece in board:
             board_matrix[piece.posY][piece.posX] = piece.color
+
+        prohibitedColor = prohibitedColor or ""
 
         color_layers = self.create_color_layers(board_matrix, prohibitedColor)
 
@@ -584,7 +588,6 @@ class SQLAlchemyRepository(GameRepository):
 
         board = json.loads(board_json)
         first_position = figure[0]
-        print(first_position.posX)
         figure_color = next(
             (
                 item["color"]
