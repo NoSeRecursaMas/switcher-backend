@@ -472,17 +472,21 @@ class SQLAlchemyRepository(GameRepository):
             prohibitedColor=game.prohibitedColor,
             posEnabledToPlay=game.posEnabledToPlay,
             players=game.players,
-            figuresToUse=self.get_available_figures(game.board),
+            figuresToUse=self.get_available_figures(game.prohibitedColor, game.board),
             cardsMovement=self.get_player_movement_cards(gameID, playerID),
         )
 
-    def get_available_figures(self, board: List[BoardPiece]) -> List[List[BoardPiecePosition]]:
+    def get_available_figures(
+        self, prohibitedColor: Optional[str], board: List[BoardPiece]
+    ) -> List[List[BoardPiecePosition]]:
         board_matrix = np.empty((6, 6), dtype=object)
 
         for piece in board:
             board_matrix[piece.posY][piece.posX] = piece.color
 
-        color_layers = self.create_color_layers(board_matrix)
+        prohibitedColor = prohibitedColor or ""
+
+        color_layers = self.create_color_layers(board_matrix, prohibitedColor)
 
         all_figures = []
         rotated_figures = {
@@ -505,8 +509,8 @@ class SQLAlchemyRepository(GameRepository):
 
         return all_figures
 
-    def create_color_layers(self, board_matrix: np.ndarray) -> dict:
-        return {color: (board_matrix == color).astype(int) for color in COLORS}
+    def create_color_layers(self, board_matrix: np.ndarray, prohibitedColor: str) -> dict:
+        return {color: (board_matrix == color).astype(int) for color in COLORS if color != prohibitedColor}
 
     def match_figure_in_layer(self, shape: np.ndarray, layer: np.ndarray) -> List[List[BoardPiecePosition]]:
         matched_figures = []
@@ -590,8 +594,26 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.delete(room)
         self.db_session.commit()
 
-    def play_figure(self, figureID: int) -> None:
+    def play_figure(self, gameID: int, figureID: int, figure: List[BoardPiecePosition]) -> None:
+        game = self.db_session.get(GameDB, gameID)
+
         figure_card = self.db_session.query(FigureCardDB).filter_by(cardID=figureID).first()
+
+        board_json = self.db_session.get(GameDB, gameID).board
+
+        board = json.loads(board_json)
+        first_position = figure[0]
+        figure_color = next(
+            (
+                item["color"]
+                for item in board
+                if item["posX"] == first_position.posX and item["posY"] == first_position.posY
+            ),
+            None,
+        )
+
+        game.prohibitedColor = figure_color
+
         if figure_card:
             self.db_session.delete(figure_card)
             self.db_session.commit()
@@ -618,6 +640,12 @@ class SQLAlchemyRepository(GameRepository):
         if card is None:
             raise ValueError(f"Card with ID {cardID} not found")
         return MovementCardDomain(type=card.type, cardID=card.cardID, isUsed=card.isDiscarded)
+
+    def get_prohibited_color(self, gameID: int) -> str:
+        game = self.db_session.get(GameDB, gameID)
+        if game is None:
+            raise ValueError(f"Game with ID {gameID} not found")
+        return game.prohibitedColor
 
     def figure_card_count(self, gameID: int, playerID: int) -> int:
         return (

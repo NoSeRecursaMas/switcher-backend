@@ -99,7 +99,7 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def play_figure(self, figureID: int) -> None:
+    def play_figure(self, gameID: int, figureID: int, figure: List[BoardPiecePosition]) -> None:
         pass
 
     @abstractmethod
@@ -147,6 +147,9 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
+    def get_prohibited_color(self, gameID: int) -> str:
+        pass
+        
     def is_blocked_and_last_card(self, gameID: int, figureID: int) -> bool:
         pass
 

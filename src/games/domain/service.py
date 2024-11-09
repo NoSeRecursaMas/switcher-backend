@@ -264,6 +264,13 @@ class RepositoryValidators:
 
         return right_side or left_side or top_side or bottom_side
 
+    def validate_prohibited_color(self, gameID: int, figure: List[BoardPiecePosition]):
+        prohibited_color = self.game_repository.get_prohibited_color(gameID)
+        board = self.game_repository.get_board(gameID)
+
+        if board[figure[0].posX * 6 + figure[0].posY].color == prohibited_color:
+            raise HTTPException(status_code=403, detail="La figura no puede ser del color prohibido.")
+
 
 class GameServiceDomain:
     def __init__(self, game_repository: GameRepository, room_repository: RoomRepository):
