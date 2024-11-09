@@ -1140,7 +1140,6 @@ def test_play_correct_mov4_card(client, test_db):
     assert origin["color"] == "B"
     assert destination["color"] == "R"
 
-
 def test_play_incorrect_mov4_card(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -1190,7 +1189,6 @@ def test_play_incorrect_mov4_card(client, test_db):
     assert origin["color"] == "R"
     assert destination["color"] == "B"
 
-
 def test_play_correct_mov5_card_down(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -1238,7 +1236,6 @@ def test_play_correct_mov5_card_down(client, test_db):
     destination = next(item for item in board if item["posX"] == 2 and item["posY"] == 1)
     assert origin["color"] == "B"
     assert destination["color"] == "R"
-
 
 def test_play_correct_mov5_card_up(client, test_db):
     db = next(override_get_db())
@@ -1288,7 +1285,6 @@ def test_play_correct_mov5_card_up(client, test_db):
     assert origin["color"] == "B"
     assert destination["color"] == "R"
 
-
 def test_play_correct_mov6_card_up(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -1336,7 +1332,6 @@ def test_play_correct_mov6_card_up(client, test_db):
     destination = next(item for item in board if item["posX"] == 0 and item["posY"] == 0)
     assert origin["color"] == "B"
     assert destination["color"] == "R"
-
 
 def test_play_correct_mov6_card_down(client, test_db):
     db = next(override_get_db())
@@ -1386,7 +1381,6 @@ def test_play_correct_mov6_card_down(client, test_db):
     assert origin["color"] == "B"
     assert destination["color"] == "R"
 
-
 def test_play_correct_mov7_card(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -1435,7 +1429,6 @@ def test_play_correct_mov7_card(client, test_db):
     assert origin["color"] == "B"
     assert destination["color"] == "R"
 
-
 def test_player_did_not_has_movement_card(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -1471,7 +1464,6 @@ def test_player_did_not_has_movement_card(client, test_db):
     )
     assert response.status_code == 403
     assert response.json() == {"detail": "El jugador no tiene la carta de movimiento."}
-
 
 def test_play_horizontal_mov06(client, test_db):
     db = next(override_get_db())
@@ -1521,7 +1513,6 @@ def test_play_horizontal_mov06(client, test_db):
     assert origin["color"] == "B"
     assert destination["color"] == "R"
 
-
 def test_play_horizontal_mov05(client, test_db):
     db = next(override_get_db())
     db.add_all(
@@ -1569,3 +1560,4 @@ def test_play_horizontal_mov05(client, test_db):
     destination = next(item for item in board if item["posY"] == 0 and item["posX"] == 2)
     assert origin["color"] == "B"
     assert destination["color"] == "R"
+

@@ -148,6 +148,40 @@ class GameRepository(ABC):
 
     @abstractmethod
     def get_prohibited_color(self, gameID: int) -> str:
+
+    def is_blocked_and_last_card(self, gameID: int, figureID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def figure_card_count(self, gameID: int, playerID: int) -> int:
+        pass
+
+    @abstractmethod
+    def block_managment(self, gameID, figureID) -> None:
+        pass
+
+    @abstractmethod
+    def unblock_managment(self, gameID, blockedcardID) -> None:
+        pass
+
+    @abstractmethod
+    def is_not_blocked(self, cardID) -> bool:
+        pass
+
+    @abstractmethod
+    def get_blocked_card(self, gameID: int, playerID: int) -> Optional[int]:
+        pass
+
+    @abstractmethod
+    def card_was_blocked(self, cardID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def set_was_blocked_false(self, cardID: int) -> None:
+        pass
+
+    @abstractmethod
+    def has_three_cards(self, playerID: int) -> bool:
         pass
 
 
