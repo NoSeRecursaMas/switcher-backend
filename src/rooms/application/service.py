@@ -49,12 +49,14 @@ class RoomService:
 
         await self.room_repository.broadcast_status_room_list()
 
-    async def join_room(self, roomID: int, playerID: int) -> None:
+    async def join_room(self, roomID: int, playerID: int,password: Optional[str] = None) -> None:
         await self.player_domain_service.validate_player_exists(playerID)
         await self.room_domain_service.validate_room_exists(roomID)
         self.room_domain_service.validate_room_full(roomID)
         await self.room_domain_service.validate_game_not_started(roomID)
 
+        self.room_domain_service.validate_room_password(roomID,password=password)
+        
         self.room_repository.add_player_to_room(playerID=playerID, roomID=roomID)
 
         await self.room_repository.broadcast_status_room_list()

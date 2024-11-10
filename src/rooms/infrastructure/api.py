@@ -9,6 +9,8 @@ from src.players.infrastructure.repository import (
 from src.rooms.application.service import RoomService
 from src.rooms.domain.models import RoomCreationRequest, RoomID
 from src.rooms.infrastructure.repository import WebSocketRepository as RoomWebSocketRepository
+from typing import Optional
+from src.rooms.domain.models import JoinRoomRequest
 
 router = APIRouter()
 
@@ -29,10 +31,11 @@ async def leave_room(roomID: int, playerID: PlayerID, db_session: Session = Depe
 
 
 @router.put("/{roomID}/join", status_code=200)
-async def join_room(roomID: int, playerID: PlayerID, db_session: Session = Depends(get_db)) -> None:
+async def join_room(roomID: int, room_data: JoinRoomRequest , db_session: Session = Depends(get_db)) -> None:
+
     service = RoomService(RoomWebSocketRepository(db_session), PlayerSQLAlchemyRepository(db_session))
 
-    await service.join_room(roomID, playerID.playerID)
+    await service.join_room(roomID, room_data.playerID, room_data.password)
 
 
 @router.websocket("/{playerID}")

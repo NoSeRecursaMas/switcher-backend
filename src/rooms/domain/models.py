@@ -38,6 +38,9 @@ class RoomExtendedInfo(BaseModel):
 class RoomID(BaseModel):
     roomID: int
 
+class JoinRoomRequest(BaseModel):
+    playerID: int
+    password: Optional[str] = None
 
 class RoomCreationRequest(BaseModel):
     playerID: int

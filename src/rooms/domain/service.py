@@ -45,6 +45,15 @@ class RepositoryValidators:
         if len(room.players) >= room.maxPlayers:
             raise HTTPException(status_code=403, detail="La sala está llena.")
 
+    def validate_room_password(self, roomID: int, password: Optional[str] = None):
+        
+        room = self.room_repository.get(roomID)
+        print(f"Comparing room.password='{room.password}' with provided password='{password}'")
+        if room.password and room.password != password:
+            raise HTTPException(status_code=403, detail="Contraseña incorrecta.")
+        elif room.password == '' and password != '':
+            raise HTTPException(status_code=403, detail="La sala no tiene contraseña.")
+        
     async def validate_game_not_started(self, roomID: int, websocket: Optional[WebSocket] = None):
         if not self.room_repository.is_game_started(roomID):
             return
