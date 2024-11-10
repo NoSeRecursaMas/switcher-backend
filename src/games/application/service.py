@@ -139,7 +139,7 @@ class GameService:
         self.game_domain_service.validate_target_has_three_cards(gameID, targetID)
 
         await self.game_repository.send_log_block_figure(gameID, playerID, targetID, cardID)
-        self.game_repository.block_managment(gameID, cardID)
+        self.game_repository.block_managment(gameID, cardID, figure)
         self.game_repository.desvinculate_partial_movement_cards(gameID)
         self.game_repository.set_partial_movements_to_empty(gameID)
 
@@ -160,7 +160,7 @@ class GameService:
 
         await self.game_repository.send_log_play_figure(gameID, playerID, figureID)
         self.game_repository.play_figure(gameID, figureID, figure)
-        
+
         self.game_repository.desvinculate_partial_movement_cards(gameID)
         self.game_repository.set_partial_movements_to_empty(gameID)
 

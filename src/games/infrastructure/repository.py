@@ -595,28 +595,24 @@ class SQLAlchemyRepository(GameRepository):
         self.db_session.commit()
 
     def play_figure(self, gameID: int, figureID: int, figure: List[BoardPiecePosition]) -> None:
-        game = self.db_session.get(GameDB, gameID)
-
         figure_card = self.db_session.query(FigureCardDB).filter_by(cardID=figureID).first()
-
-        board_json = self.db_session.get(GameDB, gameID).board
-
-        board = json.loads(board_json)
-        first_position = figure[0]
-        figure_color = next(
-            (
-                item["color"]
-                for item in board
-                if item["posX"] == first_position.posX and item["posY"] == first_position.posY
-            ),
-            None,
-        )
-
-        game.prohibitedColor = figure_color
 
         if figure_card:
             self.db_session.delete(figure_card)
+            color = self.get_color_from_position(gameID, figure[0].posX, figure[0].posY)
+            self.change_color_prohibited(gameID, color)
             self.db_session.commit()
+
+    def get_color_from_position(self, gameID: int, posX: int, posY: int) -> str:
+        game = self.db_session.get(GameDB, gameID)
+        board = json.loads(game.board)
+        piece = next(piece for piece in board if piece["posX"] == posX and piece["posY"] == posY)
+        return piece["color"]
+
+    def change_color_prohibited(self, gameID: int, color: str) -> None:
+        game = self.db_session.get(GameDB, gameID)
+        game.prohibitedColor = color
+        self.db_session.commit()
 
     def get_figure_card(self, figureCardID: int) -> Optional[FigureCard]:
         card = self.db_session.get(FigureCardDB, figureCardID)
@@ -688,7 +684,7 @@ class SQLAlchemyRepository(GameRepository):
 
         self.db_session.commit()
 
-    def block_managment(self, gameID: int, figureID: int) -> None:
+    def block_managment(self, gameID: int, figureID: int, figure: List[BoardPiecePosition]) -> None:
         card = self.db_session.get(FigureCardDB, figureID)
         cards_from_player = (
             self.db_session.query(FigureCardDB)
@@ -711,6 +707,10 @@ class SQLAlchemyRepository(GameRepository):
             if len(blocked_player_cards) == 0:
                 card.isBlocked = True
             self.db_session.commit()
+
+        color = self.get_color_from_position(gameID, figure[0].posX, figure[0].posY)
+        self.change_color_prohibited(gameID, color)
+        self.db_session.commit()
 
     def is_not_blocked(self, cardID: int) -> bool:
         card = self.db_session.get(FigureCardDB, cardID)

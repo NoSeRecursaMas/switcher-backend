@@ -62,7 +62,10 @@ def create_game(test_db, create_room):
 
 @pytest.fixture
 def create_figure_card(test_db):
-    figure_cards = [FigureCardDB(type="fige01", isBlocked=False, isPlayable=True, playerID=1, gameID=1)]
+    figure_cards = [
+        FigureCardDB(type="fige01", isBlocked=False, isPlayable=True, playerID=1, gameID=1),
+        FigureCardDB(type="fige02", isBlocked=False, isPlayable=True, playerID=1, gameID=1),
+    ]
     test_db.add_all(figure_cards)
     test_db.commit()
     return figure_cards
@@ -222,7 +225,9 @@ def test_play_figure_card(client, test_db, create_game, create_board_version_1, 
             "figure": [{"posX": 0, "posY": 0}, {"posX": 0, "posY": 1}, {"posX": 0, "posY": 2}, {"posX": 0, "posY": 3}],
         },
     )
-    test_db.refresh(game_from_db)
+
+    test_db.refresh(game)
+    # no se actualiza el color prohibido
 
     assert response.status_code == 201
     assert game_from_db.prohibitedColor == "R"
@@ -390,7 +395,7 @@ def test_figure_card_dont_exists(client, test_db, create_game, create_board_vers
 
     figure_card = create_figure_card
 
-    figure_card[0].cardID = 2
+    figure_card[0].cardID = 3
 
     test_db.commit()
 
