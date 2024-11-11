@@ -154,10 +154,28 @@ class SQLAlchemyRepository(RoomRepository):
         )
         self.db_session.commit()
 
+
     def encrypt_password(self, password: str) -> str:
         if password is None:
             return None
         return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+    def get_first_turn(self, roomID: int) -> int:
+        return (
+            self.db_session.query(PlayerRoom)
+            .filter(PlayerRoom.roomID == roomID, PlayerRoom.position == 1)
+            .one()
+            .playerID
+        )
+
+    def get_turn(self, roomID: int, posEnabled: int) -> int:
+        return (
+            self.db_session.query(PlayerRoom)
+            .filter(PlayerRoom.roomID == roomID, PlayerRoom.position == posEnabled)
+            .one()
+            .playerID
+        )
+
 
 
 class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):

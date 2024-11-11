@@ -2,7 +2,7 @@ import random
 from typing import Dict, List, Optional, Union
 
 import numpy as np
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 
 from src.games.config import COLORS, FIGURE_CARDS_FORM
@@ -293,13 +293,14 @@ class GameServiceDomain:
 
         return board
 
-    def set_game_turn_order(self, gameID: int) -> None:
+    def set_game_turn_order(self, gameID: int) -> int:
         players = self.game_repository.get_players(gameID)
         player_count = len(players)
-
         positions = list(range(1, player_count + 1))
 
         random.shuffle(positions)
 
         for player, position in zip(players, positions):
             self.room_repository.set_position(player.playerID, position, gameID)
+
+        return self.room_repository.get_first_turn(gameID)

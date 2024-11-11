@@ -1,12 +1,12 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 
 from src.database import get_db
 from src.games.application.service import GameService
-from src.games.domain.models import FigureCardRequest, GameID, MovementCardRequest, BlockCardRequest
+from src.games.domain.models import BlockCardRequest, FigureCardRequest, GameID, MovementCardRequest
 from src.games.infrastructure.repository import (
     WebSocketRepository as GameRepository,
 )
@@ -18,25 +18,29 @@ router = APIRouter()
 
 
 @router.post(path="/{roomID}", status_code=201)
-async def start_game(roomID: int, playerID: PlayerID, db_session: Session = Depends(get_db)) -> GameID:
+async def start_game(
+    roomID: int, playerID: PlayerID, background_tasks: BackgroundTasks, db_session: Session = Depends(get_db)
+) -> GameID:
     game_repository = GameRepository(db_session)
     player_repository = PlayerRepository(db_session)
     room_repository = RoomRepository(db_session)
 
     game_service = GameService(game_repository, player_repository, room_repository)
 
-    gameID = await game_service.start_game(roomID, playerID)
+    gameID = await game_service.start_game(roomID, playerID, background_tasks)
     return gameID
 
 
 @router.put(path="/{gameID}/turn", status_code=200)
-async def skip_turn(gameID: int, playerID: PlayerID, db_session: Session = Depends(get_db)) -> None:
+async def skip_turn(
+    gameID: int, playerID: PlayerID, background_tasks: BackgroundTasks, db_session: Session = Depends(get_db)
+) -> None:
     game_repository = GameRepository(db_session)
     player_repository = PlayerRepository(db_session)
     room_repository = RoomRepository(db_session)
 
     game_service = GameService(game_repository, player_repository, room_repository)
-    await game_service.skip_turn(playerID.playerID, gameID)
+    await game_service.skip_turn(playerID.playerID, gameID, background_tasks)
 
 
 @router.websocket("/{playerID}/{gameID}")
@@ -91,6 +95,7 @@ async def play_figure(
     game_service = GameService(game_repository, player_repository, room_repository)
 
     await game_service.play_figure(gameID, request.playerID, request.cardID, request.figure)
+
 
 @router.put(path="/{gameID}/block", status_code=201)
 async def block_figure(
