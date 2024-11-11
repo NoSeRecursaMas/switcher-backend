@@ -33,6 +33,7 @@ class RoomExtendedInfo(BaseModel):
     actualPlayers: int
     started: bool
     private: bool
+    playersID: List[int]
 
 
 class RoomID(BaseModel):

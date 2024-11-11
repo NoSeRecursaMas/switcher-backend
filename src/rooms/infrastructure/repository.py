@@ -85,6 +85,7 @@ class SQLAlchemyRepository(RoomRepository):
                 actualPlayers=len(room.players),
                 started=room.game is not None,
                 private=room.password is not None,
+                playersID=[player.playerID for player in room.players],
             )
             for room in all_rooms
         ]
