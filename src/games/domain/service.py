@@ -34,7 +34,8 @@ class RepositoryValidators:
         if self.game_repository.partial_movement_exists(gameID):
             return
         raise HTTPException(status_code=403, detail="El jugador no ha realizado ningún movimiento.")
-    def validate_card_is_partial_movement(self, gameID:int, cardID: int):
+
+    def validate_card_is_partial_movement(self, gameID: int, cardID: int):
         if not self.game_repository.was_card_used_in_partial_movement(gameID, cardID):
             return
         raise HTTPException(status_code=403, detail="La carta ya fue usada en un movimiento parcial.")
@@ -67,9 +68,9 @@ class RepositoryValidators:
         else:
             await websocket.accept()
             raise WebSocketDisconnect(4004, "El juego no existe.")
-        
-    def validate_target_has_three_cards(self, targetID: int):
-        if self.game_repository.has_three_cards(targetID):
+
+    def validate_target_has_three_cards(self, gameID: int, targetID: int):
+        if self.game_repository.has_three_cards(gameID, targetID):
             return
         raise HTTPException(status_code=403, detail="El jugador tiene menos de tres cartas de figura.")
 
@@ -149,10 +150,12 @@ class RepositoryValidators:
         if not self.game_repository.check_border_validity(figure, board_matrix):
             raise HTTPException(status_code=403, detail="La figura tiene una ficha adyacente del mismo color.")
 
-    def validate_is_blocked_and_the_last_card(self, gameID:int, cardID: int):
-        if self.game_repository.is_blocked_and_not_last_card(gameID, cardID):
+    def validate_is_blocked_and_the_last_card(self, gameID: int, cardID: int):
+        if not self.game_repository.is_blocked_and_last_card(gameID, cardID):
             return
-        raise HTTPException(status_code=403, detail="No se puede jugar la carta dado que no es la ultima carta y esta bloqueada.")
+        raise HTTPException(
+            status_code=403, detail="No se puede jugar la carta dado que no es la ultima carta y esta bloqueada."
+        )
 
     async def validate_player_turn(self, playerID: int, gameID: int, websocket: Optional[WebSocket] = None):
         if self.game_repository.is_player_turn(playerID, gameID):
@@ -265,6 +268,13 @@ class RepositoryValidators:
 
         return right_side or left_side or top_side or bottom_side
 
+    def validate_prohibited_color(self, gameID: int, figure: List[BoardPiecePosition]):
+        prohibited_color = self.game_repository.get_prohibited_color(gameID)
+        board = self.game_repository.get_board(gameID)
+
+        if board[figure[0].posX * 6 + figure[0].posY].color == prohibited_color:
+            raise HTTPException(status_code=403, detail="La figura no puede ser del color prohibido.")
+
 
 class GameServiceDomain:
     def __init__(self, game_repository: GameRepository, room_repository: RoomRepository):
@@ -295,7 +305,7 @@ class GameServiceDomain:
         random.shuffle(positions)
 
         for player, position in zip(players, positions):
-            self.room_repository.set_position(player.playerID, position)
+            self.room_repository.set_position(player.playerID, position, gameID)
 
         return self.room_repository.get_first_turn(gameID)
 

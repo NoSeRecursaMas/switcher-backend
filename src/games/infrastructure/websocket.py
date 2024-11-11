@@ -7,6 +7,7 @@ from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 class MessageType(str, Enum):
     STATUS = "status"
     END = "end"
+    MSG = "msg"
 
 
 class ConnectionManagerGame:
@@ -36,7 +37,7 @@ class ConnectionManagerGame:
             self.active_connections[gameID] = {}
         self.active_connections[gameID][playerID] = websocket
 
-    async def keep_listening(self, websocket: WebSocket):
+    async def keep_listening(self, websocket: WebSocket, gameID: int):
         """Mantiene la conexión abierta con el cliente por tiempo indefinido
 
         Args:
@@ -44,7 +45,9 @@ class ConnectionManagerGame:
         """
         try:
             while True:
-                await websocket.receive_text()
+                data = await websocket.receive_json()
+                if data["type"] == "msg":
+                    await self.broadcast(MessageType.MSG, data["payload"], gameID)
 
         except WebSocketDisconnect:
             await self.disconnect(websocket)
@@ -108,12 +111,12 @@ class ConnectionManagerGame:
             if playerID in self.active_connections[gameID]:
                 await self.active_connections[gameID][playerID].send_json(message)
 
-    async def broadcast(self, type: MessageType, payload: str, gameID: int):
+    async def broadcast(self, type: MessageType, payload: dict, gameID: int):
         """Envía un mensaje a todos los clientes conectados al juego
 
         Args:
             type (str): Tipo de mensaje
-            payload (str): Cuerpo del mensaje
+            payload (dict): Cuerpo del mensaje
             gameID (int): ID del juego
         """
         message = {"type": type, "payload": payload}

@@ -145,15 +145,17 @@ class SQLAlchemyRepository(RoomRepository):
         room = self.db_session.query(Room).filter_by(roomID=roomID).one_or_none()
         return room.game is not None
 
-    def set_position(self, playerID: int, position: int) -> None:
-        self.db_session.query(PlayerRoom).filter(PlayerRoom.playerID == playerID).update({"position": position})
+    def set_position(self, playerID: int, position: int, roomID: int) -> None:
+        self.db_session.query(PlayerRoom).filter(PlayerRoom.playerID == playerID, PlayerRoom.roomID == roomID).update(
+            {"position": position}
+        )
         self.db_session.commit()
 
     def get_first_turn(self, roomID: int) -> int:
-        return self.db_session.query(PlayerRoom).filter(PlayerRoom.roomID == roomID, PlayerRoom.position == 1).first().playerID
+        return self.db_session.query(PlayerRoom).filter(PlayerRoom.roomID == roomID, PlayerRoom.position == 1).one().playerID
 
-    def get_turn(self, roomID: int, posEnabled) -> int:
-        return self.db_session.query(PlayerRoom).filter(PlayerRoom.roomID == roomID, PlayerRoom.position == posEnabled).first().playerID
+    def get_turn(self, roomID: int, posEnabled: int) -> int:
+        return self.db_session.query(PlayerRoom).filter(PlayerRoom.roomID == roomID, PlayerRoom.position == posEnabled).one().playerID
 
 class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_room_list(self, websocket: WebSocket) -> None:
