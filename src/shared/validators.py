@@ -59,7 +59,7 @@ class CommonValidators:
 
     @staticmethod
     def validate_password_length(value: Optional[str], info: ValidationInfo):
-        if value is not None and not (0 < len(value) <= 16):  # Contraseña no vacía y longitud válida
+        if value is not None and not (0 < len(value) <= 16):
             raise PydanticCustomError(
                 "invalid_length",
                 "El {value} proporcionado no cumple con los requisitos de longitud permitidos.",
