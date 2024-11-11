@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from typing import Optional
 from pydantic import ValidationInfo
 from pydantic_core import PydanticCustomError
 
@@ -40,10 +41,41 @@ class CommonValidators:
                 {"value": info.field_name},
             )
 
+    @staticmethod
+    def verify_no_special_characters(value: Optional[str], info: ValidationInfo):
+        if value is not None and value == "":
+            raise PydanticCustomError(
+                "invalid_length",
+                "El {value} proporcionado no puede estar vacío.",
+                {"value": info.field_name},
+            )
+        if value and not value.isalnum():
+            raise PydanticCustomError(
+                "invalid_length",
+                "El {value} proporcionado contiene caracteres no permitidos.",
+                {"value": info.field_name},
+            )
+
+    @staticmethod
+    def validate_password_length(value: Optional[str], info: ValidationInfo):
+        if value is not None and not (0 < len(value) <= 16):  # Contraseña no vacía y longitud válida
+            raise PydanticCustomError(
+                "invalid_length",
+                "El {value} proporcionado no cumple con los requisitos de longitud permitidos.",
+                {"value": info.field_name},
+            )
+
+
     @classmethod
     def validate_string(cls, value: str, info: ValidationInfo):
         cls.validate_length(value, info)
         cls.validate_no_only_whitespaces(value, info)
         cls.verify_whitespaces(value, info)
         cls.verify_whitespace_count(value, info)
+        return value
+
+    @classmethod
+    def validate_password(cls, value: str, info: ValidationInfo):
+        cls.validate_password_length(value, info)
+        cls.verify_no_special_characters(value, info)
         return value

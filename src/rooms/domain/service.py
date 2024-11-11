@@ -1,3 +1,4 @@
+import bcrypt
 from typing import Optional
 
 from fastapi import HTTPException
@@ -46,12 +47,12 @@ class RepositoryValidators:
             raise HTTPException(status_code=403, detail="La sala está llena.")
 
     def validate_room_password(self, roomID: int, password: Optional[str] = None):
-        
         room = self.room_repository.get(roomID)
-        print(f"Comparing room.password='{room.password}' with provided password='{password}'")
-        if room.password and room.password != password:
-            raise HTTPException(status_code=403, detail="Contraseña incorrecta.")
-        elif room.password == '' and password != '':
+
+        if room.password:
+            if not password or not bcrypt.checkpw(password.encode(), room.password.encode()):
+                raise HTTPException(status_code=403, detail="Contraseña incorrecta.")
+        elif password:
             raise HTTPException(status_code=403, detail="La sala no tiene contraseña.")
         
     async def validate_game_not_started(self, roomID: int, websocket: Optional[WebSocket] = None):

@@ -1,4 +1,5 @@
 import json
+import bcrypt
 from typing import List, Optional
 
 from fastapi.websockets import WebSocket
@@ -27,11 +28,13 @@ class SQLAlchemyRepository(RoomRepository):
         self.db_session = db_session
 
     def create(self, room: RoomCreationRequest) -> RoomID:
+        encrypted_password = self.encrypt_password(room.password)
+
         room = Room(
             roomName=room.roomName,
             minPlayers=room.minPlayers,
             maxPlayers=room.maxPlayers,
-            password=room.password,
+            password=encrypted_password,
             hostID=room.playerID,
         )
 
@@ -40,6 +43,7 @@ class SQLAlchemyRepository(RoomRepository):
         self.db_session.refresh(room)
 
         return RoomID(roomID=room.roomID)
+
 
     def get(self, roomID: int) -> Optional[RoomDomain]:
         room = self.db_session.get(Room, roomID)
@@ -148,6 +152,11 @@ class SQLAlchemyRepository(RoomRepository):
     def set_position(self, playerID: int, position: int) -> None:
         self.db_session.query(PlayerRoom).filter(PlayerRoom.playerID == playerID).update({"position": position})
         self.db_session.commit()
+
+    def encrypt_password(self, password: str) -> str:
+        if password is None:
+            return None
+        return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
