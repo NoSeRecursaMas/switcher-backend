@@ -99,7 +99,7 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def play_figure(self, figureID: int) -> None:
+    def play_figure(self, gameID: int, figureID: int, figure: List[BoardPiecePosition]) -> None:
         pass
 
     @abstractmethod
@@ -146,6 +146,44 @@ class GameRepository(ABC):
     def desvinculate_partial_movement_cards(self, gameID: int) -> None:
         pass
 
+    @abstractmethod
+    def get_prohibited_color(self, gameID: int) -> str:
+        pass
+        
+    def is_blocked_and_last_card(self, gameID: int, figureID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def figure_card_count(self, gameID: int, playerID: int) -> int:
+        pass
+
+    @abstractmethod
+    def block_managment(self, gameID, figureID) -> None:
+        pass
+
+    @abstractmethod
+    def unblock_managment(self, gameID, blockedcardID) -> None:
+        pass
+
+    @abstractmethod
+    def is_not_blocked(self, cardID) -> bool:
+        pass
+
+    @abstractmethod
+    def get_blocked_card(self, gameID: int, playerID: int) -> Optional[int]:
+        pass
+
+    @abstractmethod
+    def card_was_blocked(self, cardID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def set_was_blocked_false(self, cardID: int) -> None:
+        pass
+
+    @abstractmethod
+    def has_three_cards(self, gameID: int, playerID: int) -> bool:
+        pass
 
 class GameRepositoryWS(GameRepository):
     @abstractmethod
@@ -162,4 +200,28 @@ class GameRepositoryWS(GameRepository):
 
     @abstractmethod
     async def remove_player(self, playerID: int, gameID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_play_movement_card(self, gameID: int, playerID: int, cardID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_cancel_movement_card(self, gameID: int, playerID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_player_leave_game(self, gameID: int, playerID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_play_figure(self, gameID: int, playerID: int, figureID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_block_figure(self, gameID: int, playerID: int, targetID: int, figureID: int) -> None:
+        pass
+
+    @abstractmethod
+    async def send_log_turn_skip(self, gameID: int, playerID: int) -> None:
         pass
