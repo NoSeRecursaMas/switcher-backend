@@ -188,6 +188,7 @@ class GameRepository(ABC):
     def has_three_cards(self, gameID: int, playerID: int) -> bool:
         pass
 
+
     @abstractmethod
     def get_current_timestamp_next_turn(self, gameID: int) -> datetime:
         pass

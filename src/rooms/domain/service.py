@@ -1,5 +1,6 @@
 from typing import Optional
 
+import bcrypt
 from fastapi import HTTPException
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 
@@ -44,6 +45,18 @@ class RepositoryValidators:
             raise HTTPException(status_code=404, detail="La sala no existe.")
         if len(room.players) >= room.maxPlayers:
             raise HTTPException(status_code=403, detail="La sala está llena.")
+
+    def validate_room_password(self, roomID: int, password: Optional[str] = None):
+        room = self.room_repository.get(roomID)
+
+        if room is None:
+            raise HTTPException(status_code=404, detail="Sala no encontrada.")
+
+        if room.password:
+            if not password or not bcrypt.checkpw(password.encode(), room.password.encode()):
+                raise HTTPException(status_code=403, detail="Contraseña incorrecta.")
+        elif password:
+            raise HTTPException(status_code=403, detail="La sala no tiene contraseña.")
 
     async def validate_game_not_started(self, roomID: int, websocket: Optional[WebSocket] = None):
         if not self.room_repository.is_game_started(roomID):
