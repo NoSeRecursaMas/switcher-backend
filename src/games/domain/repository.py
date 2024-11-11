@@ -161,11 +161,11 @@ class GameRepository(ABC):
         pass
 
     @abstractmethod
-    def block_managment(self, gameID, figureID) -> None:
+    def block_managment(self, gameID: int, figureID: int, figure: List[BoardPiecePosition]) -> None:
         pass
 
     @abstractmethod
-    def unblock_managment(self, gameID, blockedcardID) -> None:
+    def unblock_managment(self, gameID: int, blockedcardID: int) -> None:
         pass
 
     @abstractmethod
