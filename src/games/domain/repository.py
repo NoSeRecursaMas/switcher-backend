@@ -235,5 +235,5 @@ class GameRepositoryWS(GameRepository):
         pass
 
     @abstractmethod
-    async def send_log_turn_skip(self, gameID: int, playerID: int) -> None:
+    async def send_log_turn_skip(self, gameID: int, playerID: int, auto: bool) -> None:
         pass

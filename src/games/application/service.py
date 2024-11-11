@@ -49,7 +49,7 @@ class GameService:
             else:
                 break
         if self.game_repository.get_current_timestamp_next_turn(gameID) == timestamp:
-            await self.skip_turn(playerID, gameID, background_tasks)
+            await self.skip_turn(playerID, gameID, background_tasks, auto=True)
 
     async def start_game(self, roomID: int, playerID: PlayerID, background_tasks: BackgroundTasks) -> GameID:
         await self.player_domain_service.validate_player_exists(playerID.playerID)
@@ -76,7 +76,9 @@ class GameService:
 
         return response
 
-    async def skip_turn(self, playerID: int, gameID: int, background_tasks: BackgroundTasks) -> None:
+    async def skip_turn(
+        self, playerID: int, gameID: int, background_tasks: BackgroundTasks, auto: bool = False
+    ) -> None:
         await self.player_domain_service.validate_player_exists(playerID)
         await self.game_domain_service.validate_game_exists(gameID)
         await self.game_domain_service.is_player_in_game(playerID, gameID)
@@ -86,7 +88,7 @@ class GameService:
         self.game_repository.replacement_movement_card(gameID, playerID)
         self.game_repository.replacement_figure_card(gameID, playerID)
 
-        await self.game_repository.send_log_turn_skip(gameID, playerID)
+        await self.game_repository.send_log_turn_skip(gameID, playerID, auto)
         next_turn = self.room_domain_service.room_repository.get_turn(gameID, posEnabledToPlay)
         await self._set_turn_timer(gameID, next_turn, 120, background_tasks)
 

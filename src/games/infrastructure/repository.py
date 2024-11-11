@@ -898,11 +898,14 @@ class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
 
         await ws_manager_game.broadcast(MessageType.MSG, data, gameID)
 
-    async def send_log_turn_skip(self, gameID: int, playerID: int) -> None:
+    async def send_log_turn_skip(self, gameID: int, playerID: int, auto: bool) -> None:
         player = self.db_session.get(PlayerDB, playerID)
         player_name = player.username
 
         message = f"{player_name} ha pasado su turno"
+
+        if auto:
+            message = f"El turno de {player_name} ha terminado por finalizar su tiempo de juego"
 
         data = {"username": "⚙️ Sistema ⚙️", "text": message}
 
