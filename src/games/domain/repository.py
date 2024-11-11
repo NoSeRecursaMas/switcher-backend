@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Dict, List, Optional, Union
 
 import numpy as np
@@ -71,7 +72,8 @@ class GameRepository(ABC):
     def get_active_players(self, gameID: int) -> List[PlayerDomain]:
         pass
 
-    def skip(self, gameID: int) -> None:
+    @abstractmethod
+    def skip(self, gameID: int) -> int:
         pass
 
     @abstractmethod
@@ -149,7 +151,8 @@ class GameRepository(ABC):
     @abstractmethod
     def get_prohibited_color(self, gameID: int) -> str:
         pass
-        
+
+    @abstractmethod
     def is_blocked_and_last_card(self, gameID: int, figureID: int) -> bool:
         pass
 
@@ -183,6 +186,14 @@ class GameRepository(ABC):
 
     @abstractmethod
     def has_three_cards(self, gameID: int, playerID: int) -> bool:
+        pass
+
+    @abstractmethod
+    def get_current_timestamp_next_turn(self, gameID: int) -> datetime:
+        pass
+
+    @abstractmethod
+    def set_timestamp_next_turn(self, gameID: int, timestamp: datetime) -> None:
         pass
 
 
@@ -224,5 +235,5 @@ class GameRepositoryWS(GameRepository):
         pass
 
     @abstractmethod
-    async def send_log_turn_skip(self, gameID: int, playerID: int) -> None:
+    async def send_log_turn_skip(self, gameID: int, playerID: int, auto: bool) -> None:
         pass

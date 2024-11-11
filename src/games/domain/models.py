@@ -82,14 +82,7 @@ class Game(BaseModel):
 
 class GamePublicInfo(Game):
     figuresToUse: List[List[BoardPiecePosition]]
-    cardsMovement: List[MovementCard]
-
-    @field_validator("cardsMovement")
-    @classmethod
-    def check_movement_cards(cls, value):
-        if len(value) > 3:
-            raise ValueError("The deck of movement cards must have a maximum of 3 cards")
-        return value
+    timer: float
 
 
 class Winner(BaseModel):
@@ -101,6 +94,7 @@ class FigureCardRequest(BaseModel):
     cardID: int
     playerID: int
     figure: List[BoardPiecePosition]
+
 
 class BlockCardRequest(BaseModel):
     cardID: int
