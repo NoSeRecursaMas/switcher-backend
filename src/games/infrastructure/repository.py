@@ -129,8 +129,7 @@ class SQLAlchemyRepository(GameRepository):
         # Caso en el que el jugador que ahora tiene el turno no está activo
         for player in game_players:
             if player.position == game.posEnabledToPlay and not player.isActive:
-                self.skip(gameID)
-                return
+                return self.skip(gameID)
 
         self.db_session.commit()
 
@@ -772,6 +771,7 @@ class SQLAlchemyRepository(GameRepository):
         game = self.db_session.get(GameDB, gameID)
         game.timestamp_next_turn = timestamp
         self.db_session.commit()
+
 
 class WebSocketRepository(GameRepositoryWS, SQLAlchemyRepository):
     async def setup_connection_game(self, playerID: int, gameID: int, websocket: WebSocket) -> None:

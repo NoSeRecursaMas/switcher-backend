@@ -209,5 +209,3 @@ def test_leave_game_with_2_players_send_ws_end_game(client, test_db):
 
         assert message["type"] == "end"
         assert message["payload"] == {"winnerID": 2, "username": "test user 2"}
-
-

@@ -69,7 +69,6 @@ class GameService:
             raise ValueError("RoomRepository is required to start a game")
         game_service_domain = GameServiceDomain(self.game_repository, self.room_repository)
 
-
         first_turnID = game_service_domain.set_game_turn_order(gameID)
         await self._set_turn_timer(gameID, first_turnID, 120, background_tasks)
         await self.room_repository.broadcast_status_room_list()
@@ -185,7 +184,7 @@ class GameService:
 
         await self.game_repository.send_log_play_figure(gameID, playerID, figureID)
         self.game_repository.play_figure(gameID, figureID, figure)
-        
+
         self.game_repository.desvinculate_partial_movement_cards(gameID)
         self.game_repository.set_partial_movements_to_empty(gameID)
 

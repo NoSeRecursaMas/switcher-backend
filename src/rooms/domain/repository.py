@@ -72,6 +72,7 @@ class RoomRepository(ABC):
     def get_turn(self, roomID: int, posEnabled) -> int:
         pass
 
+
 class RoomRepositoryWS(RoomRepository):
     @abstractmethod
     async def setup_connection_room_list(self, websocket: WebSocket) -> None:
