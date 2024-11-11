@@ -196,15 +196,15 @@ def test_join_room_password(client, test_db):
     db.add(player)
     db.commit()
 
-    hashed_password = bcrypt.hashpw("1234".encode(), bcrypt.gensalt()).decode()
+    hashed_password = bcrypt.hashpw(b"1234", bcrypt.gensalt()).decode()
     room = RoomDB(roomName="test_room", minPlayers=2, maxPlayers=4, hostID=player.playerID, password=hashed_password)
     db.add(room)
     db.commit()
 
-    
     response = client.put(f"/rooms/{room.roomID}/join", json={"playerID": player.playerID, "password": "1234"})
 
     assert response.status_code == 200
+
 
 def test_join_room_password_incorrect(client, test_db):
     db = next(override_get_db())
@@ -212,7 +212,7 @@ def test_join_room_password_incorrect(client, test_db):
     db.add(player)
     db.commit()
 
-    hashed_password = bcrypt.hashpw("1234".encode(), bcrypt.gensalt()).decode()
+    hashed_password = bcrypt.hashpw(b"1234", bcrypt.gensalt()).decode()
     room = RoomDB(roomName="test_room", minPlayers=2, maxPlayers=4, hostID=player.playerID, password=hashed_password)
     db.add(room)
     db.commit()
@@ -229,7 +229,7 @@ def test_join_room_without_password(client, test_db):
     db.add(player)
     db.commit()
 
-    room = RoomDB(roomName="test_room", minPlayers=2, maxPlayers=4, hostID=player.playerID, password='')
+    room = RoomDB(roomName="test_room", minPlayers=2, maxPlayers=4, hostID=player.playerID, password="")
     db.add(room)
     db.commit()
 
@@ -237,4 +237,3 @@ def test_join_room_without_password(client, test_db):
 
     assert response.status_code == 403
     assert response.json() == {"detail": "La sala no tiene contraseña."}
- 

@@ -125,12 +125,15 @@ class GameRepository(ABC):
     @abstractmethod
     def delete_partial_movement(self, gameID: int) -> None:
         pass
+
     @abstractmethod
     def partial_movement_exists(self, gameID: int) -> bool:
         pass
+
     @abstractmethod
     def clean_partial_movements(self, gameID: int) -> None:
-        pass 
+        pass
+
     @abstractmethod
     def was_card_used_in_partial_movement(self, gameID: int, cardID: int) -> bool:
         pass
@@ -142,6 +145,7 @@ class GameRepository(ABC):
     @abstractmethod
     def desvinculate_partial_movement_cards(self, gameID: int) -> None:
         pass
+
 
 class GameRepositoryWS(GameRepository):
     @abstractmethod

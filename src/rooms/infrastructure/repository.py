@@ -1,7 +1,7 @@
 import json
-import bcrypt
 from typing import List, Optional
 
+import bcrypt
 from fastapi.websockets import WebSocket
 from sqlalchemy.orm import Session
 
@@ -28,7 +28,7 @@ class SQLAlchemyRepository(RoomRepository):
         self.db_session = db_session
 
     def create(self, room: RoomCreationRequest) -> RoomID:
-        encrypted_password = self.encrypt_password(room.password)
+        encrypted_password = self.encrypt_password(room.password) if room.password else None
 
         room = Room(
             roomName=room.roomName,
@@ -43,7 +43,6 @@ class SQLAlchemyRepository(RoomRepository):
         self.db_session.refresh(room)
 
         return RoomID(roomID=room.roomID)
-
 
     def get(self, roomID: int) -> Optional[RoomDomain]:
         room = self.db_session.get(Room, roomID)

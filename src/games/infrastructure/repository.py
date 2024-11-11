@@ -276,22 +276,30 @@ class SQLAlchemyRepository(GameRepository):
         if game is None:
             raise ValueError(f"Game with ID {gameID} not found")
         return len(json.loads(game.lastMovements)) > 0
-    
+
     def delete_partial_movement(self, gameID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
         if game is None:
             raise ValueError(f"Game with ID {gameID} not found")
-        
+
         last_movements = json.loads(game.lastMovements) if game.lastMovements else []
         if len(last_movements) == 0:
             return
-        
+
         last_movement = last_movements[-1]
         last_movement_origin = last_movement["origin"]
         last_movement_destination = last_movement["destination"]
         board = self.get_board(gameID)
-        origin_piece = next(piece for piece in board if piece.posX == last_movement_origin["posX"] and piece.posY == last_movement_origin["posY"])
-        destination_piece = next(piece for piece in board if piece.posX == last_movement_destination["posX"] and piece.posY == last_movement_destination["posY"])
+        origin_piece = next(
+            piece
+            for piece in board
+            if piece.posX == last_movement_origin["posX"] and piece.posY == last_movement_origin["posY"]
+        )
+        destination_piece = next(
+            piece
+            for piece in board
+            if piece.posX == last_movement_destination["posX"] and piece.posY == last_movement_destination["posY"]
+        )
         aux = origin_piece.color
         origin_piece.color = destination_piece.color
         destination_piece.color = aux
@@ -381,7 +389,7 @@ class SQLAlchemyRepository(GameRepository):
             cards.append(MovementCard(type=card.type, cardID=card.cardID, isUsed=isUsed))
 
         return cards
-    
+
     def clean_partial_movements(self, gameID: int) -> None:
         game = self.db_session.get(GameDB, gameID)
         last_movements = json.loads(game.lastMovements) if game.lastMovements else []
@@ -390,8 +398,12 @@ class SQLAlchemyRepository(GameRepository):
         for movement in last_movements:
             origin = movement["origin"]
             destination = movement["destination"]
-            origin_piece = next(piece for piece in board if piece.posX == origin["posX"] and piece.posY == origin["posY"])
-            destination_piece = next(piece for piece in board if piece.posX == destination["posX"] and piece.posY == destination["posY"])
+            origin_piece = next(
+                piece for piece in board if piece.posX == origin["posX"] and piece.posY == origin["posY"]
+            )
+            destination_piece = next(
+                piece for piece in board if piece.posX == destination["posX"] and piece.posY == destination["posY"]
+            )
             aux = origin_piece.color
             origin_piece.color = destination_piece.color
             destination_piece.color = aux

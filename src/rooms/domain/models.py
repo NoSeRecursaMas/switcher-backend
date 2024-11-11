@@ -38,9 +38,11 @@ class RoomExtendedInfo(BaseModel):
 class RoomID(BaseModel):
     roomID: int
 
+
 class JoinRoomRequest(BaseModel):
     playerID: int
     password: Optional[str] = None
+
 
 class RoomCreationRequest(BaseModel):
     playerID: int
@@ -53,7 +55,7 @@ class RoomCreationRequest(BaseModel):
     @classmethod
     def validate_roomName(cls, value: str, info: ValidationInfo):
         return CommonValidators.validate_string(value, info)
-    
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: Optional[str], info: ValidationInfo):

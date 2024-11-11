@@ -1,5 +1,6 @@
-from fastapi import HTTPException
 from typing import Optional
+
+from fastapi import HTTPException
 from pydantic import ValidationInfo
 from pydantic_core import PydanticCustomError
 
@@ -65,7 +66,6 @@ class CommonValidators:
                 {"value": info.field_name},
             )
 
-
     @classmethod
     def validate_string(cls, value: str, info: ValidationInfo):
         cls.validate_length(value, info)
@@ -75,7 +75,7 @@ class CommonValidators:
         return value
 
     @classmethod
-    def validate_password(cls, value: str, info: ValidationInfo):
+    def validate_password(cls, value: Optional[str], info: ValidationInfo):
         cls.validate_password_length(value, info)
         cls.verify_no_special_characters(value, info)
         return value
