@@ -85,10 +85,26 @@ class SQLAlchemyRepository(RoomRepository):
                 roomName=room.roomName,
                 minPlayers=room.minPlayers,
                 maxPlayers=room.maxPlayers,
-                actualPlayers=len([player for player in room.players if player.isActive]),
+                actualPlayers=len(
+                    [
+                        player
+                        for player in room.players
+                        if self.db_session.query(PlayerRoom)
+                        .filter_by(playerID=player.playerID, roomID=room.roomID)
+                        .one_or_none()
+                        is not None
+                    ]
+                ),
                 started=room.game is not None,
                 private=room.password is not None,
-                playersID=[player.playerID for player in room.players if player.isActive],
+                playersID=[
+                    player.playerID
+                    for player in room.players
+                    if self.db_session.query(PlayerRoom)
+                    .filter_by(playerID=player.playerID, roomID=room.roomID)
+                    .one_or_none()
+                    is not None
+                ],
             )
             for room in all_rooms
         ]
