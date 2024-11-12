@@ -161,6 +161,6 @@ def test_connect_to_room_ws_game_started(client, test_db):
     with pytest.raises(WebSocketDisconnect) as e:
         with client.websocket_connect("/rooms/1/1") as websocket:
             websocket.receive_json()
-    assert e.value.code == 4003
+    assert e.value.code == 4007
     assert "partida" in e.value.reason
     assert "comenzado" in e.value.reason

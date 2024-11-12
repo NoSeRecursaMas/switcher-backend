@@ -184,6 +184,7 @@ def test_create_game_send_update_room_list_ws_2(client, test_db):
                 "actualPlayers": 2,
                 "started": False,
                 "private": False,
+                "playersID": [1, 2],
             },
         ]
 
@@ -199,6 +200,7 @@ def test_create_game_send_update_room_list_ws_2(client, test_db):
                 "actualPlayers": 2,
                 "started": True,
                 "private": False,
+                "playersID": [1, 2],
             },
         ]
 

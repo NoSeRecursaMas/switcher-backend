@@ -137,6 +137,7 @@ def test_leave_room_send_update_ws_room_list(client, test_db):
                 "actualPlayers": 2,
                 "started": False,
                 "private": False,
+                "playersID": [1, 2],
             }
         ]
         response_leave = client.put("/rooms/1/leave", json=player_id)
@@ -150,6 +151,7 @@ def test_leave_room_send_update_ws_room_list(client, test_db):
                 "actualPlayers": 1,
                 "started": False,
                 "private": False,
+                "playersID": [1],
             }
         ]
         assert response_leave.status_code == 200

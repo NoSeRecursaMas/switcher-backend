@@ -239,6 +239,7 @@ def test_create_room_send_update_room_list_ws(client, test_db):
                 "actualPlayers": 1,
                 "started": False,
                 "private": False,
+                "playersID": [1],
             },
         ]
         assert response.status_code == 201

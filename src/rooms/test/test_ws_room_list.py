@@ -72,6 +72,7 @@ def test_connect_to_room_list_websocket_player_exist_and_has_rooms(client, test_
                 "actualPlayers": 2,
                 "started": False,
                 "private": False,
+                "playersID": [1, 3],
             },
             {
                 "roomID": 2,
@@ -80,6 +81,7 @@ def test_connect_to_room_list_websocket_player_exist_and_has_rooms(client, test_
                 "actualPlayers": 1,
                 "started": False,
                 "private": False,
+                "playersID": [2],
             },
         ]
 
@@ -110,6 +112,7 @@ def test_can_connect_2_times(client, test_db):
                     "actualPlayers": 2,
                     "started": False,
                     "private": False,
+                    "playersID": [1, 2],
                 },
             ]
 
@@ -124,6 +127,7 @@ def test_can_connect_2_times(client, test_db):
                         "actualPlayers": 2,
                         "started": False,
                         "private": False,
+                        "playersID": [1, 2],
                     },
                 ]
     except WebSocketDisconnect as e:
@@ -167,6 +171,7 @@ def test_get_all_rooms_via_websocket(client, test_db):
                 "actualPlayers": 2,
                 "started": False,
                 "private": False,
+                "playersID": [1, 8],
             },
             {
                 "roomID": 2,
@@ -175,6 +180,7 @@ def test_get_all_rooms_via_websocket(client, test_db):
                 "actualPlayers": 3,
                 "started": False,
                 "private": False,
+                "playersID": [2, 5, 9],
             },
             {
                 "roomID": 3,
@@ -183,6 +189,7 @@ def test_get_all_rooms_via_websocket(client, test_db):
                 "actualPlayers": 2,
                 "started": False,
                 "private": False,
+                "playersID": [3, 6],
             },
             {
                 "roomID": 4,
@@ -191,6 +198,7 @@ def test_get_all_rooms_via_websocket(client, test_db):
                 "actualPlayers": 2,
                 "started": False,
                 "private": False,
+                "playersID": [4, 7],
             },
         ]
 
@@ -228,6 +236,7 @@ def test_get_room_with_password(client, test_db):
                 "actualPlayers": 1,
                 "started": False,
                 "private": True,
+                "playersID": [1],
             },
         ]
 
@@ -255,5 +264,6 @@ def test_get_room_started(client, test_db):
                 "actualPlayers": 1,
                 "started": True,
                 "private": True,
+                "playersID": [1],
             },
         ]

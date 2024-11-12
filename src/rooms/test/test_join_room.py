@@ -88,6 +88,7 @@ def test_join_room_send_update_ws_room_list(client, test_db):
                 "actualPlayers": 3,
                 "started": False,
                 "private": False,
+                "playersID": [1, 2, 3],
             },
         ]
 
@@ -102,6 +103,7 @@ def test_join_room_send_update_ws_room_list(client, test_db):
                 "actualPlayers": 4,
                 "started": False,
                 "private": False,
+                "playersID": [1, 2, 3, 4],
             },
         ]
         assert response.status_code == 200
