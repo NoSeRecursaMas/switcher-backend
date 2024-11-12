@@ -467,14 +467,18 @@ class SQLAlchemyRepository(GameRepository):
         if player is None:
             raise ValueError(f"Player with ID {playerID} not found")
 
+        timestamp = self.db_session.get(GameDB, gameID).timestamp_next_turn
+        if timestamp is None:
+            timestamp = datetime.now()
+
         return GamePublicInfo(
             gameID=game.gameID,
             board=game.board,
             figuresToUse=self.get_available_figures(game.prohibitedColor, self.get_board(gameID)),
             prohibitedColor=game.prohibitedColor,
             posEnabledToPlay=game.posEnabledToPlay,
-            timer=timedelta.total_seconds(self.db_session.get(GameDB, gameID).timestamp_next_turn - datetime.now()),
             players=game.players,
+            timer=timedelta.total_seconds(timestamp - datetime.now()),
         )
 
     def add_movement_cards_to_public_info(self, gameID: int, playerID: int, game: GamePublicInfo):

@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import StaticPool, create_engine
@@ -20,6 +22,12 @@ def override_get_db():
 
 
 app.dependency_overrides[get_db] = override_get_db
+
+
+@pytest.fixture(autouse=True)
+def mock_mi_funcion():
+    with patch("src.games.application.service.GameService._run_timer") as mock_func:
+        yield mock_func
 
 
 @pytest.fixture(scope="function")

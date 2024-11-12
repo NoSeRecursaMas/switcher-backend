@@ -43,13 +43,16 @@ class GameService:
     async def _run_timer(
         self, playerID: int, gameID: int, timestamp: datetime.datetime, background_tasks: BackgroundTasks
     ) -> None:
-        while datetime.datetime.now() < timestamp:
+        try:
+            while datetime.datetime.now() < timestamp:
+                if self.game_repository.get_current_timestamp_next_turn(gameID) == timestamp:
+                    await asyncio.sleep(0.5)
+                else:
+                    break
             if self.game_repository.get_current_timestamp_next_turn(gameID) == timestamp:
-                await asyncio.sleep(0.5)
-            else:
-                break
-        if self.game_repository.get_current_timestamp_next_turn(gameID) == timestamp:
-            await self.skip_turn(playerID, gameID, background_tasks, auto=True)
+                await self.skip_turn(playerID, gameID, background_tasks, auto=True)
+        except AttributeError:
+            pass
 
     async def start_game(self, roomID: int, playerID: PlayerID, background_tasks: BackgroundTasks) -> GameID:
         await self.player_domain_service.validate_player_exists(playerID.playerID)
