@@ -50,17 +50,22 @@ def create_game(test_db, create_room):
     game = GameDB(
         roomID=create_room.roomID,
         board=json.dumps([{"posX": 0, "posY": 0, "color": "R"} for _ in range(36)]),
+        prohibitedColor="Y",
         posEnabledToPlay=1,
     )
 
     test_db.add(game)
     test_db.commit()
+
     return game
 
 
 @pytest.fixture
 def create_figure_card(test_db):
-    figure_cards = [FigureCardDB(type="fige01", isBlocked=False, isPlayable=True, playerID=1, gameID=1)]
+    figure_cards = [
+        FigureCardDB(type="fige01", isBlocked=False, isPlayable=True, playerID=1, gameID=1),
+        FigureCardDB(type="fige02", isBlocked=False, isPlayable=True, playerID=1, gameID=1),
+    ]
     test_db.add_all(figure_cards)
     test_db.commit()
     return figure_cards
@@ -154,6 +159,50 @@ def create_board_version_2():
     )
 
 
+@pytest.fixture
+def create_board_version_3():
+    return json.dumps(
+        [
+            {"posX": 0, "posY": 0, "color": "Y", "isPartial": False},
+            {"posX": 0, "posY": 1, "color": "Y", "isPartial": False},
+            {"posX": 0, "posY": 2, "color": "Y", "isPartial": False},
+            {"posX": 0, "posY": 3, "color": "Y", "isPartial": False},
+            {"posX": 0, "posY": 4, "color": "G", "isPartial": False},
+            {"posX": 0, "posY": 5, "color": "G", "isPartial": False},
+            {"posX": 1, "posY": 0, "color": "G", "isPartial": False},
+            {"posX": 1, "posY": 1, "color": "G", "isPartial": False},
+            {"posX": 1, "posY": 2, "color": "G", "isPartial": False},
+            {"posX": 1, "posY": 3, "color": "G", "isPartial": False},
+            {"posX": 1, "posY": 4, "color": "G", "isPartial": False},
+            {"posX": 1, "posY": 5, "color": "G", "isPartial": False},
+            {"posX": 2, "posY": 0, "color": "G", "isPartial": False},
+            {"posX": 2, "posY": 1, "color": "G", "isPartial": False},
+            {"posX": 2, "posY": 2, "color": "Y", "isPartial": False},
+            {"posX": 2, "posY": 3, "color": "G", "isPartial": False},
+            {"posX": 2, "posY": 4, "color": "G", "isPartial": False},
+            {"posX": 2, "posY": 5, "color": "G", "isPartial": False},
+            {"posX": 3, "posY": 0, "color": "G", "isPartial": False},
+            {"posX": 3, "posY": 1, "color": "G", "isPartial": False},
+            {"posX": 3, "posY": 2, "color": "G", "isPartial": False},
+            {"posX": 3, "posY": 3, "color": "G", "isPartial": False},
+            {"posX": 3, "posY": 4, "color": "G", "isPartial": False},
+            {"posX": 3, "posY": 5, "color": "G", "isPartial": False},
+            {"posX": 4, "posY": 0, "color": "G", "isPartial": False},
+            {"posX": 4, "posY": 1, "color": "G", "isPartial": False},
+            {"posX": 4, "posY": 2, "color": "G", "isPartial": False},
+            {"posX": 4, "posY": 3, "color": "G", "isPartial": False},
+            {"posX": 4, "posY": 4, "color": "G", "isPartial": False},
+            {"posX": 4, "posY": 5, "color": "G", "isPartial": False},
+            {"posX": 5, "posY": 0, "color": "G", "isPartial": False},
+            {"posX": 5, "posY": 1, "color": "G", "isPartial": False},
+            {"posX": 5, "posY": 2, "color": "G", "isPartial": False},
+            {"posX": 5, "posY": 3, "color": "G", "isPartial": False},
+            {"posX": 5, "posY": 4, "color": "G", "isPartial": False},
+            {"posX": 5, "posY": 5, "color": "G", "isPartial": False},
+        ]
+    )
+
+
 def test_play_figure_card(client, test_db, create_game, create_board_version_1, create_figure_card):
     game = create_game
 
@@ -164,6 +213,10 @@ def test_play_figure_card(client, test_db, create_game, create_board_version_1, 
     figure_card[0].type = "fige06"
     test_db.commit()
 
+    game_from_db = test_db.get(GameDB, game.gameID)
+
+    assert game_from_db.prohibitedColor == "Y"
+
     response = client.post(
         "/games/1/figure",
         json={
@@ -173,7 +226,11 @@ def test_play_figure_card(client, test_db, create_game, create_board_version_1, 
         },
     )
 
+    test_db.refresh(game)
+    # no se actualiza el color prohibido
+
     assert response.status_code == 201
+    assert game_from_db.prohibitedColor == "R"
     assert response.json() is None
 
 
@@ -239,7 +296,6 @@ def test_figure_not_match_card(client, test_db, create_game, create_board_versio
         },
     )
 
-    print(response.json())
     assert response.status_code == 403
     assert response.json() == {"detail": "La figura no coincide con la carta."}
 
@@ -339,7 +395,7 @@ def test_figure_card_dont_exists(client, test_db, create_game, create_board_vers
 
     figure_card = create_figure_card
 
-    figure_card[0].cardID = 2
+    figure_card[0].cardID = 3
 
     test_db.commit()
 
@@ -490,3 +546,32 @@ def test_player_not_exists(client, test_db, create_game, create_board_version_1)
 
     assert response.status_code == 404
     assert response.json() == {"detail": "El jugador no existe."}
+
+
+def test_play_figure_card_prohibited_color(client, test_db, create_game, create_board_version_3, create_figure_card):
+    game = create_game
+
+    game.board = create_board_version_3
+
+    figure_card = create_figure_card
+
+    figure_card[0].type = "fige06"
+    test_db.commit()
+
+    game_from_db = test_db.get(GameDB, game.gameID)
+
+    assert game_from_db.prohibitedColor == "Y"
+
+    response = client.post(
+        "/games/1/figure",
+        json={
+            "cardID": 1,
+            "playerID": 1,
+            "figure": [{"posX": 0, "posY": 0}, {"posX": 0, "posY": 1}, {"posX": 0, "posY": 2}, {"posX": 0, "posY": 3}],
+        },
+    )
+    test_db.refresh(game)
+
+    assert response.status_code == 403
+    assert game_from_db.prohibitedColor == "Y"
+    assert response.json() == {"detail": "La figura no puede ser del color prohibido."}

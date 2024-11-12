@@ -36,7 +36,18 @@ def test_create_game(client, test_db):
     db, players, room = create_game_generalization_two_players(client, test_db)
 
     response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+
     assert response.status_code == 201
+    assert response.json() == {"gameID": 1}
+
+
+def test_create_game_prohibited_color(client, test_db):
+    db, players, room = create_game_generalization_two_players(client, test_db)
+
+    response = client.post(f"/games/{room.roomID}", json={"playerID": players[0].playerID})
+
+    assert response.status_code == 201
+    assert db.get(GameDB, 1).prohibitedColor == None
     assert response.json() == {"gameID": 1}
 
 
@@ -173,6 +184,7 @@ def test_create_game_send_update_room_list_ws_2(client, test_db):
                 "actualPlayers": 2,
                 "started": False,
                 "private": False,
+                "playersID": [1, 2],
             },
         ]
 
@@ -188,6 +200,7 @@ def test_create_game_send_update_room_list_ws_2(client, test_db):
                 "actualPlayers": 2,
                 "started": True,
                 "private": False,
+                "playersID": [1, 2],
             },
         ]
 
@@ -264,6 +277,8 @@ def test_skip_turn_ws(client, test_db):
         assert payload["posEnabledToPlay"] == 1
 
         response = client.put(f"/games/{game.gameID}/turn", json={"playerID": players[0].playerID})
+        data = websocket.receive_json()
+        assert data["type"] == "msg"
         data = websocket.receive_json()
         assert data["type"] == "status"
         payload = data["payload"]
@@ -1558,3 +1573,54 @@ def test_play_horizontal_mov05(client, test_db):
     destination = next(item for item in board if item["posY"] == 0 and item["posX"] == 2)
     assert origin["color"] == "B"
     assert destination["color"] == "R"
+
+
+def test_cancel_movement(client, test_db):
+    db = next(override_get_db())
+    db.add_all(
+        [
+            PlayerDB(playerID=1, username="test user"),
+            PlayerDB(playerID=2, username="test user 2"),
+            RoomDB(roomID=1, roomName="test room", minPlayers=2, maxPlayers=4, hostID=1),
+            PlayerRoomDB(playerID=1, roomID=1, position=1),
+            PlayerRoomDB(playerID=2, roomID=1, position=2),
+            GameDB(
+                roomID=1,
+                board=json.dumps(
+                    [
+                        {
+                            "posX": x,
+                            "posY": y,
+                            "color": "R" if (x == 0 and y == 1) else "B" if (x == 2 and y == 0) else "G",
+                        }
+                        for x in range(6)
+                        for y in range(6)
+                    ]
+                ),
+            ),
+            MovementCardDB(gameID=1, type="mov05", isDiscarded=False, playerID=1),
+        ]
+    )
+    db.commit()
+
+    board = db.get(GameDB, 1).board
+    board = json.loads(board)
+    origin = next(item for item in board if item["posY"] == 1 and item["posX"] == 0)
+    destination = next(item for item in board if item["posY"] == 0 and item["posX"] == 2)
+    assert origin["color"] == "R"
+    assert destination["color"] == "B"
+
+    response = client.post(
+        "/games/1/movement",
+        json={"cardID": 1, "playerID": 1, "origin": {"posX": 0, "posY": 1}, "destination": {"posX": 2, "posY": 0}},
+    )
+    assert response.status_code == 201
+
+    # Cancel movement
+
+    response = client.delete("/games/1/movement?playerID=1&gameID=1")
+    assert response.status_code == 200
+
+    board = db.get(GameDB, 1).board
+    board = json.loads(board)
+    origin = next(item for item in board if item["posY"] == 1 and item["posX"] == 0)

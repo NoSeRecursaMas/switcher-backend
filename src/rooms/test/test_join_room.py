@@ -1,3 +1,5 @@
+import bcrypt
+
 from src.conftest import override_get_db
 from src.games.infrastructure.models import Game as GameDB
 from src.players.infrastructure.models import Player as PlayerDB
@@ -86,6 +88,7 @@ def test_join_room_send_update_ws_room_list(client, test_db):
                 "actualPlayers": 3,
                 "started": False,
                 "private": False,
+                "playersID": [1, 2, 3],
             },
         ]
 
@@ -100,6 +103,7 @@ def test_join_room_send_update_ws_room_list(client, test_db):
                 "actualPlayers": 4,
                 "started": False,
                 "private": False,
+                "playersID": [1, 2, 3, 4],
             },
         ]
         assert response.status_code == 200
@@ -186,3 +190,52 @@ def test_join_room_game_started(client, test_db):
 
     assert response_leave.status_code == 403
     assert response_leave.json() == {"detail": "La partida ya ha comenzado."}
+
+
+def test_join_room_password(client, test_db):
+    db = next(override_get_db())
+    player = PlayerDB(username="player")
+    db.add(player)
+    db.commit()
+
+    hashed_password = bcrypt.hashpw(b"1234", bcrypt.gensalt()).decode()
+    room = RoomDB(roomName="test_room", minPlayers=2, maxPlayers=4, hostID=player.playerID, password=hashed_password)
+    db.add(room)
+    db.commit()
+
+    response = client.put(f"/rooms/{room.roomID}/join", json={"playerID": player.playerID, "password": "1234"})
+
+    assert response.status_code == 200
+
+
+def test_join_room_password_incorrect(client, test_db):
+    db = next(override_get_db())
+    player = PlayerDB(username="player")
+    db.add(player)
+    db.commit()
+
+    hashed_password = bcrypt.hashpw(b"1234", bcrypt.gensalt()).decode()
+    room = RoomDB(roomName="test_room", minPlayers=2, maxPlayers=4, hostID=player.playerID, password=hashed_password)
+    db.add(room)
+    db.commit()
+
+    response = client.put(f"/rooms/{room.roomID}/join", json={"playerID": player.playerID, "password": "12345"})
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Contraseña incorrecta."}
+
+
+def test_join_room_without_password(client, test_db):
+    db = next(override_get_db())
+    player = PlayerDB(username="player")
+    db.add(player)
+    db.commit()
+
+    room = RoomDB(roomName="test_room", minPlayers=2, maxPlayers=4, hostID=player.playerID, password="")
+    db.add(room)
+    db.commit()
+
+    response = client.put(f"/rooms/{room.roomID}/join", json={"playerID": player.playerID, "password": "1234"})
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "La sala no tiene contraseña."}

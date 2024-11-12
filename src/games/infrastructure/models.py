@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.database import Base
@@ -14,6 +14,7 @@ class Game(Base):
     prohibitedColor = Column(String, nullable=True)
     room = relationship("Room", back_populates="game")
     posEnabledToPlay = Column(Integer, default=1)
+    timestamp_next_turn = Column(DateTime, nullable=True)
 
     figureDeck = relationship("FigureCard", back_populates="game")
     movementDeck = relationship("MovementCard", back_populates="game")
@@ -29,6 +30,7 @@ class FigureCard(Base):
     type = Column(String, nullable=True)
     isBlocked = Column(Boolean, default=False)
     isPlayable = Column(Boolean, default=False)
+    wasBlocked = Column(Boolean, default=False)
 
     playerID = Column(ForeignKey("players.playerID"), nullable=False)
     gameID = Column(ForeignKey("games.gameID"), nullable=False)

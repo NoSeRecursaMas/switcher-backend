@@ -61,7 +61,15 @@ class RoomRepository(ABC):
         pass
 
     @abstractmethod
-    def set_position(self, playerID: int, position: int) -> None:
+    def set_position(self, playerID: int, position: int, roomID: int) -> None:
+        pass
+
+    @abstractmethod
+    def get_first_turn(self, roomID: int) -> int:
+        pass
+
+    @abstractmethod
+    def get_turn(self, roomID: int, posEnabled) -> int:
         pass
 
 

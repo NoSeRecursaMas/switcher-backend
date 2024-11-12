@@ -1,6 +1,7 @@
 import json
 from typing import List, Optional
 
+import bcrypt
 from fastapi.websockets import WebSocket
 from sqlalchemy.orm import Session
 
@@ -27,11 +28,13 @@ class SQLAlchemyRepository(RoomRepository):
         self.db_session = db_session
 
     def create(self, room: RoomCreationRequest) -> RoomID:
+        encrypted_password = self.encrypt_password(room.password) if room.password else None
+
         room = Room(
             roomName=room.roomName,
             minPlayers=room.minPlayers,
             maxPlayers=room.maxPlayers,
-            password=room.password,
+            password=encrypted_password,
             hostID=room.playerID,
         )
 
@@ -82,9 +85,26 @@ class SQLAlchemyRepository(RoomRepository):
                 roomName=room.roomName,
                 minPlayers=room.minPlayers,
                 maxPlayers=room.maxPlayers,
-                actualPlayers=len(room.players),
+                actualPlayers=len(
+                    [
+                        player
+                        for player in room.players
+                        if self.db_session.query(PlayerRoom)
+                        .filter_by(playerID=player.playerID, roomID=room.roomID)
+                        .one()
+                        .isActive
+                    ]
+                ),
                 started=room.game is not None,
                 private=room.password is not None,
+                playersID=[
+                    player.playerID
+                    for player in room.players
+                    if self.db_session.query(PlayerRoom)
+                    .filter_by(playerID=player.playerID, roomID=room.roomID)
+                    .one()
+                    .isActive
+                ],
             )
             for room in all_rooms
         ]
@@ -145,9 +165,32 @@ class SQLAlchemyRepository(RoomRepository):
         room = self.db_session.query(Room).filter_by(roomID=roomID).one_or_none()
         return room.game is not None
 
-    def set_position(self, playerID: int, position: int) -> None:
-        self.db_session.query(PlayerRoom).filter(PlayerRoom.playerID == playerID).update({"position": position})
+    def set_position(self, playerID: int, position: int, roomID: int) -> None:
+        self.db_session.query(PlayerRoom).filter(PlayerRoom.playerID == playerID, PlayerRoom.roomID == roomID).update(
+            {"position": position}
+        )
         self.db_session.commit()
+
+    def encrypt_password(self, password: str) -> str:
+        if password is None:
+            return None
+        return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+    def get_first_turn(self, roomID: int) -> int:
+        return (
+            self.db_session.query(PlayerRoom)
+            .filter(PlayerRoom.roomID == roomID, PlayerRoom.position == 1)
+            .one()
+            .playerID
+        )
+
+    def get_turn(self, roomID: int, posEnabled: int) -> int:
+        return (
+            self.db_session.query(PlayerRoom)
+            .filter(PlayerRoom.roomID == roomID, PlayerRoom.position == posEnabled)
+            .one()
+            .playerID
+        )
 
 
 class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
