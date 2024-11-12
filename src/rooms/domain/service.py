@@ -52,4 +52,4 @@ class RepositoryValidators:
             raise HTTPException(status_code=403, detail="La partida ya ha comenzado.")
         else:
             await websocket.accept()
-            raise WebSocketDisconnect(4003, "La partida ya ha comenzado.")
+            raise WebSocketDisconnect(4007, "La partida ya ha comenzado.")
