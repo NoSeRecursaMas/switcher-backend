@@ -122,7 +122,7 @@ def test_connect_to_game_websocket_player_in_game(client, test_db):
         assert payload["players"][0]["isActive"]
         assert "sizeDeckFigure" in payload["players"][0]
         assert "cardsFigure" in payload["players"][0]
-        assert "cardsMovement" in payload
+        assert "cardsMovement" in payload["players"][0]
 
 
 def test_close_connection_if_player_open_second(client, test_db):
