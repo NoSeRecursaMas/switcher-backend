@@ -91,8 +91,8 @@ class SQLAlchemyRepository(RoomRepository):
                         for player in room.players
                         if self.db_session.query(PlayerRoom)
                         .filter_by(playerID=player.playerID, roomID=room.roomID)
-                        .one_or_none()
-                        is not None
+                        .one()
+                        .isActive
                     ]
                 ),
                 started=room.game is not None,
@@ -102,8 +102,8 @@ class SQLAlchemyRepository(RoomRepository):
                     for player in room.players
                     if self.db_session.query(PlayerRoom)
                     .filter_by(playerID=player.playerID, roomID=room.roomID)
-                    .one_or_none()
-                    is not None
+                    .one()
+                    .isActive
                 ],
             )
             for room in all_rooms
