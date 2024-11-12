@@ -85,10 +85,10 @@ class SQLAlchemyRepository(RoomRepository):
                 roomName=room.roomName,
                 minPlayers=room.minPlayers,
                 maxPlayers=room.maxPlayers,
-                actualPlayers=len(room.players),
+                actualPlayers=len([player for player in room.players if player.isActive]),
                 started=room.game is not None,
                 private=room.password is not None,
-                playersID=[player.playerID for player in room.players],
+                playersID=[player.playerID for player in room.players if player.isActive],
             )
             for room in all_rooms
         ]
@@ -155,7 +155,6 @@ class SQLAlchemyRepository(RoomRepository):
         )
         self.db_session.commit()
 
-
     def encrypt_password(self, password: str) -> str:
         if password is None:
             return None
@@ -176,7 +175,6 @@ class SQLAlchemyRepository(RoomRepository):
             .one()
             .playerID
         )
-
 
 
 class WebSocketRepository(RoomRepositoryWS, SQLAlchemyRepository):
